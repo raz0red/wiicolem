@@ -5,6 +5,8 @@ WiiColEm v0.2 release README
 Ported by raz0red
 [http://www.twitchasylum.com]
 
+<a href='http://www.youtube.com/watch?feature=player_embedded&v=UdHW9kOBeiE' target='_blank'><img src='http://img.youtube.com/vi/UdHW9kOBeiE/0.jpg' width='425' height=344 /></a>
+
 --------------------------------------------
 Overview
 --------------------------------------------
