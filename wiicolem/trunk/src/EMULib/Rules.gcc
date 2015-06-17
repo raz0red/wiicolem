@@ -1,0 +1,63 @@
+BASEDIR	= ../..
+EMULIB	= $(BASEDIR)/EMULib
+LIBARM	= $(BASEDIR)/ARM
+LIBZ80	= $(BASEDIR)/Z80
+LIB6502	= $(BASEDIR)/M6502
+LIBGBZ	= $(BASEDIR)/GBZ80
+
+CC	= gcc
+CPP	= cpp
+CFLAGS	= -O3 -pthread -I. -I.. -I$(EMULIB)
+DEFINES = -DZLIB
+LIBS    = -lz -lpthread
+
+# EMULib sound, console, and other utility functions 
+OBJECTS	= $(EMULIB)/EMULib.o $(EMULIB)/Console.o $(EMULIB)/Sound.o \
+	  $(EMULIB)/NetPlay.o
+# Platform-specific EMULib files
+EMUUNIX	= $(EMULIB)/Unix/LibUnix.o $(EMULIB)/Unix/SndUnix.o \
+	  $(EMULIB)/Unix/ImgUnix.o $(EMULIB)/Unix/NetUnix.o
+EMUMAEMO= $(EMULIB)/Maemo/LibMaemo.o $(EMULIB)/Unix/SndUnix.o \
+	  $(EMULIB)/Unix/NetUnix.o $(EMULIB)/Image.o \
+	  $(EMULIB)/LibARM.o
+# .INI file access library
+INIFILE	= $(EMULIB)/INIFile.o
+# 720kB floppy utility library
+FLOPPY	= $(EMULIB)/Floppy.o
+# Disk image utility library
+FDIDISK	= $(EMULIB)/FDIDisk.o
+# CPU emulation libraries
+ARM	= $(LIBARM)/ARM.o $(LIBARM)/ConDebug.o
+Z80	= $(LIBZ80)/Z80.o $(LIBZ80)/ConDebug.o
+GBZ80	= $(LIBGBZ)/Z80.o $(LIBGBZ)/ConDebug.o
+M6502	= $(LIB6502)/M6502.o $(LIB6502)/ConDebug.o
+# TMS9918/9928/9929 VDP emulation
+TMS9918	= $(EMULIB)/TMS9918.o $(EMULIB)/DRV9918.o
+# Disk controller emulation libraries
+WD1793	= $(EMULIB)/WD1793.o
+UPD765	= $(EMULIB)/uPD765.o
+WD2793	= $(WD1793)
+I8272	= $(UPD765)
+# C93xx/C94xx EEPROM chips
+C93XX	= $(EMULIB)/C93XX.o
+# Intel 8255 PPI chip
+I8255	= $(EMULIB)/I8255.o
+# Sound chip emulation libraries
+AY8910	= $(EMULIB)/AY8910.o
+SN76489	= $(EMULIB)/SN76489.o
+YM2413	= $(EMULIB)/YM2413.o
+SCC     = $(EMULIB)/SCC.o
+# Cartridge parsing utilities
+NESCART	= $(EMULIB)/NESCarts.o
+GBCART	= $(EMULIB)/GBCarts.o
+GBACART	= $(EMULIB)/GBACarts.o
+DSCART	= $(EMULIB)/DSCarts.o
+
+.c.o:
+	$(CC) $(CFLAGS) $(DEFINES) -c -o $@ $<
+.cc.o:
+	$(CC) $(CFLAGS) $(DEFINES) -c -o $@ $<
+.cpp.o:
+	$(CC) $(CFLAGS) $(DEFINES) -c -o $@ $<
+.s.o:
+	$(CC) $(CFLAGS) $(DEFINES) -c -o $@ $<

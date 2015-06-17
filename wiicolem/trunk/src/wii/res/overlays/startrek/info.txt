@@ -1,0 +1,8 @@
+keypOverlay=startrek.png
+keypSelKeyRgba=FF000054
+keypSelKeyW=35
+keypSelKeyH=25
+keypOffX=93
+keypOffY=40
+keypGapX=8
+keypGapY=17

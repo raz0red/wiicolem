@@ -1,0 +1,8 @@
+keypOverlay=roo2.png
+keypSelKeyRgba=0000006D
+keypSelKeyW=45
+keypSelKeyH=41
+keypOffX=26
+keypOffY=23
+keypGapX=6
+keypGapY=11

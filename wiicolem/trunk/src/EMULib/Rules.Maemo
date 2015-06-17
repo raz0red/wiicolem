@@ -1,0 +1,18 @@
+include ../../EMULib/Rules.gcc
+
+CC	= gcc
+CPP	= cpp
+CFLAGS	+= `pkg-config gtk+-2.0 gconf-2.0 libosso hildon-1 hildon-fm-2 --cflags --libs` \
+	-Wall -Wa,--defsym,BPP16=1 -I$(EMULIB)/Maemo -I$(EMULIB)/Unix \
+	-mfpu=vfp -mfloat-abi=softfp
+DEFINES+= -DMAEMO -DLSB_FIRST -DBPP16 -DBPS16 -DESD_AUDIO
+OBJECTS+= $(EMUMAEMO)
+
+# In case if Maemo ZLib is either outdated or broken
+ZLIB  = ../../ZLib/adler32.o ../../ZLib/crc32.o ../../ZLib/deflate.o \
+	../../ZLib/inflate.o ../../ZLib/gzio.o ../../ZLib/compress.o \
+	../../ZLib/inffast.o ../../ZLib/inftrees.o ../../ZLib/trees.o \
+	../../ZLib/zutil.o
+
+.asm.s:
+	$(EMULIB)/Tools/sdt2gas.pl $< >$@

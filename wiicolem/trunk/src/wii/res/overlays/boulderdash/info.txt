@@ -1,0 +1,8 @@
+keypOverlay=boulderdash.png
+keypSelKeyRgba=66666699
+keypSelKeyW=45
+keypSelKeyH=41
+keypOffX=21
+keypOffY=25
+keypGapX=6
+keypGapY=11

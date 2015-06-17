@@ -1,0 +1,8 @@
+keypOverlay=warroom.png
+keypSelKeyRgba=FFFFFF56
+keypSelKeyW=45
+keypSelKeyH=41
+keypOffX=26
+keypOffY=23
+keypGapX=6
+keypGapY=11

@@ -1,0 +1,8 @@
+keypOverlay=cpkps.png
+keypSelKeyRgba=FFFFFF4F
+keypSelKeyW=45
+keypSelKeyH=41
+keypOffX=19
+keypOffY=23
+keypGapX=6
+keypGapY=11

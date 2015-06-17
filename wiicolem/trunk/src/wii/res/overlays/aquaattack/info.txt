@@ -1,0 +1,8 @@
+keypOverlay=aquaattack.png
+keypSelKeyRgba=FF00007F
+keypSelKeyW=45
+keypSelKeyH=41
+keypOffX=23
+keypOffY=24
+keypGapX=6
+keypGapY=11

@@ -1,0 +1,8 @@
+keypOverlay=spnpw.png
+keypSelKeyRgba=FFFFFF5E
+keypSelKeyW=45
+keypSelKeyH=45
+keypOffX=20
+keypOffY=21
+keypGapX=9
+keypGapY=8

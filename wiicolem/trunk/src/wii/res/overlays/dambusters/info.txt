@@ -1,0 +1,8 @@
+keypOverlay=dambusters.png
+keypSelKeyRgba=0000665B
+keypSelKeyW=45
+keypSelKeyH=41
+keypOffX=20
+keypOffY=22
+keypGapX=6
+keypGapY=11

@@ -1,0 +1,8 @@
+keypOverlay=frontline.png
+keypSelKeyRgba=0000FF54
+keypSelKeyW=35
+keypSelKeyH=25
+keypOffX=94
+keypOffY=38
+keypGapX=8
+keypGapY=17

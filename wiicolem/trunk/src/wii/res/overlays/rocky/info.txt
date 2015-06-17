@@ -1,0 +1,8 @@
+keypOverlay=rocky.png
+keypSelKeyRgba=FF000054
+keypSelKeyW=35
+keypSelKeyH=25
+keypOffX=94
+keypOffY=38
+keypGapX=8
+keypGapY=17

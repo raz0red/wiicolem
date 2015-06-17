@@ -1,0 +1,8 @@
+colem (2.5.2-1) stable; urgency=low
+
+  * Now using frame buffer directly when in full screen mode.
+  * Now using hardware scaling when in full screen mode.
+  * Added optional frame rate counter.
+  * Fixed on-screen input cues to prevent flickering.
+
+ -- Marat Fayzullin <marat@komkon.org>  Mon, 13 Oct 2008 13:51:56 -0500

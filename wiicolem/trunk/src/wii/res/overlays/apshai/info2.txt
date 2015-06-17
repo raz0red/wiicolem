@@ -1,0 +1,8 @@
+keypOverlay=apshai2.png
+keypSelKeyRgba=FFFFFF6D
+keypSelKeyW=45
+keypSelKeyH=41
+keypOffX=22
+keypOffY=23
+keypGapX=6
+keypGapY=11

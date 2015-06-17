@@ -1,0 +1,8 @@
+keypOverlay=kenuston.png
+keypSelKeyRgba=FF000063
+keypSelKeyW=45
+keypSelKeyH=42
+keypOffX=19
+keypOffY=24
+keypGapX=6
+keypGapY=10

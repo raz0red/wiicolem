@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info"
+           xmlns:osso="http://nokia.com/osso/mime-categories">
+  <mime-type type="application/x-cvrom">
+    <comment>ColecoVision cartridge ROM</comment>
+    <osso:category name="documents"/>
+    <glob pattern="*.cv.gz"/>
+    <glob pattern="*.cv"/>
+  </mime-type>
+</mime-info>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+ <app version="1">
+   <name>WiiColEm</name>
+   <coder>raz0red</coder>
+   <version>0.2</version>
+   <release_date>20110306000</release_date>
+   <short_description>ColecoVision Emulator</short_description>
+   <long_description>WiiColem is a port of the ColEm emulator developed by Marat Fayzullin.
+   
+Wii port by raz0red [http://www.twitchasylum.com].
+   </long_description>
+ </app>

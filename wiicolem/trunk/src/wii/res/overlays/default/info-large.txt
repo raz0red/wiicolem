@@ -1,0 +1,7 @@
+OffsetX=27
+OffsetY=126
+GapX=6
+GapY=5
+Width=21
+Height=20
+Color=00FF0080

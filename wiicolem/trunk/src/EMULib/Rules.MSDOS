@@ -1,0 +1,10 @@
+###
+### Include this file in the first line of your Makefile when compiling
+### EMULib application for Microsoft MSDOS (with NMAKE).
+###
+
+!include ..\..\EMULib\Rules.wcc
+
+CFLAGS  = $(CFLAGS) -bt=dos4g -I$(EMULIB)\MSDOS
+DEFINES = $(DEFINES) -DMSDOS -DLSB_FIRST
+OBJECTS = $(OBJECTS) $(EMUDOS)

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+sb2 dpkg-buildpackage -rfakeroot -d -b
+
+# Installing .deb file to Scratchbox
+#sb2 fakeroot dpkg -i ../colem_2.5.2-2_armel.deb
+
+# Uploading .deb file to the repository
+debsign -kDCDD1F2F ../colem_2.5.2-1_armel.changes
+#dput diablo-extras ../colem_2.5.2-1_armel.changes
+
+# Sending .deb file to the device
+scp ../colem_2.5.2-1_armel.deb root@192.168.0.104:/media/mmc2

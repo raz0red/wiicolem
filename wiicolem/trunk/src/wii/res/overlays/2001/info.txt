@@ -1,0 +1,8 @@
+keypOverlay=2001.png
+keypSelKeyRgba=FFFFFF40
+keypSelKeyW=45
+keypSelKeyH=40
+keypOffX=26
+keypOffY=27
+keypGapX=5
+keypGapY=12

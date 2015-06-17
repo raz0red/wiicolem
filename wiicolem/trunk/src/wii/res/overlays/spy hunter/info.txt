@@ -1,0 +1,8 @@
+keypOverlay=spyhunter.png
+keypSelKeyRgba=FFFFFF54
+keypSelKeyW=45
+keypSelKeyH=41
+keypOffX=23
+keypOffY=20
+keypGapX=6
+keypGapY=11

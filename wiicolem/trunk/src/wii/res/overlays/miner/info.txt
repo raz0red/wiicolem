@@ -1,0 +1,8 @@
+keypOverlay=miner.png
+keypSelKeyRgba=0000005B
+keypSelKeyW=45
+keypSelKeyH=42
+keypOffX=24
+keypOffY=22
+keypGapX=6
+keypGapY=11
