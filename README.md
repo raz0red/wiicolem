@@ -1,19 +1,14 @@
---------------------------------------------
-WiiColEm v0.2 release README
---------------------------------------------
+# WiiColEm v0.2 release README
 
 Ported by raz0red
-[http://www.twitchasylum.com]
 
 _WiiColem Video_
 
 <a href='http://www.youtube.com/watch?feature=player_embedded&v=UdHW9kOBeiE' target='_blank'><img src='http://img.youtube.com/vi/UdHW9kOBeiE/0.jpg' width='425' height=344 /></a>
 
---------------------------------------------
-Overview
---------------------------------------------
+## Overview
 
-WiiColEm is a port of the ColEm ColecoVision emulator developed by 
+WiiColEm is a port of the [ColEm ColecoVision emulator](https://fms.komkon.org/ColEm/) developed by 
 Marat Fayzullin.
 
 Features:
@@ -44,9 +39,7 @@ The following additions/modifications were made to the core emulation code:
   * Fixed issue where noise channel wasn't starting when it should (Matt
     Patrol). 
     
---------------------------------------------
-What about BlueMSX-wii? 
---------------------------------------------
+## What about BlueMSX-wii? 
 
 So, a common question might be why release WiiColEm when the excellent
 BlueMSX-wii emulator exists? The truth is that I started this project some
@@ -58,25 +51,19 @@ controllers (Driving, Roller, and Spinner). Finally, it has an on-screen
 keypad display with key descriptions and overlay support so all Coleco games
 should be playable. 
 
---------------------------------------------
-Known issues
---------------------------------------------
+## Known issues
 
   * Zip files are not currently supported 
   * The noise channel isn't accurate (core bug) 
 
---------------------------------------------
-Installation
---------------------------------------------
+## Installation
 
 To install WiiColEm, simply extract the zip file directly to your SD card
 or USB device (retain the hierarchical structure exactly).
 
 Cartridge images must be placed in the roms directory (/wiicolem/roms).
 
---------------------------------------------
-Cartridge Database 
---------------------------------------------
+## Cartridge Database 
 
 WiiColem ships with a database that contains recommended settings for most
 commercial cartridges. These settings cover controls mappings, keypad
@@ -94,9 +81,7 @@ following steps:
 For more information on mapping controls and creating and/or customizing
 cartridge settings, see the "Cartridge Settings" section (below). 
 
---------------------------------------------
-Controls
---------------------------------------------
+## Controls
 
 The following section contains the "default" control mappings for WiiColEm.
 
@@ -367,9 +352,7 @@ the Cartridge Database it may contain non-default mappings.
   GameCube and Classic controller/Pro for firing in the eight different 
   directions.
         
---------------------------------------------
-Cartridge Settings
---------------------------------------------
+## Cartridge Settings
 
 WiiColEm contains the ability to manage per-cartridge settings. The settings
 that can be edited include:
@@ -418,19 +401,15 @@ that can be edited include:
       Classic   : ZR           Classic   : ZL
       GameCube  : (n/a)        GameCube  : (n/a)
            
---------------------------------------------
-WiiColEm crashes, code dumps, etc.
---------------------------------------------
+## WiiColEm crashes, code dumps, etc.
 
 If you are having issues with WiiColEm, please let me know about it via one
 of the following locations:
 
-[http://www.wiibrew.org/wiki/Talk:WiiColEm]
-[http://www.twitchasylum.com/forum/viewtopic.php?t=1245]
+* http://www.wiibrew.org/wiki/Talk:WiiColEm
+* http://www.twitchasylum.com/forum/viewtopic.php?t=1245
 
---------------------------------------------
-Credits
---------------------------------------------
+## Credits
 
 * NeoRame          : Icon
 * Pixelboy         : Source overlays
@@ -439,9 +418,7 @@ Credits
 * Astroman         : Testing (0.2)
 * Yurkie           : Testing (0.1)
 
---------------------------------------------
-Special thanks
---------------------------------------------
+## Special thanks
 
 * Tantric          : Menu example code and SDL enhancements
 * Marat Fayzullin  : Answering all of my questions
@@ -449,12 +426,9 @@ Special thanks
 * Opcode           : Providing a ROM for testing the Opcode memory expansion
                      and MegaCart(R) support
 
---------------------------------------------
-Change log
---------------------------------------------
+## Change log
 
-03/06/11 (0.2)
--------------------
+### 03/06/11 (0.2)
   - Cartridge-specific overlays
   - Default keypad (controller) image for cartridges without specific overlays
     - Ability to set the default keypad (controller) size
@@ -478,6 +452,5 @@ Change log
       Classic/Pro controllers).
   - Fixed bugs caused by pressing multiple keypad buttons simultaneously
 
-01/26/10 (0.1)
--------------------
+### 01/26/10 (0.1)
   - Initial release
