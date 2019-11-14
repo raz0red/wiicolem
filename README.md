@@ -88,9 +88,8 @@ The following section contains the "default" control mappings for WiiColEm.
 It is important to note that if the cartridge that is being loaded exists in
 the Cartridge Database it may contain non-default mappings. 
 
-  WiiColEm menu:
-  --------------
-
+### WiiColEm menu:
+  
     Wiimote:
 
       Left/Right  : Scroll (if sideways orientation)
@@ -120,8 +119,7 @@ the Cartridge Database it may contain non-default mappings.
       B           : Back
       Z           : Exit to Homebrew Channel
                         
-  In-game (Keypad):
-  -----------------
+### In-game (Keypad):
   
   The keypad allows you to press keys on the ColecoVision controller keypads.
   If a description has been provided for the currently selected key it will
@@ -133,14 +131,14 @@ the Cartridge Database it may contain non-default mappings.
   cartridge basis via Cartridge Settings (see "Cartridge Settings" section,
   below).
 
-    * When keypad pause is enabled, the keypad will be closed when a keypad
+  * When keypad pause is enabled, the keypad will be closed when a keypad
       button is pressed (or the keypad is explicitly closed). It is important
       to note that the keypad button will continue to be pressed as long as
       the controller button is held. This is necessary for games like War 
       Room where you need to hold the keypad buttons down to see the 
       different factories, etc.
       
-    * When keypad pause is disabled, emulation will continue while the keypad
+  * When keypad pause is disabled, emulation will continue while the keypad
       is displayed. The keypad will continue to be displayed until it is
       explicitly closed. 
 
@@ -171,9 +169,8 @@ the Cartridge Database it may contain non-default mappings.
       A, B           : Press Key
       Start          : Close Keypad
             
-  In-game (Standard):
-  -------------------
-
+### In-game (Standard):
+  
     Wiimote:
 
       D-pad          : Move
@@ -206,8 +203,7 @@ the Cartridge Database it may contain non-default mappings.
       Start          : Toggle Keypad
       Z              : Display WiiColEm menu (see above)
 
-  In-game (Super action):
-  -----------------------    
+### In-game (Super action):
   
   Very few games use the "spinner" that is a part of the super action 
   controller. You can enable/disable the "spinner" via Cartridge Settings
@@ -253,8 +249,7 @@ the Cartridge Database it may contain non-default mappings.
       Start          : Toggle Keypad
       Z              : Display WiiColEm menu (see above)
 
-  In-game (Driving/Tilt):
-  -----------------------
+### In-game (Driving/Tilt):
   
   In this mode, you steer by tilting the Wiimote (similar to Excite
   Truck/Bots). You can adjust the tilt sensitivity via Cartridge Settings
@@ -269,9 +264,8 @@ the Cartridge Database it may contain non-default mappings.
       +      : Toggle Keypad
       Home   : Display WiiColEm menu (see above)
       
-  In-game (Driving/Analog):
-  -------------------------
-
+### In-game (Driving/Analog):
+  
   In this mode, you steer by using the analog controls (Nunchuk, Classic,
   GameCube). You can adjust the analog sensitivity via Cartridge Settings
   (see "Cartridge Settings" section, below).
@@ -303,8 +297,7 @@ the Cartridge Database it may contain non-default mappings.
       Start         : Toggle Keypad
       Z             : Display WiiColEm menu (see above)
       
-  In-game (Roller):
-  -----------------
+### In-game (Roller):
 
   In this mode, the trackball motion is simulated via analog controls
   (Nunchuk, Classic, GameCube). You can adjust the analog sensitivity via
@@ -340,9 +333,8 @@ the Cartridge Database it may contain non-default mappings.
       Start        : Toggle Keypad
       Z            : Display WiiColEm menu (see above)
       
-  In-game (Aquattack):
-  --------------------
-
+### In-game (Aquattack):
+  
   Aquattack has a very unique control scheme. It uses the keypad buttons to 
   fire in eight different directions. Essentially, it uses the "keypad" as a 
   "d-pad". While the keypad buttons have been mapped to the eight different 
@@ -361,16 +353,14 @@ that can be edited include:
   * Advanced settings (Whether it requires Opcode memory expansion,
     keypad pause, etc.) 
     
-  Control Settings
-  ----------------
+### Control Settings
 
-  The following control options are available:
+The following control options are available:
 
-    * The controller type (standard, super action, driving/tilt,
-      driving/analog, roller)
-    * Wiimote orientation
-    * Sensitivity (Roller and driving controllers)
-    * ColecoVision keypad and controller button mappings 
+  * The controller type (standard, super action, driving/tilt, driving/analog, roller)
+  * Wiimote orientation
+  * Sensitivity (Roller and driving controllers)
+  * ColecoVision keypad and controller button mappings 
 
   When mapping buttons, you map a ColecoVision keypad or controller button to
   one of the "button groups" listed below. This allows you to map a button
