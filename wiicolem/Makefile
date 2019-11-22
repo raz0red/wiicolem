@@ -7,7 +7,6 @@ ifeq ($(strip $(DEVKITPPC)),)
 $(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPPC)
 endif
 
-#include $(DEVKITPPC)/gamecube_rules
 include $(DEVKITPPC)/wii_rules
 
 #---------------------------------------------------------------------------------
@@ -17,18 +16,46 @@ include $(DEVKITPPC)/wii_rules
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
 #TARGET		:=	$(notdir $(CURDIR))
-TARGET      :=  boot
+TARGET		:=  boot
 BUILD		:=	build
-SOURCES		:=  src src/wii src/wii/common src/wii/common/netprint src/wii/common/pngu src/wii/common/FreeTypeGX src/ColEm src/Z80 src/EMULib src/Colem/Wii src/EMULib/Wii 
-DATA		:=	src/wii/res/fonts src/wii/res/gfx
+SOURCES		:= \
+    src src/wii \
+    src/wii/common \
+    src/wii/common/netprint \
+    src/wii/common/pngu \
+    src/wii/common/FreeTypeGX \
+    src/ColEm src/Z80 \
+    src/EMULib \
+    src/Colem/Wii \
+    src/EMULib/Wii 
+DATA		:= \
+    src/wii/res/fonts \
+    src/wii/res/gfx
 #DATA		:=	
-INCLUDES	:=	src src/wii src/wii/common src/wii/common/netprint src/wii/common/pngu src/wii/common/FreeTypeGX src/Colem src/Z80 src/EMULib src/Colem/Wii src/EMULib/Wii
+INCLUDES	:= \
+    src src/wii \
+    src/wii/common \
+    src/wii/common/netprint \
+    src/wii/common/pngu \
+    src/wii/common/FreeTypeGX \
+    src/Colem \
+    src/Z80 \
+    src/EMULib \
+    src/Colem/Wii \
+    src/EMULib/Wii \
+    thirdparty/freetype/include \
+    thirdparty/zlib/include \
+    thirdparty/sdl/include \
+    thirdparty/png/include
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O1 -Wall $(MACHDEP) $(INCLUDE) -DMSB_FIRST -DCOLEM -DWII -DBPP8 -DBPS16 -DWII_BIN2O -DMEGACART
+CFLAGS	=   -g -O1 -Wall $(MACHDEP) $(INCLUDE) -DMSB_FIRST -DCOLEM -DWII -DBPP8 \
+            -DBPS16 -DWII_BIN2O -DMEGACART \
+            -Wno-format-truncation \
+            -Wno-format-overflow
 # -DNO_AUDIO_PLAYBACK -DWII_NETTRACE
 CXXFLAGS	=	$(CFLAGS)
 
@@ -37,15 +64,19 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS    :=  -lSDL_ttf -lSDL -lSDL_image -lpng -ljpeg -lfreetype -lfat -lwiiuse \
+LIBS    :=  -lSDL_ttf -lSDL -lSDL_image -lpng -lfreetype -lfat -lwiiuse \
             -lbte -logc -lz -lm
-#LIBS -lwiikeyboard            
+#LIBS -lwiikeyboard
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:=
+LIBDIRS	:= \
+    thirdparty/freetype/lib \
+    thirdparty/zlib/lib \
+    thirdparty/sdl/lib \
+    thirdparty/png/lib
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -125,16 +156,14 @@ export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 					-I$(CURDIR)/$(BUILD) \
-					-I$(LIBOGC_INC) \
-					-I$(LIBOGC_INC)/SDL				
+					-I$(LIBOGC_INC)
 
 #---------------------------------------------------------------------------------
 # build a list of library paths
 #---------------------------------------------------------------------------------
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
-					-L$(LIBOGC_LIB)
-					
-
+export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(CURDIR)/$(dir)) \
+					-L$(LIBOGC_LIB) \
+					-L$(DEVKITPRO)/portlibs/ppc/lib
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 .PHONY: $(BUILD) clean
@@ -156,7 +185,6 @@ run:
 #---------------------------------------------------------------------------------
 reload:
 	psoload -r $(TARGET).dol
-
 
 #---------------------------------------------------------------------------------
 else

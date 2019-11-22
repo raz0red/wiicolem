@@ -40,6 +40,6 @@ typedef unsigned short word;
 
 typedef unsigned int uint;
 typedef unsigned char uchar;
-typedef unsigned long long ulong;
+typedef unsigned long long ullong;
 
 #endif

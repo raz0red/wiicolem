@@ -58,6 +58,7 @@ static volatile int AudioPaused = 0; /* 1: Audio paused      */
 void AudioHandler(void *UserData,sample *Stream,int Length)
 {
   int J;
+  sample *Stream = (sample)inStream;
 
   /* Need to have valid playback rate */
   if(!SndRate) return;

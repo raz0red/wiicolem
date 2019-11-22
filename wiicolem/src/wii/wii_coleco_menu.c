@@ -26,6 +26,7 @@ distribution.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/iosupport.h>
 
 #include "Coleco.h"
 
@@ -1057,27 +1058,31 @@ void wii_menu_handle_update( TREENODE *menu )
  */
 static void wii_read_game_list( TREENODE *menu )
 {
-  DIR_ITER *romdir = diropen( wii_get_roms_dir() );
+  DIR *romdir = opendir( wii_get_roms_dir() );
   if( romdir != NULL)
   {
+    struct dirent *dent;
     struct stat statbuf;
-    char filepath[WII_MAX_PATH];
-    while( dirnext( romdir, filepath, &statbuf ) == 0 )
-    {               
+    while ((dent = readdir(romdir)) != NULL)
+    {   
+      char* filepath = dent->d_name;
+      char path[WII_MAX_PATH];
+      sprintf(path,"%s/%s", wii_get_roms_dir(), filepath);
+      stat(path, &statbuf);
       if( strcmp( ".", filepath ) != 0 && 
         strcmp( "..", filepath ) != 0 )
-      {				                
+      {
         if( !S_ISDIR( statbuf.st_mode ) )
         {
           TREENODE *child = 
             wii_create_tree_node( NODETYPE_ROM, filepath );
 
           wii_add_child( menu, child );
-        }				
+        }
       }
     }
 
-    dirclose( romdir );
+    closedir( romdir );
   }
   else
   {
@@ -1098,14 +1103,18 @@ static void wii_read_game_list( TREENODE *menu )
  */
 static void wii_read_save_state_list( TREENODE *menu )
 {
-  DIR_ITER *ssdir = diropen( wii_get_saves_dir() );
+  DIR *ssdir = opendir( wii_get_saves_dir() );
   if( ssdir != NULL)
-  {   
+  {
+    struct dirent *dent;
     struct stat statbuf;
     char ext[WII_MAX_PATH];
-    char filepath[WII_MAX_PATH];
-    while( dirnext( ssdir, filepath, &statbuf ) == 0 ) 
-    {            
+    while ((dent = readdir(ssdir)) != NULL)
+    {
+      char* filepath = dent->d_name;
+      char path[WII_MAX_PATH];
+      sprintf(path,"%s/%s", wii_get_saves_dir(), filepath);
+      stat(path, &statbuf);
       if( strcmp( ".", filepath ) != 0 && 
         strcmp( "..", filepath ) != 0 )
       {			                
@@ -1126,7 +1135,7 @@ static void wii_read_save_state_list( TREENODE *menu )
       }
     }
 
-    dirclose( ssdir );
+    closedir( ssdir );
   }
   else
   {

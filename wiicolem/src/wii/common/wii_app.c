@@ -110,7 +110,7 @@ void wii_set_app_path( int argc, char *argv[] )
 #endif
   }
 
-  if( strncmpi( "usb", app_path, 3 ) == 0 )
+  if( strncasecmp( "usb", app_path, 3 ) == 0 )
   {
     wii_is_usb = TRUE;
   }

@@ -37,22 +37,22 @@ distribution.
 #include "wii_coleco_snapshot.h"
 
 /*
- * Saves with the specified save name
- *
- * filename   The name of the save file
- * return     Whether the save was successful
- */
+* Saves with the specified save name
+*
+* filename   The name of the save file
+* return     Whether the save was successful
+*/
 BOOL wii_snapshot_handle_save( char* filename )
 {
   return SaveSTA( filename );
 }
 
 /*
- * Determines the save name for the specified rom file
- *
- * romfile  The name of the rom file
- * buffer   The buffer to write the save name to
- */
+* Determines the save name for the specified rom file
+*
+* romfile  The name of the rom file
+* buffer   The buffer to write the save name to
+*/
 void wii_snapshot_handle_get_name( const char *romfile, char *buffer )
 {
   char filename[WII_MAX_PATH];            
@@ -62,10 +62,10 @@ void wii_snapshot_handle_get_name( const char *romfile, char *buffer )
 }
 
 /*
- * Starts the emulator for the specified snapshot file.
- *
- * savefile The name of the save file to load. 
- */
+* Starts the emulator for the specified snapshot file.
+*
+* savefile The name of the save file to load. 
+*/
 BOOL wii_start_snapshot( char *savefile )
 {
   BOOL succeeded = FALSE;

@@ -31,6 +31,7 @@ extern "C" {
 
 #include <gccore.h>
 #include <sys/dir.h>
+#include <sys/param.h>
 #include <unistd.h>
 
 #include "wii_app_common.h"
@@ -88,7 +89,7 @@ extern int wii_menu_sel_offset;
 extern RGBA wii_menu_sel_color;
 
 // The display mode (from SDL)
-extern GXRModeObj *vmode;	
+extern GXRModeObj *vmode;
 
 /*
  * Creates and returns a new menu tree node
