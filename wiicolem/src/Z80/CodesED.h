@@ -5,7 +5,7 @@
 /** This file contains implementation for the ED table of   **/
 /** Z80 commands. It is included from Z80.c.                **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1994-2008                 **/
+/** Copyright (C) Marat Fayzullin 1994-2018                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -96,13 +96,12 @@ case LD_A_I:
   break;
 
 case LD_A_R:
-  R->R++;
-  R->AF.B.h=(byte)(R->R-R->ICount);
+  R->AF.B.h=R->R;
   R->AF.B.l=(R->AF.B.l&C_FLAG)|(R->IFF&IFF_2? P_FLAG:0)|ZSTable[R->AF.B.h];
   break;
 
 case LD_I_A:   R->I=R->AF.B.h;break;
-case LD_R_A:   break;
+case LD_R_A:   R->R=R->AF.B.h;break;
 
 case IM_0:     R->IFF&=~(IFF_IM1|IFF_IM2);break;
 case IM_1:     R->IFF=(R->IFF&~IFF_IM2)|IFF_IM1;break;
@@ -130,6 +129,7 @@ case OUT_xC_E: OutZ80(R->BC.W,R->DE.B.l);break;
 case OUT_xC_H: OutZ80(R->BC.W,R->HL.B.h);break;
 case OUT_xC_L: OutZ80(R->BC.W,R->HL.B.l);break;
 case OUT_xC_A: OutZ80(R->BC.W,R->AF.B.h);break;
+case OUT_xC_F: OutZ80(R->BC.W,0);break;
 
 case INI:
   WrZ80(R->HL.W++,InZ80(R->BC.W));
@@ -138,14 +138,9 @@ case INI:
   break;
 
 case INIR:
-  do
-  {
-    WrZ80(R->HL.W++,InZ80(R->BC.W));
-    --R->BC.B.h;R->ICount-=21;
-  }
-  while(R->BC.B.h&&(R->ICount>0));
-  if(R->BC.B.h) { R->AF.B.l=N_FLAG;R->PC.W-=2; }
-  else { R->AF.B.l=Z_FLAG|N_FLAG;R->ICount+=5; }
+  WrZ80(R->HL.W++,InZ80(R->BC.W));
+  if(--R->BC.B.h) { R->AF.B.l=N_FLAG;R->ICount-=21;R->PC.W-=2; }
+  else            { R->AF.B.l=Z_FLAG|N_FLAG;R->ICount-=16; }
   break;
 
 case IND:
@@ -155,14 +150,9 @@ case IND:
   break;
 
 case INDR:
-  do
-  {
-    WrZ80(R->HL.W--,InZ80(R->BC.W));
-    --R->BC.B.h;R->ICount-=21;
-  }
-  while(R->BC.B.h&&(R->ICount>0));
-  if(R->BC.B.h) { R->AF.B.l=N_FLAG;R->PC.W-=2; }
-  else { R->AF.B.l=Z_FLAG|N_FLAG;R->ICount+=5; }
+  WrZ80(R->HL.W--,InZ80(R->BC.W));
+  if(!--R->BC.B.h) { R->AF.B.l=N_FLAG;R->ICount-=21;R->PC.W-=2; }
+  else             { R->AF.B.l=Z_FLAG|N_FLAG;R->ICount-=16; }
   break;
 
 case OUTI:
@@ -173,23 +163,19 @@ case OUTI:
   break;
 
 case OTIR:
-  do
-  {
-    --R->BC.B.h;
-    I=RdZ80(R->HL.W++);
-    OutZ80(R->BC.W,I);
-    R->ICount-=21;
-  }
-  while(R->BC.B.h&&(R->ICount>0));
+  --R->BC.B.h;
+  I=RdZ80(R->HL.W++);
+  OutZ80(R->BC.W,I);
   if(R->BC.B.h)
   {
     R->AF.B.l=N_FLAG|(R->HL.B.l+I>255? (C_FLAG|H_FLAG):0);
+    R->ICount-=21;
     R->PC.W-=2;
   }
   else
   {
     R->AF.B.l=Z_FLAG|N_FLAG|(R->HL.B.l+I>255? (C_FLAG|H_FLAG):0);
-    R->ICount+=5;
+    R->ICount-=16;
   }
   break;
 
@@ -201,23 +187,19 @@ case OUTD:
   break;
 
 case OTDR:
-  do
-  {
-    --R->BC.B.h;
-    I=RdZ80(R->HL.W--);
-    OutZ80(R->BC.W,I);
-    R->ICount-=21;
-  }
-  while(R->BC.B.h&&(R->ICount>0));
+  --R->BC.B.h;
+  I=RdZ80(R->HL.W--);
+  OutZ80(R->BC.W,I);
   if(R->BC.B.h)
   {
     R->AF.B.l=N_FLAG|(R->HL.B.l+I>255? (C_FLAG|H_FLAG):0);
+    R->ICount-=21;
     R->PC.W-=2;
   }
   else
   {
     R->AF.B.l=Z_FLAG|N_FLAG|(R->HL.B.l+I>255? (C_FLAG|H_FLAG):0);
-    R->ICount+=5;
+    R->ICount-=16;
   }
   break;
 
@@ -228,15 +210,18 @@ case LDI:
   break;
 
 case LDIR:
-  do
+  WrZ80(R->DE.W++,RdZ80(R->HL.W++));
+  if(--R->BC.W)
   {
-    WrZ80(R->DE.W++,RdZ80(R->HL.W++));
-    --R->BC.W;R->ICount-=21;
+    R->AF.B.l=(R->AF.B.l&~(H_FLAG|P_FLAG))|N_FLAG;
+    R->ICount-=21;
+    R->PC.W-=2;
   }
-  while(R->BC.W&&(R->ICount>0));
-  R->AF.B.l&=~(N_FLAG|H_FLAG|P_FLAG);
-  if(R->BC.W) { R->AF.B.l|=N_FLAG;R->PC.W-=2; }
-  else R->ICount+=5;
+  else
+  {
+    R->AF.B.l&=~(N_FLAG|H_FLAG|P_FLAG);
+    R->ICount-=16;
+  }
   break;
 
 case LDD:
@@ -246,15 +231,19 @@ case LDD:
   break;
 
 case LDDR:
-  do
-  {
-    WrZ80(R->DE.W--,RdZ80(R->HL.W--));
-    --R->BC.W;R->ICount-=21;
-  }
-  while(R->BC.W&&(R->ICount>0));
+  WrZ80(R->DE.W--,RdZ80(R->HL.W--));
   R->AF.B.l&=~(N_FLAG|H_FLAG|P_FLAG);
-  if(R->BC.W) { R->AF.B.l|=N_FLAG;R->PC.W-=2; }
-  else R->ICount+=5;
+  if(--R->BC.W)
+  {
+    R->AF.B.l=(R->AF.B.l&~(H_FLAG|P_FLAG))|N_FLAG;
+    R->ICount-=21;
+    R->PC.W-=2;
+  }
+  else
+  {
+    R->AF.B.l&=~(N_FLAG|H_FLAG|P_FLAG);
+    R->ICount-=16;
+  }
   break;
 
 case CPI:
@@ -267,17 +256,12 @@ case CPI:
   break;
 
 case CPIR:
-  do
-  {
-    I=RdZ80(R->HL.W++);
-    J.B.l=R->AF.B.h-I;
-    --R->BC.W;R->ICount-=21;
-  }  
-  while(R->BC.W&&J.B.l&&(R->ICount>0));
+  I=RdZ80(R->HL.W++);
+  J.B.l=R->AF.B.h-I;
+  if(--R->BC.W&&J.B.l) { R->ICount-=21;R->PC.W-=2; } else R->ICount-=16;
   R->AF.B.l =
     N_FLAG|(R->AF.B.l&C_FLAG)|ZSTable[J.B.l]|
     ((R->AF.B.h^I^J.B.l)&H_FLAG)|(R->BC.W? P_FLAG:0);
-  if(R->BC.W&&J.B.l) R->PC.W-=2; else R->ICount+=5;
   break;  
 
 case CPD:
@@ -290,15 +274,10 @@ case CPD:
   break;
 
 case CPDR:
-  do
-  {
-    I=RdZ80(R->HL.W--);
-    J.B.l=R->AF.B.h-I;
-    --R->BC.W;R->ICount-=21;
-  }
-  while(R->BC.W&&J.B.l);
+  I=RdZ80(R->HL.W--);
+  J.B.l=R->AF.B.h-I;
+  if(--R->BC.W&&J.B.l) { R->ICount-=21;R->PC.W-=2; } else R->ICount-=16;
   R->AF.B.l =
     N_FLAG|(R->AF.B.l&C_FLAG)|ZSTable[J.B.l]|
     ((R->AF.B.h^I^J.B.l)&H_FLAG)|(R->BC.W? P_FLAG:0);
-  if(R->BC.W&&J.B.l) R->PC.W-=2; else R->ICount+=5;
   break;

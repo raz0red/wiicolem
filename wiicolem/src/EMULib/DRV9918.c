@@ -7,18 +7,12 @@
 /** TMS9918.h for declarations and TMS9918.c for the main   **/
 /** code.                                                   **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1996-2008                 **/
+/** Copyright (C) Marat Fayzullin 1996-2019                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
 /*************************************************************/
 #include "TMS9918.h"
-
-#ifdef WII
-#include <stdio.h>
-#include "wii_app.h"
-#include "wii_coleco.h"
-#endif
 
 /** Static Functions *****************************************/
 /** Functions used internally by the TMS9918 drivers.       **/
@@ -73,27 +67,43 @@ void RefreshSprites(register TMS9918 *VDP,register byte Y)
   register int L,K;
   register unsigned int M;
 
+  /* No 5th sprite yet */
+  VDP->Status &= ~(TMS9918_STAT_5THNUM|TMS9918_STAT_5THSPR);
+
   T  = (pixel *)(VDP->XBuf)
      + VDP->Width*(Y+(VDP->Height-192)/2)
      + VDP->Width/2-128;
   OH = SprHeights[VDP->R[1]&0x03];
   IH = SprHeights[VDP->R[1]&0x02];
   AT = VDP->SprTab-4;
-  C  = VDP->MaxSprites;
+  C  = VDP->MaxSprites+1;
   M  = 0;
-  L  = 0;
 
-  do
+  for(L=0;L<32;++L)
   {
-    M<<=1;AT+=4;L++;     /* Iterate through SprTab */
+    M<<=1;AT+=4;         /* Iterate through SprTab */
     K=AT[0];             /* K = sprite Y coordinate */
     if(K==208) break;    /* Iteration terminates if Y=208 */
     if(K>256-IH) K-=256; /* Y coordinate may be negative */
 
     /* Mark all valid sprites with 1s, break at MaxSprites */
-    if((Y>K)&&(Y<=K+OH)) { M|=1;if(!--C) break; }
+    if((Y>K)&&(Y<=K+OH))
+    {
+      /* If we exceed the maximum number of sprites per line... */
+      if(!--C)
+      {
+        /* Set extra sprite flag in the VDP status register */
+        VDP->Status|=TMS9918_STAT_5THSPR;
+        break;
+      }
+
+      /* Mark sprite as ready to draw */
+      M|=1;
+    }
   }
-  while(L<32);
+
+  /* Set last checked sprite number (5th sprite, or Y=208, or sprite #31) */
+  VDP->Status|=L<32? L:31;
 
   for(;M;M>>=1,AT-=4)
     if(M&1)
@@ -118,7 +128,7 @@ void RefreshSprites(register TMS9918 *VDP,register byte Y)
         K=L>=0? 0xFFFF:(0x10000>>(OH>IH? (-L>>1):-L))-1;
 
         /* Mask 2: clip right sprite boundary */
-        L+=OH-257;
+        L+=(int)OH-257;
         if(L>=0)
         {
           L=(IH>8? 0x0002:0x0200)<<(OH>IH? (L>>1):L);
@@ -287,10 +297,9 @@ void RefreshLine1(register TMS9918 *VDP,register byte Y)
 /*************************************************************/
 void RefreshLine2(register TMS9918 *VDP,register byte Y)
 {
-  register byte X,K,Offset;
-  register byte *T,*PGT,*CLT;
   register pixel *P,FC,BC;
-  register int J;
+  register byte X,K,*T,*PGT,*CLT;
+  register int J,I,PGTMask,CLTMask;
 
   P  = (pixel *)(VDP->XBuf)
      + VDP->Width*(Y+(VDP->Height-192)/2)
@@ -303,47 +312,20 @@ void RefreshLine2(register TMS9918 *VDP,register byte Y)
   }
   else
   {
-#ifdef WII
-    unsigned int CMASK = ((VDP->R[3] & 0x1F) << 6 )|0x003F;
-#if 0
-    if( ( VDP->R[3] & 0x1F ) != 0x1F )
-    {
-      char msg[512];
-      sprintf( msg, "VDP->R[3] (4-0) : 0x%0X", ( VDP->R[3] & 0x1F ) );
-      wii_set_status_message( msg );
-    }    
-#endif
-#endif
-
-    J      = (int)(Y&0xC0)<<5;
-#ifdef WII    
-    PGT    = VDP->ChrGen+(J&((VDP->R[4] & 0x03) << 11 ));
-    CLT    = VDP->ColTab+(J&((VDP->R[3] & 0x60) << 6 )); 
-#else
-    PGT    = VDP->ChrGen+J;
-    CLT    = VDP->ColTab+J;
-#endif
-    T      = VDP->ChrTab+((int)(Y&0xF8)<<2);
-    Offset = Y&0x07;
+    J       = ((int)(Y&0xC0)<<5)+(Y&0x07);
+    PGT     = VDP->ChrGen;
+    CLT     = VDP->ColTab;
+    PGTMask = VDP->ChrGenM;
+    CLTMask = VDP->ColTabM;
+    T       = VDP->ChrTab+((int)(Y&0xF8)<<2);
 
     for(X=0;X<32;X++)
     {
-      J    = ((int)*T<<3)+Offset;      
-#ifdef WII
-      if( !(wii_coleco_db_entry.flags&IGNORE_R4_MASK) )
-      {
-        K    = CLT[J&CMASK];
-      }
-      else
-      {
-        K    = CLT[J];
-      }
-#else
-      K    = CLT[J];
-#endif
+      I    = (int)*T<<3;
+      K    = CLT[(J+I)&CLTMask];
       FC   = VDP->XPal[K>>4];
       BC   = VDP->XPal[K&0x0F];
-      K    = PGT[J];
+      K    = PGT[(J+I)&PGTMask];
       P[0] = K&0x80? FC:BC;
       P[1] = K&0x40? FC:BC;
       P[2] = K&0x20? FC:BC;

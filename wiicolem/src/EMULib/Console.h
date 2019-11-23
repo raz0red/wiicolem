@@ -5,7 +5,7 @@
 /** This file contains platform-independent definitions and **/
 /** declarations for the EMULib-based console.              **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 2005-2008                 **/
+/** Copyright (C) Marat Fayzullin 2005-2019                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -37,6 +37,7 @@ extern "C" {
 #define CON_INSERT 0x0E
 #define CON_DELETE 0x0F
 #define CON_FUNC   0x10 /* 10 keys */ 
+#define CON_STOP   0x1A
 #define CON_ESCAPE 0x1B
 
 /** CONSetFont Modes *****************************************/
@@ -58,6 +59,7 @@ extern "C" {
 /*************************************************************/
 void CONSetColor(pixel FGColor,pixel BGColor);
 void CONSetFont(const unsigned char *Font);
+const unsigned char *CONGetFont();
 
 /** CONClear() ***********************************************/
 /** Clear screen with a given color.                        **/
@@ -84,6 +86,13 @@ void CONChar(int X,int Y,char V);
 /** When BG=-1, use transparent background.                 **/
 /*************************************************************/
 void PrintXY(Image *Img,const char *S,int X,int Y,pixel FG,int BG);
+
+/** ShadowPrintXY() ******************************************/
+/** Print contrast text at given pixel coordinates in given **/
+/** text and contrast shadow colors. When BG=-1, do not     **/
+/** show shadow.                                            **/
+/*************************************************************/
+void ShadowPrintXY(Image *Img,const char *S,int X,int Y,pixel FG,int BG);
 
 /** CONPrint() ***********************************************/
 /** Print a text at given coordinates with current colors.  **/

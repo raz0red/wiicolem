@@ -5,7 +5,7 @@
 /** This file contains help information printed out by the  **/
 /** main() routine when started with option "-help".        **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1994-2008                 **/
+/** Copyright (C) Marat Fayzullin 1994-2019                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -23,12 +23,15 @@ char *HelpText[] =
   "  -verbose <level>    - Select debugging messages [5]",
   "                        0 - Silent       1 - Startup messages",
   "                        2 - VDP          4 - Illegal Z80 ops",
-  "                                        16 - Sound",
+  "                        8 - EEPROM      16 - Sound",
   "  -pal/-ntsc          - Video system to use [-ntsc]",
   "  -skip <percent>     - Percentage of frames to skip [25]",
   "  -help               - Print this help page",
   "  -home <dirname>     - Set directory with system ROM files [off]",
   "  -adam/-cv           - Run in Adam/ColecoVision mode [-cv]",
+  "  -sgm/-nosgm         - Enable Super Game Module extension [-nosgm]",
+  "  -24c08/-24c256      - Enable serial EEPROM emulation [off]",
+  "  -sram               - Enable battery-backed SRAM emulation [off]",
   "  -allspr             - Show all sprites [off]",
   "  -autoa/-noautoa     - Autofire/No autofire for FIRE-R button [-noautoa]",
   "  -autob/-noautob     - Autofire/No autofire for FIRE-L button [-noautob]",
@@ -48,10 +51,15 @@ char *HelpText[] =
 #endif /* DEBUG */
 
 #if defined(MSDOS) || defined(UNIX) || defined(MAEMO)
-  "  -sync <frequency>   - Sync screen updates to <frequency> [60]",
-  "  -nosync             - Do not sync screen updates [-nosync]",
-  "  -tv/-notv           - Simulate/Don't simulate scanlines [-notv]",
-  "  -soft/-nosoft       - Scale screen up with softening [-nosoft]",
+  "  -sync <frequency>   - Sync screen updates to <frequency> [-sync 60]",
+  "  -nosync             - Do not sync screen updates",
+  "  -tv/-lcd/-raster    - Simulate TV scanlines or LCD raster [off]",
+  "  -soft/-eagle        - Scale display with 2xSaI or EAGLE [off]",
+  "  -epx/-scale2x       - Scale display with EPX or Scale2X [off]",
+  "  -cmy/-rgb           - Simulate CMY/RGB pixel raster [off]",
+  "  -mono/-sepia        - Simulate monochrome or sepia CRT [off]",
+  "  -green/-amber       - Simulate green or amber CRT [off]",
+  "  -4x3                - Force 4:3 television screen ratio [off]",
 #endif /* MSDOS || UNIX || MAEMO */
 
 #if defined(UNIX) || defined(MAEMO)
@@ -89,8 +97,8 @@ char *HelpText[] =
   "  [F5]           - Invoke configuration menu",
   "  [F6]           - Load emulation state",
   "  [F7]           - Save emulation state",
-  "  [F8]           - Turn scanline simulation on/off",
-  "  [ALT]+[F8]     - Toggle screen softening on/off",
+  "  [F8]           - Replay recorded gameplay",
+  "  [SHIFT]+[F8]   - Toggle gameplay recorder on/off",
   "  [F9]           - Fast-forward emulation (also: [PGUP])",
 #if defined(GIFLIB)
   "  [F10]          - Make a screen snapshot (SNAPxxxx.GIF)",

@@ -6,7 +6,7 @@
 /** produced by Texas Instruments. See TMS9918.h for        **/
 /** declarations.                                           **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1996-2008                 **/
+/** Copyright (C) Marat Fayzullin 1996-2019                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -45,13 +45,13 @@ RGB Palette9918[16*3] =
 struct
 {
   void (*LineHandler)(TMS9918 *VDP,byte Y);
-  byte R2,R3,R4,R5,R6;
+  byte R2,R3,R4,R5,R6,M2,M3,M4,M5;
 } Screen9918[4] =
 {
-  { RefreshLine0,0x7F,0x00,0x3F,0x00,0x3F },/* SCREEN 0:TEXT 40x24    */
-  { RefreshLine1,0x7F,0xFF,0x3F,0xFF,0x3F },/* SCREEN 1:TEXT 32x24    */
-  { RefreshLine2,0x7F,0x80,0x3C,0xFF,0x3F },/* SCREEN 2:BLOCK 256x192 */
-  { RefreshLine3,0x7F,0x00,0x3F,0xFF,0x3F },/* SCREEN 3:GFX 64x48x16  */
+  { RefreshLine0,0x7F,0x00,0x3F,0x00,0x3F,0x00,0x00,0x00,0x00 },/* SCREEN 0:TEXT 40x24    */
+  { RefreshLine1,0x7F,0xFF,0x3F,0xFF,0x3F,0x00,0x00,0x00,0x00 },/* SCREEN 1:TEXT 32x24    */
+  { RefreshLine2,0x7F,0x80,0x3C,0xFF,0x3F,0x00,0x7F,0x03,0x00 },/* SCREEN 2:BLOCK 256x192 */
+  { RefreshLine3,0x7F,0x00,0x3F,0xFF,0x3F,0x00,0x00,0x00,0x00 },/* SCREEN 3:GFX 64x48x16  */
 };
 
 /** Static Functions *****************************************/
@@ -109,33 +109,33 @@ void Reset9918(TMS9918 *VDP,byte *Buffer,int Width,int Height)
     VDP->OwnXBuf = 0;
   }
 
-  memset(VDP->R,0,sizeof(VDP->R));
+  memset(VDP->VRAM,0x00,0x4000);
+  memset(VDP->R,0x00,sizeof(VDP->R));
 
-  VDP->UCount = 0;
-  VDP->VAddr  = 0x0000;
-  VDP->Status = 0x00;
-  VDP->VKey   = 1;
-  VDP->WKey   = 1;
-  VDP->Mode   = 0;
-  VDP->Line   = VDP->Scanlines;
-
-  VDP->ChrTab = VDP->VRAM;
-  VDP->ChrGen = VDP->VRAM;
-  VDP->ColTab = VDP->VRAM;
-  VDP->SprTab = VDP->VRAM;
-  VDP->SprGen = VDP->VRAM;
-
-#ifdef WII
-  // Bug, these weren't being properly reset. VRAM was 
-  // especially bad as it could cause the previous loaded
-  // games elements to appear in the game that was loaded
-  // next...
-  VDP->CLatch = 0;
-  VDP->DLatch = 0;
+  VDP->UCount  = 0;
+  VDP->VAddr   = 0x0000;
+  VDP->Status  = 0x00;
+  VDP->VKey    = 1;
+  VDP->Mode    = 0;
+  VDP->Line    = 0;
+  VDP->DLatch  = 0;
   VDP->FGColor = 0;
   VDP->BGColor = 0;
-  memset( VDP->VRAM, 0, 0x4000 );
-#endif
+
+  VDP->ChrTab  = VDP->VRAM;
+  VDP->ChrGen  = VDP->VRAM;
+  VDP->ColTab  = VDP->VRAM;
+  VDP->SprTab  = VDP->VRAM;
+  VDP->SprGen  = VDP->VRAM;
+
+  VDP->ChrTabM = ~0;
+  VDP->ColTabM = ~0;
+  VDP->ChrGenM = ~0;
+  VDP->SprTabM = ~0;
+
+  /* These are no longer used */
+  VDP->WKey    = 1;
+  VDP->CLatch  = 0;
 }
 
 /** Trash9918() **********************************************/
@@ -187,12 +187,14 @@ byte Write9918(TMS9918 *VDP,byte R,byte V)
       {
         case 0x00: V=1;break;
         case 0x01: V=2;break;
-#ifdef WII
-        case 0x02: V=3;break;
-        case 0x04: V=0;break;
-#else
+#if 0 //def COLEM
+        /* This breaks homebrewn ColecoVision games: */
+        /* Bankrupcy Builder, Search For Crown Jewels, Waterville Rescue */
         case 0x02: V=0;break;
         case 0x04: V=3;break;
+#else
+        case 0x02: V=3;break;
+        case 0x04: V=0;break;
 #endif
         default:   V=VDP->Mode;break;
       }
@@ -200,30 +202,38 @@ byte Write9918(TMS9918 *VDP,byte R,byte V)
       /* If mode was changed, recompute table addresses */
       if((V!=VDP->Mode)||!VRAMMask)
       {
-        VRAMMask    = TMS9918_VRAMMask(VDP);
-        VDP->ChrTab = VDP->VRAM+(((int)(VDP->R[2]&Screen9918[V].R2)<<10)&VRAMMask);
-        VDP->ColTab = VDP->VRAM+(((int)(VDP->R[3]&Screen9918[V].R3)<<6)&VRAMMask);
-        VDP->ChrGen = VDP->VRAM+(((int)(VDP->R[4]&Screen9918[V].R4)<<11)&VRAMMask);
-        VDP->SprTab = VDP->VRAM+(((int)(VDP->R[5]&Screen9918[V].R5)<<7)&VRAMMask);
-        VDP->SprGen = VDP->VRAM+(((int)(VDP->R[6]&Screen9918[V].R6)<<11)&VRAMMask);
-        VDP->Mode   = V;
+        VRAMMask     = TMS9918_VRAMMask(VDP);
+        VDP->ChrTab  = VDP->VRAM+(((int)(VDP->R[2]&Screen9918[V].R2)<<10)&VRAMMask);
+        VDP->ColTab  = VDP->VRAM+(((int)(VDP->R[3]&Screen9918[V].R3)<<6)&VRAMMask);
+        VDP->ChrGen  = VDP->VRAM+(((int)(VDP->R[4]&Screen9918[V].R4)<<11)&VRAMMask);
+        VDP->SprTab  = VDP->VRAM+(((int)(VDP->R[5]&Screen9918[V].R5)<<7)&VRAMMask);
+        VDP->SprGen  = VDP->VRAM+(((int)(VDP->R[6]&Screen9918[V].R6)<<11)&VRAMMask);
+        VDP->ChrTabM = ((int)(VDP->R[2]|~Screen9918[V].M2)<<10)|0x03FF;
+        VDP->ColTabM = ((int)(VDP->R[3]|~Screen9918[V].M3)<<6)|0x1C03F;
+        VDP->ChrGenM = ((int)(VDP->R[4]|~Screen9918[V].M4)<<11)|0x007FF;
+        VDP->SprTabM = ((int)(VDP->R[5]|~Screen9918[V].M5)<<7)|0x1807F;
+        VDP->Mode    = V;
       }
       break;
 
     case 2: /* Name Table */
-      VDP->ChrTab=VDP->VRAM+(((int)(V&Screen9918[VDP->Mode].R2)<<10)&VRAMMask);
+      VDP->ChrTab  = VDP->VRAM+(((int)(V&Screen9918[VDP->Mode].R2)<<10)&VRAMMask);
+      VDP->ChrTabM = ((int)(V|~Screen9918[VDP->Mode].M2)<<10)|0x03FF;
       break;
     case 3: /* Color Table */
-      VDP->ColTab=VDP->VRAM+(((int)(V&Screen9918[VDP->Mode].R3)<<6)&VRAMMask);
+      VDP->ColTab  = VDP->VRAM+(((int)(V&Screen9918[VDP->Mode].R3)<<6)&VRAMMask);
+      VDP->ColTabM = ((int)(V|~Screen9918[VDP->Mode].M3)<<6)|0x1C03F;
       break;
     case 4: /* Pattern Table */
-      VDP->ChrGen=VDP->VRAM+(((int)(V&Screen9918[VDP->Mode].R4)<<11)&VRAMMask);
+      VDP->ChrGen  = VDP->VRAM+(((int)(V&Screen9918[VDP->Mode].R4)<<11)&VRAMMask);
+      VDP->ChrGenM = ((int)(V|~Screen9918[VDP->Mode].M4)<<11)|0x007FF;
       break;
     case 5: /* Sprite Attributes */
-      VDP->SprTab=VDP->VRAM+(((int)(V&Screen9918[VDP->Mode].R5)<<7)&VRAMMask);
+      VDP->SprTab  = VDP->VRAM+(((int)(V&Screen9918[VDP->Mode].R5)<<7)&VRAMMask);
+      VDP->SprTabM = ((int)(V|~Screen9918[VDP->Mode].M5)<<7)|0x1807F;
       break;
     case 6: /* Sprite Patterns */
-      VDP->SprGen=VDP->VRAM+(((int)(V&Screen9918[VDP->Mode].R6)<<11)&VRAMMask);
+      VDP->SprGen  = VDP->VRAM+(((int)(V&Screen9918[VDP->Mode].R6)<<11)&VRAMMask);
       break;
 
     case 7: /* Foreground and background colors */
@@ -295,27 +305,22 @@ byte Loop9918(TMS9918 *VDP)
 /*************************************************************/
 byte WrCtrl9918(TMS9918 *VDP,byte V)
 {
-  if(VDP->VKey) { VDP->VKey=0;VDP->CLatch=V; }
+  if(VDP->VKey) { VDP->VKey=0;VDP->VAddr=(VDP->VAddr&0xFF00)|V; }
   else
   {
-    VDP->VKey=1;
+    VDP->VKey  = 1;
+    VDP->VAddr = ((VDP->VAddr&0x00FF)|((int)V<<8))&0x3FFF;
+
     switch(V&0xC0)
     {
       case 0x00:
-      case 0x40:
-        VDP->VAddr=(VDP->CLatch|((int)V<<8))&0x3FFF;
-        VDP->WKey=V&0x40;
-/*
-        if(!VDP->WKey)
-        {
-          VDP->DLatch=VDP->VRAM[VDP->VAddr];
-          VDP->VAddr=(VDP->VAddr+1)&0x3FFF;
-        }
-*/
+        /* In READ mode, read the first byte from VRAM */
+        VDP->DLatch = VDP->VRAM[VDP->VAddr];
+        VDP->VAddr  = (VDP->VAddr+1)&0x3FFF;
         break;
       case 0x80:
         /* Enabling IRQs may cause an IRQ here */ 
-        return(Write9918(VDP,V&0x0F,VDP->CLatch));
+        return(Write9918(VDP,V&0x0F,VDP->VAddr&0x00FF));
     }
   }
 
@@ -331,8 +336,9 @@ byte RdCtrl9918(TMS9918 *VDP)
   register byte J;
 
   J           = VDP->Status;
-  VDP->Status&= TMS9918_STAT_5THNUM;
-  VDP->VKey   = 1;
+  VDP->Status&= TMS9918_STAT_5THNUM|TMS9918_STAT_5THSPR;
+// @@@ Resetting it here breaks ColecoVision Sir Lancelot!
+// VDP->VKey   = 1;
   return(J);
 }
 
@@ -341,19 +347,8 @@ byte RdCtrl9918(TMS9918 *VDP)
 /*************************************************************/
 void WrData9918(TMS9918 *VDP,byte V)
 {
-  if(VDP->WKey)
-  {
-    /* VDP in the proper WRITE mode */
-    VDP->DLatch = VDP->VRAM[VDP->VAddr]=V;
-    VDP->VAddr  = (VDP->VAddr+1)&0x3FFF;
-  }
-  else
-  {
-    /* VDP in the READ mode */
-    VDP->DLatch = VDP->VRAM[VDP->VAddr];
-    VDP->VAddr  = (VDP->VAddr+1)&0x3FFF;
-    VDP->VRAM[VDP->VAddr]=V;
-  }
+  VDP->DLatch = VDP->VRAM[VDP->VAddr]=V;
+  VDP->VAddr  = (VDP->VAddr+1)&0x3FFF;
 }
 
 /** RdData9918() *********************************************/
@@ -363,13 +358,80 @@ byte RdData9918(TMS9918 *VDP)
 {
   register byte J;
 
-/*
-  J=VDP->DLatch;
-  VDP->DLatch=VDP->VRAM[VDP->VAddr];
-*/
-  J          = VDP->VRAM[VDP->VAddr];
-  VDP->VAddr = (VDP->VAddr+1)&0x3FFF;
+  J           = VDP->DLatch;
+  VDP->DLatch = VDP->VRAM[VDP->VAddr];
+  VDP->VAddr  = (VDP->VAddr+1)&0x3FFF;
+
   return(J);
+}
+
+/** Save9918() ***********************************************/
+/** Save TMS9918 state to a given buffer of given maximal   **/
+/** size. Returns number of bytes saved or 0 on failure.    **/
+/*************************************************************/
+unsigned int Save9918(const TMS9918 *VDP,byte *Buf,unsigned int Size)
+{
+  unsigned int N = (const byte *)&(VDP->XBuf) - (const byte *)VDP;
+  TMS9918 TMP;
+
+  /* Must have enough bytes */
+  if(N>Size) return(0);
+
+  /* Fill outdated fields for backward compatibility */
+  TMP = *VDP;
+  TMP.Reserved1    = 0;
+  TMP.Reserved2[0] = TMP.ChrTab-TMP.VRAM;
+  TMP.Reserved2[1] = TMP.ChrGen-TMP.VRAM;
+  TMP.Reserved2[2] = TMP.SprTab-TMP.VRAM;
+  TMP.Reserved2[3] = TMP.SprGen-TMP.VRAM;
+  TMP.Reserved2[4] = TMP.ColTab-TMP.VRAM;
+
+  memcpy(Buf,&TMP,N);
+  return(N);
+}
+
+/** Load9918() ***********************************************/
+/** Load TMS9918 state from a given buffer of given maximal **/
+/** size. Returns number of bytes loaded or 0 on failure.   **/
+/*************************************************************/
+unsigned int Load9918(TMS9918 *VDP,byte *Buf,unsigned int Size)
+{
+  unsigned int N = (const byte *)&(VDP->XBuf) - (const byte *)VDP;
+  int XPal[16],Width,Height,DrawFrames;
+  byte OwnXBuf;
+
+  /* Must have enough bytes */
+  if(N>Size) return(0);
+
+  /* Preserve palette, etc */
+  memcpy(XPal,VDP->XPal,sizeof(XPal));
+  DrawFrames = VDP->DrawFrames;
+  OwnXBuf    = VDP->OwnXBuf;
+  Width      = VDP->Width;
+  Height     = VDP->Height;
+
+  /* Load VDP state */
+  memcpy(VDP,Buf,N);
+
+  /* Restore palette, etc */
+  memcpy(VDP->XPal,XPal,sizeof(VDP->XPal));
+  VDP->DrawFrames = DrawFrames;
+  VDP->OwnXBuf    = OwnXBuf;
+  VDP->Width      = Width;
+  VDP->Height     = Height;
+
+  /* Restore table addresses */
+  VDP->ChrTab = VDP->VRAM + VDP->Reserved2[0] - VDP->Reserved1;
+  VDP->ChrGen = VDP->VRAM + VDP->Reserved2[1] - VDP->Reserved1;
+  VDP->SprTab = VDP->VRAM + VDP->Reserved2[2] - VDP->Reserved1;
+  VDP->SprGen = VDP->VRAM + VDP->Reserved2[3] - VDP->Reserved1;
+  VDP->ColTab = VDP->VRAM + VDP->Reserved2[4] - VDP->Reserved1;
+
+  /* Update foreground/background colors */
+  Write9918(VDP,7,VDP->R[7]);
+
+  /* Done */
+  return(N);
 }
 
 /** CheckSprites() *******************************************/
@@ -378,36 +440,39 @@ byte RdData9918(TMS9918 *VDP)
 /*************************************************************/
 byte CheckSprites(TMS9918 *VDP)
 {
-  register int LS,LD;
-  register byte DH,DV,*PS,*PD,*T;
-  byte I,J,N,*S,*D;
+  unsigned int I,J,LS,LD;
+  byte *S,*D,*PS,*PD,*T;
+  int DH,DV;
 
-  /* Find first sprite to display */
-  for(N=0,S=VDP->SprTab;(N<32)&&(S[0]!=208);N++,S+=4);
+  /* Find valid, displayed sprites */
+  DV = TMS9918_Sprites16(VDP)? -16:-8;
+  for(I=J=0,S=VDP->SprTab;(I<32)&&(S[0]!=208);++I,S+=4)
+    if(((S[0]<191)||(S[0]>255+DV))&&((int)S[1]-(S[3]&0x80? 32:0)>DV))
+      J|=1<<I;
 
   if(TMS9918_Sprites16(VDP))
   {
-    for(J=0,S=VDP->SprTab;J<N;J++,S+=4)
-      if(S[3]&0x0F)
-        for(I=J+1,D=S+4;I<N;I++,D+=4)
-          if(D[3]&0x0F)
+    for(S=VDP->SprTab;J;J>>=1,S+=4)
+      if(J&1)
+        for(I=J>>1,D=S+4;I;I>>=1,D+=4)
+          if(I&1)
           {
-            DV=S[0]-D[0];
-            if((DV<16)||(DV>240))
+            DV=(int)S[0]-(int)D[0];
+            if((DV<16)&&(DV>-16))
             {
-              DH=S[1]-D[1];
-              if((DH<16)||(DH>240))
+              DH=(int)S[1]-(int)D[1]-(S[3]&0x80? 32:0)+(D[3]&0x80? 32:0);
+              if((DH<16)&&(DH>-16))
               {
                 PS=VDP->SprGen+((int)(S[2]&0xFC)<<3);
                 PD=VDP->SprGen+((int)(D[2]&0xFC)<<3);
-                if(DV<16) PD+=DV; else { DV=256-DV;PS+=DV; }
-                if(DH>240) { DH=256-DH;T=PS;PS=PD;PD=T; }
+                if(DV>0) PD+=DV; else { DV=-DV;PS+=DV; }
+                if(DH<0) { DH=-DH;T=PS;PS=PD;PD=T; }
                 while(DV<16)
                 {
-                  LS=((int)PS[0]<<8)+PS[16];
-                  LD=((int)PD[0]<<8)+PD[16];
+                  LS=((unsigned int)PS[0]<<8)+PS[16];
+                  LD=((unsigned int)PD[0]<<8)+PD[16];
                   if(LD&(LS>>DH)) break;
-                  else { DV++;PS++;PD++; }
+                  else { ++DV;++PS;++PD; }
                 }
                 if(DV<16) return(1);
               }
@@ -416,22 +481,22 @@ byte CheckSprites(TMS9918 *VDP)
   }
   else
   {
-    for(J=0,S=VDP->SprTab;J<N;J++,S+=4)
-      if(S[3]&0x0F)
-        for(I=J+1,D=S+4;I<N;I++,D+=4)
-          if(D[3]&0x0F)
+    for(S=VDP->SprTab;J;J>>=1,S+=4)
+      if(J&1)
+        for(I=J>>1,D=S+4;I;I>>=1,D+=4)
+          if(I&1)
           {
-            DV=S[0]-D[0];
-            if((DV<8)||(DV>248))
+            DV=(int)S[0]-(int)D[0];
+            if((DV<8)&&(DV>-8))
             {
-              DH=S[1]-D[1];
-              if((DH<8)||(DH>248))
+              DH=(int)S[1]-(int)D[1]-(S[3]&0x80? 32:0)+(D[3]&0x80? 32:0);
+              if((DH<8)&&(DH>-8))
               {
                 PS=VDP->SprGen+((int)S[2]<<3);
                 PD=VDP->SprGen+((int)D[2]<<3);
-                if(DV<8) PD+=DV; else { DV=256-DV;PS+=DV; }
-                if(DH>248) { DH=256-DH;T=PS;PS=PD;PD=T; }
-                while((DV<8)&&!(*PD&(*PS>>DH))) { DV++;PS++;PD++; }
+                if(DV>0) PD+=DV; else { DV=-DV;PS+=DV; }
+                if(DH<0) { DH=-DH;T=PS;PS=PD;PD=T; }
+                while((DV<8)&&!(*PD&(*PS>>DH))) { ++DV;++PS;++PD; }
                 if(DV<8) return(1);
               }
             }

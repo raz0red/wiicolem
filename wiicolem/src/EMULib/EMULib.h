@@ -5,7 +5,7 @@
 /** This file contains platform-independent definitions and **/
 /** declarations for the emulation library.                 **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1996-2008                 **/
+/** Copyright (C) Marat Fayzullin 1996-2019                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -13,38 +13,75 @@
 #ifndef EMULIB_H
 #define EMULIB_H
 
-#ifdef WINDOWS
-#include "LibWin.h"
-#endif
-#ifdef MSDOS
-#include "LibMSDOS.h"
-#endif
-#ifdef UNIX
-#include "LibUnix.h"
-#endif
-#ifdef MAEMO
-#include "LibMaemo.h"
-#endif
-#ifdef NXC2600
-#include "LibNXC2600.h"
-#endif
-#if defined(S60) || defined(UIQ)
-#include "LibSym.h"
-#include "LibSym.rh"
-#endif
-#ifdef WII
-#include "LibWii.h"
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /** ARMScaleImage() Attributes *******************************/
 /** These values can be ORed and passed to ARMScaleImage(). **/
 /*************************************************************/
 #define ARMSI_VFILL  0x01
 #define ARMSI_HFILL  0x02
+
+/** SetEffects() Attributes **********************************/
+/** These values can be ORed and passed to SetEffects().    **/
+/*************************************************************/
+#define EFF_NONE       0x0000  /* No special effects         */
+#define EFF_SCALE      0x0001  /* Scale video to fill screen */
+#define EFF_SOFTEN     0x0002  /* Scale + soften video       */
+#define EFF_TVLINES    0x0004  /* Apply TV scanlines effect  */
+#define EFF_SAVECPU    0x0008  /* Suspend when inactive      */
+#define EFF_SYNC       0x0010  /* Wait for sync timer        */
+#define EFF_PENCUES    0x0020  /* Draw pen input cue lines   */
+#define EFF_DIALCUES   0x0040  /* Draw dialpad (with PENCUES)*/
+#define EFF_VERBOSE    0x0080  /* Report problems via printf */
+#define EFF_STRETCH    0x0100  /* Stretch video, fill screen */
+#define EFF_SHOWFPS    0x0200  /* Show frames-per-sec count  */
+#define EFF_LCDLINES   0x0400  /* Apply LCD scanlines effect */
+#define EFF_VKBD       0x0800  /* Draw virtual keyboard      */
+#define EFF_SOFTEN2    0x1000  /* Softening algorithm select */
+#define EFF_FULLJOY    0x2000  /* Use full screen controls   */
+#define EFF_TILTJOY    0x4000  /* Use accelerometer controls */
+#define EFF_PENJOY     0x8000  /* Use touchpad controls      */
+#define EFF_VSYNC     0x10000  /* Wait for VBlanks           */
+#define EFF_DIRECT    0x20000  /* Copy whole VideoImg        */
+#define EFF_CMYMASK   0x40000  /* Apply vertical CMY mask    */
+#define EFF_RGBMASK   0x80000  /* Apply vertical RGB mask    */
+#define EFF_SOFTEN3 0x1000000  /* Softening algorithm select */
+#define EFF_MONO    0x2000000  /* Apply monochrome color     */
+#define EFF_VIGNETTE 0x4000000 /* Apply CRT-like vignetting  */
+#define EFF_4X3     0x8000000  /* Stretch video to 4x3 ratio */
+#if defined(ANDROID)
+#define EFF_FIXFFWD  0x100000  /* Persistent FFWD button     */
+#define EFF_GLES     0x200000  /* OpenGLES video rendering   */
+#define EFF_EXTVKBD  0x400000  /* Java virtual keyboard      */
+#define EFF_LOCKED 0x80000000  /* SetEffects() now disabled  */
+#elif defined(MAEMO)
+#define EFF_NOVOLUME 0x100000  /* No volume control on F7/F8 */
+#define EFF_FULLSCR  0x200000  /* Force full-screen mode     */
+#define EFF_WINDOWED 0x400000  /* Force windowed mode        */
+#define EFF_HAA      0x800000  /* Use HildonAnimationActor   */
+#define EFF_ALWAYS1  0x80000000    /* 1: InitMaemo() success */
+#elif defined(S60) || defined(UIQ)
+#define EFF_FILL     0x100000  /* Fill display vertically    */
+#define EFF_LIGHT    0x200000  /* Keep backlight on          */
+#define EFF_USEHAL   0x400000  /* Use direct image rendering without DSB */
+#elif defined(UNIX)
+#define EFF_MITSHM   0x100000  /* Use MITSHM X11 extension   */
+#define EFF_VARBPP   0x200000  /* X11 determines Image depth */
+#endif
+
+#define EFF_SOFTEN_ALL (EFF_SOFTEN|EFF_SOFTEN2|EFF_SOFTEN3)
+#define EFF_2XSAI      (EFF_SOFTEN)
+#define EFF_EPX        (EFF_SOFTEN2)
+#define EFF_EAGLE      (EFF_SOFTEN|EFF_SOFTEN2)
+#define EFF_SCALE2X    (EFF_SOFTEN3)
+#define EFF_HQ4X       (EFF_SOFTEN|EFF_SOFTEN3)
+#define EFF_NEAREST    (EFF_SOFTEN2|EFF_SOFTEN3) /* Disable hw interpolation */
+
+#define EFF_RASTER_ALL (EFF_TVLINES|EFF_LCDLINES)
+#define EFF_RASTER     (EFF_TVLINES|EFF_LCDLINES)
+
+#define EFF_MASK_ALL   (EFF_CMYMASK|EFF_RGBMASK|EFF_MONO)
+#define EFF_GREEN      (EFF_MONO|EFF_CMYMASK)
+#define EFF_AMBER      (EFF_MONO|EFF_RGBMASK)
+#define EFF_SEPIA      (EFF_MONO|EFF_CMYMASK|EFF_RGBMASK)
 
 /** Button Bits **********************************************/
 /** Bits returned by GetJoystick() and WaitJoystick().      **/
@@ -60,19 +97,33 @@ extern "C" {
 #define BTN_START    0x0100
 #define BTN_SELECT   0x0200
 #define BTN_EXIT     0x0400
-#define BTN_ALL      0x07FF
+#define BTN_FIREX    0x0800
+#define BTN_FIREY    0x1000
+#define BTN_FFWD     0x2000
+#define BTN_MENU     0x4000
+#define BTN_ALL      0x7FFF
 #define BTN_OK       (BTN_FIREA|BTN_START)
-#define BTN_FIRE     (BTN_FIREA|BTN_FIREB|BTN_FIREL|BTN_FIRER)
+#define BTN_FIRE     (BTN_FIREA|BTN_FIREB|BTN_FIREL|BTN_FIRER|BTN_FIREX|BTN_FIREY)
+#define BTN_ARROWS   (BTN_LEFT|BTN_RIGHT|BTN_UP|BTN_DOWN)
 #define BTN_SHIFT    CON_SHIFT
 #define BTN_CONTROL  CON_CONTROL
 #define BTN_ALT      CON_ALT
 #define BTN_MODES    (BTN_SHIFT|BTN_CONTROL|BTN_ALT)
 
+/** Mouse Bits ***********************************************/
+/** Bits returned by GetMouse() and WaitKeyOrMouse().       **/
+/*************************************************************/
+#define MSE_RIGHT    0x80000000
+#define MSE_LEFT     0x40000000
+#define MSE_BUTTONS  (MSE_RIGHT|MSE_LEFT)
+#define MSE_YPOS     0x3FFF0000
+#define MSE_XPOS     0x0000FFFF
+
 /** Special Key Codes ****************************************/
 /** Modifiers returned by GetKey() and WaitKey().           **/
 /*************************************************************/
-#define CON_KEYCODE  0x00FFFFFF /* Key code                  */
-#define CON_MODES    0xFF000000 /* Mode bits, as follows:    */
+#define CON_KEYCODE  0x03FFFFFF /* Key code                  */
+#define CON_MODES    0xFC000000 /* Mode bits, as follows:    */
 #define CON_CLICK    0x04000000 /* Key click (LiteS60 only)  */
 #define CON_CAPS     0x08000000 /* CapsLock held             */
 #define CON_SHIFT    0x10000000 /* SHIFT held                */
@@ -99,8 +150,54 @@ extern "C" {
 #define CON_OK       0xFE
 #define CON_EXIT     0xFF
 
+#ifdef WINDOWS
+#include "LibWin.h"
+#endif
+#ifdef MSDOS
+#include "LibMSDOS.h"
+#endif
+#ifdef UNIX
+#include "LibUnix.h"
+#endif
+#ifdef MAEMO
+#define ARM_CPU
+#include "LibMaemo.h"
+#endif
+#ifdef MEEGO
+#define ARM_CPU
+#include "LibMeego.h"
+#endif
+#ifdef NXC2600
+#include "LibNXC2600.h"
+#endif
+#ifdef STMP3700
+#define ARM_CPU
+#include "LibSTMP3700.h"
+#endif
+#ifdef ANDROID
+#include "LibAndroid.h"
+#endif
+#ifdef IOS
+#define ARM_CPU
+#include "LibApple.h"
+#endif
+#if defined(S60) || defined(UIQ)
+#define ARM_CPU
+#include "LibSym.h"
+#include "LibSym.rh"
+#endif
+#ifdef WII
+#include "LibWii.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** pixel ****************************************************/
-/** Pixels may be either 8bit, or 16bit, or 32bit.          **/
+/** Pixels may be either 8bit, or 16bit, or 32bit. When no  **/
+/** BPP* specified, we assume the pixel to have the largest **/
+/** size and default to GetColor().                         **/
 /*************************************************************/
 #ifndef PIXEL_TYPE_DEFINED
 #define PIXEL_TYPE_DEFINED
@@ -108,8 +205,11 @@ extern "C" {
 typedef unsigned int pixel;
 #elif defined(BPP16)
 typedef unsigned short pixel;
-#else
+#elif defined(BPP8)
 typedef unsigned char pixel;
+#else
+typedef unsigned int pixel;
+#define PIXEL(R,G,B) GetColor(R,G,B)
 #endif
 #endif
 
@@ -139,6 +239,9 @@ typedef struct
 #endif
 #ifdef MAEMO
   GdkImage *GImg;            /* Pointer to GdkImage object   */
+#endif
+#ifdef MEEGO
+  QImage *QImg;              /* Pointer to QImage object     */
 #endif
 #ifdef UNIX
   XImage *XImg;              /* Pointer to XImage structure  */
@@ -180,7 +283,7 @@ void FreeImage(Image *Img);
 /*************************************************************/
 Image *CropImage(Image *Dst,const Image *Src,int X,int Y,int W,int H);
 
-#if defined(WINDOWS) || defined(UNIX) || defined(MAEMO)
+#if defined(WINDOWS) || defined(UNIX) || defined(MAEMO) || defined(MEEGO)
 Image *GenericCropImage(Image *Dst,const Image *Src,int X,int Y,int W,int H);
 #endif
 
@@ -195,12 +298,52 @@ void ScaleImage(Image *Dst,const Image *Src,int X,int Y,int W,int H);
 /** an alignment problem. Returns destination height and    **/
 /** width on success in <Height 31:16><Width 15:0> format.  **/
 /*************************************************************/
-int ARMScaleImage(Image *Dst,Image *Src,int X,int Y,int W,int H,int Attrs);
+unsigned int ARMScaleImage(Image *Dst,Image *Src,int X,int Y,int W,int H,int Attrs);
 
 /** TelevizeImage() ******************************************/
 /** Create televizion effect on the image.                  **/
 /*************************************************************/
 void TelevizeImage(Image *Img,int X,int Y,int W,int H);
+
+/** LcdizeImage() ********************************************/
+/** Create LCD effect on the image.                         **/
+/*************************************************************/
+void LcdizeImage(Image *Img,int X,int Y,int W,int H);
+
+/** RasterizeImage() *****************************************/
+/** Create raster effect on the image.                      **/
+/*************************************************************/
+void RasterizeImage(Image *Img,int X,int Y,int W,int H);
+
+/** CMYizeImage() ********************************************/
+/** Apply vertical CMY stripes to the image.                **/
+/*************************************************************/
+void CMYizeImage(Image *Img,int X,int Y,int W,int H);
+
+/** RGBizeImage() ********************************************/
+/** Apply vertical RGB stripes to the image.                **/
+/*************************************************************/
+void RGBizeImage(Image *Img,int X,int Y,int W,int H);
+
+/** MonoImage() **********************************************/
+/** Turn image into monochrome.                             **/
+/*************************************************************/
+void MonoImage(Image *Img,int X,int Y,int W,int H);
+
+/** SepiaImage() *********************************************/
+/** Turn image into sepia tones.                            **/
+/*************************************************************/
+void SepiaImage(Image *Img,int X,int Y,int W,int H);
+
+/** GreenImage() *********************************************/
+/** Simulate green CRT phosphor.                            **/
+/*************************************************************/
+void GreenImage(Image *Img,int X,int Y,int W,int H);
+
+/** AmberImage() *********************************************/
+/** Simulate amber CRT phosphor.                            **/
+/*************************************************************/
+void AmberImage(Image *Img,int X,int Y,int W,int H);
 
 /** SoftenImage() ********************************************/
 /** Uses softening algorithm to interpolate image Src into  **/
@@ -208,10 +351,28 @@ void TelevizeImage(Image *Img,int X,int Y,int W,int H);
 /*************************************************************/
 void SoftenImage(Image *Dst,const Image *Src,int X,int Y,int W,int H);
 
+/** SoftenSCALE2X() ******************************************/
+/** Uses SCALE2X softening algorithm to interpolate image   **/
+/** Src into a bigger image Dst.                            **/
+/*************************************************************/
+void SoftenSCALE2X(Image *Dst,const Image *Src,int X,int Y,int W,int H);
+
+/** SoftenEPX() **********************************************/
+/** Uses EPX softening algorithm to interpolate image Src   **/
+/** into a bigger image Dst.                                **/
+/*************************************************************/
+void SoftenEPX(Image *Dst,const Image *Src,int X,int Y,int W,int H);
+
+/** SoftenEAGLE() ********************************************/
+/** Uses EAGLE softening algorithm to interpolate image Src **/
+/** into a bigger image Dst.                                **/
+/*************************************************************/
+void SoftenEAGLE(Image *Dst,const Image *Src,int X,int Y,int W,int H);
+
 /** ClearImage() *********************************************/
 /** Clear image with a given color.                         **/
 /*************************************************************/
-void ClearImage(Image *Img,int Color);
+void ClearImage(Image *Img,pixel Color);
 
 /** IMGCopy() ************************************************/
 /** Copy one image into another. Skips pixels of given      **/
@@ -222,8 +383,8 @@ void IMGCopy(Image *Dst,int DX,int DY,const Image *Src,int SX,int SY,int W,int H
 /** IMGDrawRect()/IMGFillRect() ******************************/
 /** Draw filled/unfilled rectangle in a given image.        **/
 /*************************************************************/
-void IMGDrawRect(Image *Img,int X,int Y,int W,int H,int Color);
-void IMGFillRect(Image *Img,int X,int Y,int W,int H,int Color);
+void IMGDrawRect(Image *Img,int X,int Y,int W,int H,pixel Color);
+void IMGFillRect(Image *Img,int X,int Y,int W,int H,pixel Color);
 
 /** IMGPrint() ***********************************************/
 /** Print text in a given image.                            **/
@@ -235,6 +396,10 @@ void IMGFillRect(Image *Img,int X,int Y,int W,int H,int Color);
 /** Set part of the image as "active" for display.          **/
 /*************************************************************/
 void SetVideo(Image *Img,int X,int Y,int W,int H);
+
+#if defined(UNIX) || defined(MAEMO) || defined(MEEGO) || defined(ANDROID)
+void GenericSetVideo(Image *Img,int X,int Y,int W,int H);
+#endif
 
 /** ShowVideo() **********************************************/
 /** Show "active" image at the actual screen or window.     **/
@@ -258,16 +423,27 @@ void SetPalette(pixel N,unsigned char R,unsigned char G,unsigned char B);
 /*************************************************************/
 unsigned int GetFreeAudio(void);
 
+/** GetTotalAudio() ******************************************/
+/** Get total amount of samples in the audio buffer.        **/
+/*************************************************************/
+unsigned int GetTotalAudio(void);
+
 /** WriteAudio() *********************************************/
 /** Write up to a given number of samples to audio buffer.  **/
 /** Returns the number of samples written.                  **/
 /*************************************************************/
 unsigned int WriteAudio(sample *Data,unsigned int Length);
 
+/** PauseAudio() *********************************************/
+/** Pause/resume audio playback. Returns current playback   **/
+/** state.                                                  **/
+/************************************************* OPTIONAL **/
+int PauseAudio(int Switch);
+
 /** GetJoystick() ********************************************/
 /** Get the state of joypad buttons (1="pressed"). Refer to **/
 /** the BTN_* #defines for the button mappings. Notice that **/
-/** on Windows this function calls WinProcessMsgs() thus    **/
+/** on Windows this function calls ProcessEvents() thus    **/
 /** automatically handling all Windows messages.            **/
 /*************************************************************/
 unsigned int GetJoystick(void);
@@ -311,9 +487,11 @@ unsigned int WaitKeyOrMouse(void);
 void SetKeyHandler(void (*Handler)(unsigned int Key));
 
 /** WaitSyncTimer() ******************************************/
-/** Wait for the timer to become ready.                     **/
+/** Wait for the timer to become ready. Returns number of   **/
+/** times timer has been triggered after the last call to   **/
+/** WaitSyncTimer().                                        **/
 /*************************************************************/
-void WaitSyncTimer(void);
+int WaitSyncTimer(void);
 
 /** SyncTimerReady() *****************************************/
 /** Return 1 if sync timer ready, 0 otherwise.              **/
@@ -324,6 +502,24 @@ int SyncTimerReady(void);
 /** Set synchronization timer to a given frequency in Hz.   **/
 /*************************************************************/
 int SetSyncTimer(int Hz);
+
+/** ProcessEvents() ******************************************/
+/** Process UI (X11,GTK,Qt,...) event messages. When Wait=1 **/
+/** and there are no messages, wait for some. Returns 1 for **/
+/** continued execution, 0 if application has been closed.  **/
+/*************************************************************/
+int ProcessEvents(int Wait);
+
+/** SetEffects() *********************************************/
+/** Set visual effects applied to video in ShowVideo().     **/
+/*************************************************************/
+void SetEffects(unsigned int NewEffects);
+
+/** ParseEffects() *******************************************/
+/** Parse command line visual effect options, removing them **/
+/** from Args[] and applying to the initial Effects value.  **/
+/*************************************************************/
+unsigned int ParseEffects(char *Args[],unsigned int Effects);
 
 /** GetFilePath() ********************************************/
 /** Extracts pathname from filename and returns a pointer   **/
@@ -347,6 +543,11 @@ const char *NewFile(const char *Pattern);
 /*************************************************************/
 int ChangeDir(const char *Name);
 
+/** MicroSleep() *********************************************/
+/** Wait for a given number of microseconds.                **/
+/*************************************************************/
+void MicroSleep(unsigned int uS);
+
 #ifdef GIFLIB
 /** LoadGIF() ************************************************/
 /** Load screen from .GIF file. Returns the number of used  **/
@@ -360,6 +561,14 @@ int LoadGIF(const char *File);
 /*************************************************************/
 int SaveGIF(const char *File);
 #endif /* GIFLIB */
+
+#ifdef LIBPNG
+/** LoadPNG() ************************************************/
+/** Load image from a .PNG file. Returns 1 on success, 0 on **/
+/** failure.                                                **/
+/*************************************************************/
+int LoadPNG(Image *Img,const char *FileName);
+#endif
 
 #ifdef __cplusplus
 }

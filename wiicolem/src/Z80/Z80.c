@@ -7,26 +7,15 @@
 /** LoopZ80(), and PatchZ80() functions to accomodate the   **/
 /** emulated machine's architecture.                        **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1994-2008                 **/
+/** Copyright (C) Marat Fayzullin 1994-2018                 **/
 /**     You are not allowed to distribute this software     **/
-/**     commercially. Please, notify me, if you make any    **/   
+/**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
 /*************************************************************/
 
 #include "Z80.h"
 #include "Tables.h"
 #include <stdio.h>
-
-#ifdef WII
-// Hack for interrupt bug, affected Frogger and Space Fury
-#include "TMS9918.h"
-TMS9918 VDP;
-#endif
-
-#ifdef MEGACART
-#include "Coleco.h"
-extern unsigned int MegaCartMask;
-#endif
 
 /** INLINE ***************************************************/
 /** C99 standard has "inline", but older compilers used     **/
@@ -43,27 +32,9 @@ extern unsigned int MegaCartMask;
 /** up. It has to stay inlined to be fast.                  **/
 /*************************************************************/
 #ifdef COLEM
-#define RdZ80 RDZ80
+#define FAST_RDOP
 extern byte *ROMPage[];
-INLINE byte RdZ80(word A) 
-{ 
-#ifdef MEGACART
-  if( MegaCartMask )
-  {
-    byte page = A>>13;
-    A&=0x1fff;
-    if( page == 7 && A >= 0x1fc0 ) 
-    {
-      byte result = A&MegaCartMask;
-      ROMPage[6] = ROM_CARTRIDGE+(result << 14);
-      ROMPage[7] = ROMPage[6]+0x2000;
-      return result;
-    }
-    return(ROMPage[page][A]);     
-  }
-#endif
-  return(ROMPage[A>>13][A&0x1FFF]); 
-}
+INLINE byte OpZ80(word A) { return(ROMPage[A>>13][A&0x1FFF]); }
 #endif
 
 #ifdef SPECCY
@@ -71,7 +42,7 @@ INLINE byte RdZ80(word A)
 // @@@ WrZ80() can't be inlined as it contains debugging stuff
 //#define WrZ80 WRZ80
 extern byte *Page[],*ROM;
-INLINE byte RdZ80(word A)        { return(Page[A>>13][A&0x1FFF]); }
+INLINE byte RdZ80(word A) { return(Page[A>>13][A&0x1FFF]); }
 //INLINE void WrZ80(word A,byte V) { if(Page[A>>13]<ROM) Page[A>>13][A&0x1FFF]=V; }
 #endif
 
@@ -87,6 +58,15 @@ extern byte *RAM[];
 INLINE byte OpZ80(word A) { return(RAM[A>>13][A&0x1FFF]); }
 #endif
 
+#ifdef ATI85
+#define RdZ80 RDZ80
+#define WrZ80 WRZ80
+extern byte *Page[],*ROM;
+extern void (*DoMEM)(register word Addr,register byte V);
+INLINE byte RdZ80(word A) { return(Page[A>>14][A&0x3FFF]); }
+INLINE void WrZ80(word A,byte V) { if(Page[A>>14]<ROM) Page[A>>14][A&0x3FFF]=V; else DoMEM(A,V); }
+#endif
+
 /** FAST_RDOP ************************************************/
 /** With this #define not present, RdZ80() should perform   **/
 /** the functions of OpZ80().                               **/
@@ -98,6 +78,7 @@ INLINE byte OpZ80(word A) { return(RAM[A>>13][A&0x1FFF]); }
 #define S(Fl)        R->AF.B.l|=Fl
 #define R(Fl)        R->AF.B.l&=~(Fl)
 #define FLAGS(Rg,Fl) R->AF.B.l=Fl|ZSTable[Rg]
+#define INCR(N)      R->R=((R->R+(N))&0x7F)|(R->R&0x80)
 
 #define M_RLC(Rg)      \
   R->AF.B.l=Rg>>7;Rg=(Rg<<1)|R->AF.B.l;R->AF.B.l|=PZSTable[Rg]
@@ -337,7 +318,7 @@ enum CodesED
   IN_E_xC,OUT_xC_E,ADC_HL_DE,LD_DE_xWORDe,DB_5C,DB_5D,IM_2,LD_A_R,
   IN_H_xC,OUT_xC_H,SBC_HL_HL,LD_xWORDe_HL,DB_64,DB_65,DB_66,RRD,
   IN_L_xC,OUT_xC_L,ADC_HL_HL,LD_HL_xWORDe,DB_6C,DB_6D,DB_6E,RLD,
-  IN_F_xC,DB_71,SBC_HL_SP,LD_xWORDe_SP,DB_74,DB_75,DB_76,DB_77,
+  IN_F_xC,OUT_xC_F,SBC_HL_SP,LD_xWORDe_SP,DB_74,DB_75,DB_76,DB_77,
   IN_A_xC,OUT_xC_A,ADC_HL_SP,LD_SP_xWORDe,DB_7C,DB_7D,DB_7E,DB_7F,
   DB_80,DB_81,DB_82,DB_83,DB_84,DB_85,DB_86,DB_87,
   DB_88,DB_89,DB_8A,DB_8B,DB_8C,DB_8D,DB_8E,DB_8F,
@@ -361,8 +342,13 @@ static void CodesCB(register Z80 *R)
 {
   register byte I;
 
+  /* Read opcode and count cycles */
   I=OpZ80(R->PC.W++);
   R->ICount-=CyclesCB[I];
+
+  /* R register incremented on each M1 cycle */
+  INCR(1);
+
   switch(I)
   {
 #include "CodesCB.h"
@@ -382,9 +368,11 @@ static void CodesDDCB(register Z80 *R)
   register byte I;
 
 #define XX IX    
+  /* Get offset, read opcode and count cycles */
   J.W=R->XX.W+(offset)OpZ80(R->PC.W++);
   I=OpZ80(R->PC.W++);
   R->ICount-=CyclesXXCB[I];
+
   switch(I)
   {
 #include "CodesXCB.h"
@@ -405,9 +393,11 @@ static void CodesFDCB(register Z80 *R)
   register byte I;
 
 #define XX IY
+  /* Get offset, read opcode and count cycles */
   J.W=R->XX.W+(offset)OpZ80(R->PC.W++);
   I=OpZ80(R->PC.W++);
   R->ICount-=CyclesXXCB[I];
+
   switch(I)
   {
 #include "CodesXCB.h"
@@ -427,8 +417,13 @@ static void CodesED(register Z80 *R)
   register byte I;
   register pair J;
 
+  /* Read opcode and count cycles */
   I=OpZ80(R->PC.W++);
   R->ICount-=CyclesED[I];
+
+  /* R register incremented on each M1 cycle */
+  INCR(1);
+
   switch(I)
   {
 #include "CodesED.h"
@@ -450,8 +445,13 @@ static void CodesDD(register Z80 *R)
   register pair J;
 
 #define XX IX
+  /* Read opcode and count cycles */
   I=OpZ80(R->PC.W++);
   R->ICount-=CyclesXX[I];
+
+  /* R register incremented on each M1 cycle */
+  INCR(1);
+
   switch(I)
   {
 #include "CodesXX.h"
@@ -477,8 +477,13 @@ static void CodesFD(register Z80 *R)
   register pair J;
 
 #define XX IY
+  /* Read opcode and count cycles */
   I=OpZ80(R->PC.W++);
   R->ICount-=CyclesXX[I];
+
+  /* R register incremented on each M1 cycle */
+  INCR(1);
+
   switch(I)
   {
 #include "CodesXX.h"
@@ -551,8 +556,10 @@ int ExecZ80(register Z80 *R,register int RunCycles)
 
       /* Read opcode and count cycles */
       I=OpZ80(R->PC.W++);
-      /* Count cycles */
       R->ICount-=Cycles[I];
+
+      /* R register incremented on each M1 cycle */
+      INCR(1);
 
       /* Interpret opcode */
       switch(I)
@@ -665,8 +672,12 @@ word RunZ80(Z80 *R)
       if(!DebugZ80(R)) return(R->PC.W);
 #endif
 
+    /* Read opcode and count cycles */
     I=OpZ80(R->PC.W++);
     R->ICount-=Cycles[I];
+
+    /* R register incremented on each M1 cycle */
+    INCR(1);
 
     switch(I)
     {
@@ -704,17 +715,7 @@ word RunZ80(Z80 *R)
       }
 
       if(J.W==INT_QUIT) return(R->PC.W); /* Exit if INT_QUIT */
-#ifdef WII
-      // Fixes the Interrupt bug. Basically if an interrupt occurred when
-      // the latch was set, the VDP could get corrupted. The following 
-      // "hack" avoids this. This is especially lame due to the fact that
-      // the z80 now has knowledge of the VDP. I have contacted Marat and 
-      // he is researching a more suitable fix. This bug affected Frogger
-      // and Space Fury (possibly more).
-      if(J.W!=INT_NONE && VDP.VKey) IntZ80(R,J.W);   /* Int-pt if needed */
-#else
       if(J.W!=INT_NONE) IntZ80(R,J.W);   /* Int-pt if needed */
-#endif
     }
   }
 

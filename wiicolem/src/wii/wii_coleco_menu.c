@@ -210,17 +210,12 @@ void wii_coleco_menu_init()
   wii_add_child( cartadvanced, child );
 
   child = wii_create_tree_node( 
-    NODETYPE_LOTD_SRAM, "Lord of the Dungeon " );
+    NODETYPE_CART_SRAM, "Battery-backed SRAM " );
   child->x = -2; child->value_x = -3;
   wii_add_child( cartadvanced, child );
 
   child = wii_create_tree_node( 
     NODETYPE_OPCODE_MEMORY, "Opcode memory " );
-  child->x = -2; child->value_x = -3;
-  wii_add_child( cartadvanced, child );
-
-  child = wii_create_tree_node( 
-    NODETYPE_R4_MASK, "Reg. 4 (4-0) mask " );
   child->x = -2; child->value_x = -3;
   wii_add_child( cartadvanced, child );
 
@@ -441,9 +436,8 @@ void wii_menu_handle_get_node_name(
     case NODETYPE_AUTO_LOAD_STATE:
     case NODETYPE_AUTO_SAVE_STATE:
     case NODETYPE_SHOW_ALL_SPRITES:
-    case NODETYPE_LOTD_SRAM:
+    case NODETYPE_CART_SRAM:
     case NODETYPE_OPCODE_MEMORY:
-    case NODETYPE_R4_MASK:
     case NODETYPE_VSYNC:
     case NODETYPE_SPINNER:
     case NODETYPE_KEYPAD_PAUSE:
@@ -455,11 +449,8 @@ void wii_menu_handle_get_node_name(
           case NODETYPE_SPINNER:
             enabled = !( wii_coleco_db_entry.flags&DISABLE_SPINNER );
             break;
-          case NODETYPE_LOTD_SRAM:
-            enabled = wii_coleco_db_entry.flags&LOTD_SRAM;
-            break;
-          case NODETYPE_R4_MASK:
-            enabled = !( wii_coleco_db_entry.flags&IGNORE_R4_MASK );
+          case NODETYPE_CART_SRAM:
+            enabled = wii_coleco_db_entry.flags&CART_SRAM;
             break;
           case NODETYPE_OPCODE_MEMORY:
             enabled = wii_coleco_db_entry.flags&OPCODE_MEMORY;
@@ -929,11 +920,8 @@ void wii_menu_handle_select_node( TREENODE *node )
     case NODETYPE_OPCODE_MEMORY:
       wii_coleco_db_entry.flags ^= OPCODE_MEMORY;
       break;
-    case NODETYPE_LOTD_SRAM:
-      wii_coleco_db_entry.flags ^= LOTD_SRAM;
-      break;
-    case NODETYPE_R4_MASK:
-      wii_coleco_db_entry.flags ^= IGNORE_R4_MASK;
+    case NODETYPE_CART_SRAM:
+      wii_coleco_db_entry.flags ^= CART_SRAM;
       break;
     case NODETYPE_SPINNER:
       wii_coleco_db_entry.flags ^= DISABLE_SPINNER;

@@ -5,7 +5,7 @@
 /** This file contains generic main() procedure statrting   **/
 /** the emulation.                                          **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1994-2008                 **/
+/** Copyright (C) Marat Fayzullin 1994-2019                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -23,12 +23,12 @@
 char *Options[]=
 { 
   "verbose","pal","ntsc","skip","help",
-  "adam","cv","allspr","autoa","noautoa","autob","noautob",
+  "adam","cv","sgm","nosgm","24c08","24c256","sram",
+  "allspr","autoa","noautoa","autob","noautob",
   "spin1x","spin1y","spin2x","spin2y",
   "drums","nodrums","logsnd","palette",
   "home","sound","nosound","trap",
-  "sync","nosync","tv","notv","soft","nosoft",
-  "saver","nosaver","shm","noshm","scale","vsync",
+  "sync","nosync","scale","vsync",
   0
 };
 
@@ -68,7 +68,12 @@ int main(int argc,char *argv[])
 #endif
   if(P) { *P='\0';HomeDir=argv[0]; }
 
-  for(N=1,I=0;N<argc;N++)
+#if defined(UNIX) || defined(MAEMO) || defined(MSDOS)
+  /* Extract visual effects arguments */
+  UseEffects = ParseEffects(argv,UseEffects);
+#endif
+
+  for(N=1,I=0;(N<argc)&&argv[N];N++)
     if(*argv[N]!='-')
       switch(I++)
       {
@@ -97,27 +102,32 @@ int main(int argc,char *argv[])
                  }
                  break;
 	case 4:  printf
-                 ("%s by Marat Fayzullin    (C)FMS 1994-2008\n",Title);
+                 ("%s by Marat Fayzullin    (C)FMS 1994-2019\n",Title);
                  for(J=0;HelpText[J];J++) puts(HelpText[J]);
                  return(0);
         case 5:  Mode|=CV_ADAM;break;
         case 6:  Mode&=~CV_ADAM;break;
-        case 7:  Mode|=CV_ALLSPRITE;break;
-        case 8:  Mode|=CV_AUTOFIRER;break;
-        case 9:  Mode&=~CV_AUTOFIRER;break;
-        case 10: Mode|=CV_AUTOFIREL;break;
-        case 11: Mode&=~CV_AUTOFIREL;break;
-        case 12: Mode|=CV_SPINNER1X;break;
-        case 13: Mode|=CV_SPINNER1Y;break;
-        case 14: Mode|=CV_SPINNER2X;break;
-        case 15: Mode|=CV_SPINNER2Y;break;
-        case 16: Mode|=CV_DRUMS;break;
-        case 17: Mode&=~CV_DRUMS;break;
-        case 18: N++;
+        case 7:  Mode|=CV_SGM;break;
+        case 8:  Mode&=~CV_SGM;break;
+        case 9:  Mode=(Mode&~CV_EEPROM)|CV_24C08;break;
+        case 10: Mode=(Mode&~CV_EEPROM)|CV_24C256;break;
+        case 11: Mode|=CV_SRAM;break;
+        case 12: Mode|=CV_ALLSPRITE;break;
+        case 13: Mode|=CV_AUTOFIRER;break;
+        case 14: Mode&=~CV_AUTOFIRER;break;
+        case 15: Mode|=CV_AUTOFIREL;break;
+        case 16: Mode&=~CV_AUTOFIREL;break;
+        case 17: Mode|=CV_SPINNER1X;break;
+        case 18: Mode|=CV_SPINNER1Y;break;
+        case 19: Mode|=CV_SPINNER2X;break;
+        case 20: Mode|=CV_SPINNER2Y;break;
+        case 21: Mode|=CV_DRUMS;break;
+        case 22: Mode&=~CV_DRUMS;break;
+        case 23: N++;
                  if(N<argc) SndName=argv[N];
                  else printf("%s: No file for soundtrack logging\n",argv[0]);
                  break;
-        case 19: N++;
+        case 24: N++;
                  if(N>=argc)
                    printf("%s: No palette number supplied\n",argv[0]);
                  else
@@ -129,19 +139,19 @@ int main(int argc,char *argv[])
                    Mode = (Mode&~CV_PALETTE)|J;
                  }
                  break;
-        case 20: N++;
+        case 25: N++;
                  if(N<argc) HomeDir=argv[N];
                  else printf("%s: No home directory supplied\n",argv[0]);
                  break;
-        case 21: N++;
+        case 26: N++;
                  if(N>=argc) { UseSound=1;N--; }
                  else if(sscanf(argv[N],"%d",&UseSound)!=1)
                       { UseSound=1;N--; }
                  break;
-        case 22: UseSound=0;break;
+        case 27: UseSound=0;break;
 
 #if defined(DEBUG)
-        case 23: N++;
+        case 28: N++;
                  if(N>=argc)
                    printf("%s: No trap address supplied\n",argv[0]);
                  else
@@ -151,28 +161,15 @@ int main(int argc,char *argv[])
 #endif /* DEBUG */
 
 #if defined(UNIX) || defined(MSDOS) || defined(MAEMO)
-        case 24: N++;
+        case 29: N++;
                  if(N<argc) SyncFreq=atoi(argv[N]);
                  else printf("%s: No sync frequency supplied\n",argv[0]);
                  break;
-        case 25: SyncFreq=0;break;
-        case 26: UseEffects|=EFF_TVLINES;break;
-        case 27: UseEffects&=~EFF_TVLINES;break;
-        case 28: UseEffects|=EFF_SOFTEN;break;
-        case 29: UseEffects&=~EFF_SOFTEN;break;
+        case 30: SyncFreq=0;break;
 #endif /* UNIX || MSDOS || MAEMO */
 
-#if defined(UNIX) || defined(MAEMO)
-        case 30: UseEffects|=EFF_SAVECPU;break;
-        case 31: UseEffects&=~EFF_SAVECPU;break;
-#endif /* UNIX || MAEMO */
-
 #if defined(UNIX)
-#if defined(MITSHM)
-        case 32: UseEffects|=EFF_MITSHM;break;
-        case 33: UseEffects&=~EFF_MITSHM;break;
-#endif
-        case 34: N++;
+        case 31: N++;
                  if(N>=argc) { UseZoom=1;N--; }
                  else if(sscanf(argv[N],"%d",&UseZoom)!=1)
                       { UseZoom=1;N--; }
@@ -180,7 +177,7 @@ int main(int argc,char *argv[])
 #endif /* UNIX */
 
 #if defined(MSDOS)
-        case 35: SyncFreq=-1;break;
+        case 32: SyncFreq=-1;break;
 #endif /* MSDOS */
 
         default: printf("%s: Wrong option '%s'\n",argv[0],argv[N]);

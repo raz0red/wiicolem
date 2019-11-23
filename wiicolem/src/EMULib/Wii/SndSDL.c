@@ -39,6 +39,7 @@ distribution.
 
 #include "EMULib.h"
 #include "Sound.h"
+#include "LibWii.h"
 
 #include <string.h>
 #include "wii_types.h"

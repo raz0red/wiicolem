@@ -50,6 +50,12 @@ extern void WII_SetRenderCallback( void (*cb)(void) );
 
 extern void wii_render_callback();
 
+static int get_coleco_mode() {
+  return wii_coleco_mode 
+    | (wii_coleco_db_entry.flags&CART_SRAM ? CV_SRAM : 0) 
+    | CV_SGM;
+}
+
 /*
  * Starts the emulator for the specified rom file.
  *
@@ -65,9 +71,6 @@ BOOL wii_start_emulation( char *romfile, const char *savefile, BOOL reset, BOOL 
 {
   // Write out the current config
   wii_write_config();
-
-  // Set the Coleco mode
-  Mode = wii_coleco_mode;
 
   BOOL succeeded = true;
   char autosavename[WII_MAX_PATH] = "";
@@ -107,7 +110,7 @@ BOOL wii_start_emulation( char *romfile, const char *savefile, BOOL reset, BOOL 
 
         // Reset coleco. Allows for memory adjustments based on cartridge 
         // settings, etc.
-        ResetColeco( Mode );
+        ResetColeco( get_coleco_mode() );
       }
       else
       {
@@ -140,11 +143,12 @@ BOOL wii_start_emulation( char *romfile, const char *savefile, BOOL reset, BOOL 
     }
     else if( reset )
     {
-      ResetColeco( Mode );         
+      ResetColeco( get_coleco_mode() );
     }
     else if( resume )
     {
-      // Nothing to do when resuming...
+      // Restore mode
+      Mode = get_coleco_mode();
     }
     
     if( succeeded )

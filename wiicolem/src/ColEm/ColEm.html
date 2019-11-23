@@ -6,7 +6,7 @@
 <BODY BGCOLOR=#FFFFFF LINK=#006000 VLINK=#006000>
 
 <CENTER>
-<H1><FONT COLOR=#FF0000>ColEm<BR>version 2.5</FONT></H1>
+<H1><FONT COLOR=#FF0000>ColEm<BR>version 4.7</FONT></H1>
 <H3>by <A HREF="http://fms.komkon.org/">Marat Fayzullin</A></H3>
 </CENTER>>
 
@@ -25,28 +25,11 @@
 <H1>New in This Version</H1>
 </A>
 <UL>
-<LI>Yet again ported ColEm to Unix using the new EMULib
-    framework. The new <B>ColEm-Unix</B> has been tested to compile
-    and run on Ubuntu Linux but should work on any other Unix.
-    ColEm-Unix source code is included with the core source code
-    distribution.
-<LI>Ported ColEm to Maemo OS2008 used in N800 and N810 internet tablets
-    from Nokia. <B>ColEm-Maemo</B> has been specifically optimized for
-    the tablets using ARM assembler. It will simulate joypad with the
-    touch screen and automatically open <CODE>*.cv/*.cv.gz</CODE> files
-    from the file manager. ColEm-Maemo source code is included with the
-    core source code distribution.
-<LI>Renamed <CODE>-zoom/-nozoom</CODE> to <CODE>-soft/-nosoft</CODE>.
-<LI>Added <CODE>-scale</CODE> option to scale window on Unix.
-<LI>Added <CODE>-home</CODE> to set home directory with system ROMs. 
-<LI>Options <CODE>-tv/-notv</CODE>, <CODE>-soft/-nosoft</CODE>, and the
-    <CODE>[F8]</CODE> key now work for both MSDOS and Unix.
-<LI>ColEm-Symbian display routines rewritten in ARM assembler for speed. 
-<LI>Split ColEm-Symbian configuration menu into four tabs, making
-    "Video" and "Audio" settings separate.
-<LI>Added "Audio Latency", "Skip Frames", and "Sync Updates" settings
-    to ColEm-Symbian.
-<LI>Documentation and built-in help changed, many inconsistencies removed.
+<LI>Fixed sprite collision code to take into account early-sync flag.
+<LI>Fixed scoring in the <I>Carnival</I> bear scene. 
+<LI>Fixed saved state compatibility between 32bit and 64bit architectures.
+<LI>Fixed several problems with saving and loading TMS9918 states.
+<LI>Fixed PulseAudio hangup on exit in ColEm-Linux.
 </UL>
 
 <A NAME="LABC">
@@ -62,24 +45,25 @@ source code, and support files from
 <A HREF="http://fms.komkon.org/ColEm/">http://fms.komkon.org/ColEm/</A>
 </P>
 <P>
-There are versions of ColEm for many platforms, with Windows, MSDOS, Unix,
-and Symbian ports being maintained by myself. All these ports are available
-for free from the above website.
-</P>
-<P>
-The ColEm-Symbian port works on the 3rd Edition Series60 phones from
-Nokia and its licensees. You can download it, as well as my other
-Symbian products, at
+There are versions of ColEm for many platforms. Windows and Unix ports
+are available for free from the above website. MSDOS, Symbian, Maemo,
+and Meego ports have been discontinued due to the death of their
+respective platforms. The Android port can be downloaded from the
+Google Play:
 </P>
 <P ALIGN=CENTER>
-<A HREF="http://fms.komkon.org/EmuSymbian/">http://fms.komkon.org/EmuSymbian/</A>
+<A HREF="https://play.google.com/store/apps/details?id=com.fms.colem.deluxe">https://play.google.com/store/apps/details?id=com.fms.colem.deluxe</A>
+(full version)
+</P>
+<P ALIGN=CENTER>
+<A HREF="https://play.google.com/store/apps/details?id=com.fms.colem">https://play.google.com/store/apps/details?id=com.fms.colem</A>
+(free version)
 </P>
 <P>
 ColEm is written in portable C and thus can be ported to any sufficiently
 fast computing platform. The current ColEm source code distribution includes
-portable core sources and platform-specific sources for Windows and MSDOS.
-The ColEm-Unix sources are also available, for a slightly older version
-of ColEm.
+portable core sources and platform-specific sources for Unix, Windows,
+and MSDOS.
 </P>
 <P>
 If you would like to port ColEm to another system or make changes in
@@ -113,8 +97,7 @@ Feel free to look at it though.
   [F5]           - Invoke configuration menu
   [F6]           - Load emulation state
   [F7]           - Save emulation state
-  [F8]           - Turn scanline simulation on/off
-  [ALT]+[F8]     - Toggle screen softening on/off
+  [F8]           - Replay recorded gameplay
   [F9]           - Fast-forward emulation (also: [PGUP])
   [F11]          - Reset hardware
   [F12]          - Quit emulation (also: [ESC])
@@ -153,6 +136,9 @@ Usage: colem [-option1 [-option2...]] [filename]
   -home &lt;dirname&gt;     - Set directory with system ROM files [off]
   -pal/-ntsc          - Video system to use [-ntsc]
   -adam/-cv           - Run in Adam/ColecoVision mode [-cv]
+  -sgm/-nosgm         - Enable Super Game Module extension [-nosgm]
+  -24c08/-24c256      - Enable serial EEPROM emulation [off]
+  -sram               - Enable battery-backed SRAM emulation [off]
   -allspr             - Show all sprites [off]
   -autoa/-noautoa     - Autofire/No autofire for FIRE-R button [-noautoa]
   -autob/-noautob     - Autofire/No autofire for FIRE-L button [-noautob]
@@ -165,8 +151,13 @@ Usage: colem [-option1 [-option2...]] [filename]
                         2 - Faded NTSC colors
   -sync &lt;frequency&gt;   - Sync screen updates to &lt;frequency&gt; [-nosync]
   -nosync             - Do not sync screen updates [-nosync]
-  -tv/-notv           - Simulate/Don't simulate scanlines [-notv]
-  -soft/-nosoft       - Scale screen up with softening [-nosoft]
+  -tv/-lcd/-raster    - Simulate TV scanlines or LCD raster [off]
+  -soft/-eagle        - Scale display with 2xSaI or EAGLE [off]
+  -epx/-scale2x       - Scale display with EPX or Scale2X [off]
+  -cmy/-rgb           - Simulate CMY/RGB pixel raster [off]
+  -mono/-sepia        - Simulate monochrome or sepia CRT [off]
+  -green/-amber       - Simulate green or amber CRT [off]
+  -4x3                - Force 4:3 television screen ratio [off]
   -sound [&lt;quality&gt;]  - Sound emulation quality [22050]
   -nosound            - Don't emulate sound [-nosound]
 
@@ -244,6 +235,216 @@ drivers included into official ColEm distribution.
 <A NAME="LABK">
 <H1>History</H1>
 </A>
+<H2>New in ColEm 4.6</H2>
+<UL>
+<LI>Made replay save states approximately every 170ms.
+<LI>Added ability to browse through paused replay.
+<LI>During replay, press [UP] to pause or resume.
+<LI>When replay paused, press [LEFT] and [RIGHT] to browse.
+<LI>Press any other button to continue playing.
+<LI>Now cancelling replay if any key or button is pressed.
+<LI>Made <CODE>WaitJoystick()</CODE> exit when window closed.
+</UL>
+<H2>New in ColEm 4.5</H2>
+<UL>
+<LI>Added battery-backed SRAM emulation (<I>Lord Of The Dungeon</I> works).
+<LI>Added <I>"Hardware | 2kB SRAM"</I> menu option to ColEm-Windows.
+<LI>Removed <CODE>-noeeprom</CODE> command line option, as useless.
+<LI>Added <CODE>-sram</CODE> command line option.
+<LI>Fixed saved state compatibility between 32bit and 64bit systems.
+</UL>
+<H2>New in ColEm 4.4</H2>
+<UL>
+<LI>Added ROM page switch specific for carts with EEPROM.
+<LI>Added 24c08 EEPROM support (<I>Black Onyx</I> saves now).
+<LI>Added 24c256 EEPROM support (<I>Boxxle</I> works).
+<LI>Now saving EEPROM state into .SAV files.
+<LI>Now saving SGM state into .STA files.
+<LI>Now accepting both AA55h and 55AAh MegaCarts.
+<LI>SGM games <I>Buckrogers</I>, <I>Subroc</I>, <I>Zaxxon</I>, <I>Dragon's Lair</I> work.
+<LI>Fixed restoring background screen color from .STA files.
+<LI>Added EEPROM menu selections to ColEm-Windows.
+<LI>Added links to <I>CV Addict</I> and <I>AtariAge</I> forums to ColEm-Windows.
+<LI>Added <CODE>-24c08</CODE>, <CODE>-24c256</CODE>, and <CODE>-noeeprom</CODE> command line options.
+<LI>Compiled ColEm-Unix with <CODE>-Wall</CODE> and eliminated warnings.
+<LI>Replaced <CODE>-DNO_WAVE_INTERPOLATION</CODE> with <CODE>-DWAVE_INTERPOLATION</CODE>, off by default.
+<LI>Removed old <CODE>LoadSTA()</CODE> and <CODE>SaveSTA()</CODE> code.
+<LI>Finally deprecated <CODE>-DNEW_STATES</CODE>.
+</UL>
+<H2>New in ColEm 4.3</H2>
+<UL>
+<LI>Added <I>Super Game Module</I> (SGM) emulation.
+<LI>As part of SGM emulation, added AY8910 PSG chip support.
+<LI>Added <CODE>-sgm</CODE> and <CODE>-nosgm</CODE> command line options.
+<LI>Fixed high-frequency PSG noise (dynamite sounds in HERO).
+<LI>Added remaining time display during replay.
+<LI>Stopping replay when menu opens on Windows.
+<LI>Fixed replay rollover mechanism.
+<LI>Added shadow underneath the time display.
+</UL>
+<H2>New in ColEm 4.2</H2>
+<UL>
+<LI>Added multiple monitor support to ColEm-Windows.
+<LI>Fixed disappearing window in ColEm-Windows.
+<LI>Fixed best full-screen mode detection in ColEm-Windows.
+<LI>Fixed window flicker that appeared after recent Win10 updates.
+<LI>Fixed DirectInput joysticks support in ColEm-Windows.
+<LI>Fixed directional pads on the XBox gamepads.
+<LI>Switched ColEm-Linux to using PulseAudio sound.
+<LI>Updated old PulseAudio driver for 64bit Linux.
+</UL>
+<H2>New in ColEm 4.1</H2>
+<UL>
+<LI>Added support for DirectInput joysticks to ColEm-Windows.
+<LI>Moved all input-related options to the <I>"Input"</I> menu in ColEm-Windows.
+<LI>Fixed crash when changing audio sampling rate in ColEm-Windows.
+<LI>Added <I>"Draw 65% Frames"</I> option to ColEm-Windows.
+<LI>Fixed screen updates after changing scaling algorithm in ColEm-Windows.
+</UL>
+<H2>New in ColEm 4.0</H2>
+<UL>
+<LI>Added <I>MegaCart</I> support for 64kB+ homebrew games.
+<LI>Fixed SCREEN 0/3 VDP mode selection (<I>Bankrupcy Builder</I>, etc).
+<LI>Added <I>"Nearest Neighbor"</I> option to disable linear interpolation.
+<LI>Added <I>"Force 4:3 Screen"</I> option to ColEm-Windows.
+<LI>Fixed <I>"Hit MIDI Drums"</I> option in VGB-Windows.
+<LI>Fixed 44kHz sound hiccups when 50Hz sync selected in ColEm-Windows.
+<LI>Computing effective waveform power when simulating samples via MIDI.
+<LI>ColEm-Windows will not overwrite last ROM file name with other names.
+<LI>Added <CODE>-4x3</CODE> command line option to ColEm-Unix.
+</UL>
+<H2>New in ColEm 3.8</H2>
+<UL>
+<LI>Added Scale2X scaling algorithm.
+<LI>Added Monochrome, Green, Amber, and Sepia CRT emulation.
+<LI>Added <CODE>-scale2x</CODE> and <CODE>-raster</CODE> command line options.
+<LI>Added <CODE>-mono</CODE>, <CODE>-sepia</CODE>, <CODE>-green</CODE>,
+    and <CODE>-amber</CODE> command line options.
+<LI>EMULib-specific command line options now processed inside EMULib.
+<LI>Added <I>"Scale2x Algorithm"</I> option on Windows.
+<LI>Added <I>"LCD Raster"</I> option on Windows.
+<LI>Renamed <I>"Color Raster"</I> menu to <I>"Color Filter"</I> on Windows.
+<LI>Deprecated <CODE>-notv</CODE> and <CODE>-nolcd</CODE> command line options.
+<LI>Reorganized menus in ColEm-Windows.
+</UL>
+<H2>New in ColEm 3.7</H2>
+<UL>
+<LI>Fixed sprite collision detection.
+<LI>Added collision detection even on transparent sprites.
+<LI>Now setting lower VDPStatus bits to the last tested sprite.
+</UL>
+<H2>New in ColEm 3.6</H2>
+<UL>
+<LI>Changed VDP VRAM access mechanism according to datasheet.
+<LI>Added support for *.COL files to ColEm-Windows.
+<LI>Added "Play Sound When Inactive" option to ColEm-Windows.
+<LI>Added "Clear File Associations" option to ColEm-Windows.
+<LI>Added "Debugger" option to ColEm-Windows.
+<LI>Made color raster effects stronger.
+</UL>
+<H2>New in ColEm 3.5</H2>
+<UL>
+<LI>Added special effects simulating individual pixel components.
+<LI>Added EPX and EAGLE scaling algorithms.
+<LI>Added keypad recording to the instant replay recorder.
+<LI>Fixed memory corruption bug in the instant replay recorder.
+<LI>Fixed instant replay not restoring successive states.
+<LI>Fixed instant replay not recording the first state.
+<LI>Merged scanline options into "Simulate Scanlines" in ColEm-Windows.
+<LI>Merged scaling options into "Interpolate Video" in ColEm-Windows.
+<LI>Added "Apply Color Raster" submenu to ColEm-Windows.
+<LI>Added "RGB Raster" and "CMY Raster" options to ColEm-Windows.
+<LI>Added "Clear File Associations" option to ColEm-Windows.
+<LI>Added <CODE>-rgb</CODE> and <CODE>-cmy</CODE> command line options.
+<LI>Added <CODE>-epx</CODE> and <CODE>-eagle</CODE> command line options.
+</UL>
+<H2>New in ColEm 3.4</H2>
+<UL>
+<LI>Removed waveform interpolation for more realistic sound.
+<LI>Switched ColEm-Windows to Direct3D textures-based rendering.
+<LI>Added "Stretch Full Screen" option to ColEm-Windows.
+<LI>Added new icon to ColEm-Windows.
+<LI>Added <CODE>-lcd</CODE> and <CODE>-nolcd</CODE> command line options.
+<LI>Switched ColEm-Linux Replay feature to always-on recording.
+<LI>Now properly setting display update period after restore.
+<LI>Fixed display updates synchronization in ColEm-Linux.
+<LI>Fixed compilation warnings in ColEm-Linux.
+</UL>
+<H2>New in ColEm 3.3</H2>
+<UL>
+<LI>Added accurate SN76489 noise channel emulation.
+<LI>Added RAM-based cheats with AAAA in 0x6000..0x63FF range.
+<LI>Added Cheat Hunter tool that lets you search for cheat codes.
+<LI>Now properly restoring sound parameters.
+<LI>Disabled console window in ColEm-Windows.
+<LI>Fixed compilation errors in ColEm-Unix.
+</UL>
+<H2>New in ColEm 3.2</H2>
+<UL>
+<LI>Added support for Super Game Cartridges with &gt;32kB ROMs.
+<LI>Added support for cheats in AAAA-DD and AAAA-DDDD formats.
+<LI>Added RAM-based cheats with AAAA in 0x6000..0x63FF range.
+<LI>Added Cheat Hunter tool that lets you search for cheat codes.
+<LI>Gameplay recording now always enabled.
+</UL>
+<H2>New in ColEm 2.9</H2>
+<UL>
+<LI>Not resetting VDP address latch when reading status (<I>Sir Lancelot</I>).
+<LI>Implemented 5th sprite fields in the VDP status register.
+<LI>Switched SN76489 PSG to logarithmic volumes.
+<LI>Corrected SN76489 PSG base frequency.
+<LI>Added more realistic "LD R,A" opcode to the Z80 emulation.
+<LI>Added undocumented opcode 71h to the Z80 emulation.
+<LI>Added accurate R register emulation.
+<LI>Added accurate LDIR/LDDR emulation.
+<LI>Added "replay" function (press [SHIFT]+[F8] to record, [F8] to replay).
+<LI>Added vertical scanlines effect to ColEm-Windows.
+<LI>Added LCD-like raster effect to ColEm-Windows.
+<LI>Started adding Coleco Adam emulation (not yet complete).
+<LI>ColEm-Android port is now available from Google Play.
+<LI>Maemo, Meego, Symbian, and MSDOS versions are no longer supported.
+</UL>
+<H2>New in ColEm 2.6</H2>
+<UL>
+<LI>State save file format (.STA) changed!
+<LI>Now clearing all RAM to zeros (Heist works).
+<LI>Now padding smaller ROMs with 0xFFs in LoadROM().
+<LI>Fixed Reset9918() to reset VDP completely (Boulder Dash and Frogger).
+<LI>Implemented SCREEN2 table address masking, thanks to Daniel Bienvenu.
+<LI>Fixed ColEm-Unix to automatically adapt to the screen depth.
+<LI>Ported ColEm to Maemo5 (aka Fremantle).
+<LI>Added accelerometer based tilt controls to ColEm-Maemo5.
+<LI>Added Maemo-specific configuration menu to ColEm-Maemo5.
+<LI>Added customizable key mappings to ColEm-Maemo5.
+<LI>Added fast-forwarding with [Ctrl]+[Space] to ColEm-Maemo5.
+<LI>Fixed on-screen dialpad in ColEm-Maemo.
+<LI>Multiple other small fixes and additions to ColEm-Maemo.
+</UL>
+<H2>New in ColEm 2.5</H2>
+<UL>
+<LI>Yet again ported ColEm to Unix using the new EMULib
+    framework. The new <B>ColEm-Unix</B> has been tested to compile
+    and run on Ubuntu Linux but should work on any other Unix.
+    ColEm-Unix source code is included with the core source code
+    distribution.
+<LI>Ported ColEm to Maemo OS2008 used in N800 and N810 internet tablets
+    from Nokia. <B>ColEm-Maemo</B> has been specifically optimized for
+    the tablets using ARM assembler. It will simulate joypad with the
+    touch screen and automatically open <CODE>*.cv/*.cv.gz</CODE> files
+    from the file manager. ColEm-Maemo source code is included with the
+    core source code distribution.
+<LI>Renamed <CODE>-zoom/-nozoom</CODE> to <CODE>-soft/-nosoft</CODE>.
+<LI>Added <CODE>-scale</CODE> option to scale window on Unix.
+<LI>Added <CODE>-home</CODE> to set home directory with system ROMs. 
+<LI>Options <CODE>-tv/-notv</CODE>, <CODE>-soft/-nosoft</CODE>, and the
+    <CODE>[F8]</CODE> key now work for both MSDOS and Unix.
+<LI>ColEm-Symbian display routines rewritten in ARM assembler for speed. 
+<LI>Split ColEm-Symbian configuration menu into four tabs, making
+    "Video" and "Audio" settings separate.
+<LI>Added "Audio Latency", "Skip Frames", and "Sync Updates" settings
+    to ColEm-Symbian.
+<LI>Documentation and built-in help changed, many inconsistencies removed.
+</UL>
 <H2>New in ColEm 2.4</H2>
 <UL>
 <LI>Ported ColEm to smartphones running <B>Symbian/UIQ3</B> software!

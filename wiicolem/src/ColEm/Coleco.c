@@ -5,7 +5,7 @@
 /** This file contains implementation for the Coleco        **/
 /** specific hardware. Initialization code is also here.    **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1994-2008                 **/
+/** Copyright (C) Marat Fayzullin 1994-2019                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -13,6 +13,7 @@
 
 #include "Coleco.h"
 #include "Sound.h"
+#include "CRC32.h"
 
 #ifdef WII
 #include "wii_app.h"
@@ -34,13 +35,16 @@
 #include <direct.h>
 #endif
 
+#ifdef ANDROID
+#include "MemFS.h"
+#define puts   LOGI
+#define printf LOGI
+#endif
+
 #ifdef ZLIB
 #include <zlib.h>
 #endif
 
-#ifdef WII
-int  CartSize    = 0;          /* The loaded cartridge's size   */
-#endif
 byte Verbose     = 1;          /* Debug msgs ON/OFF             */
 byte UPeriod     = 75;         /* Percentage of frames to draw  */
 int  Mode        = 0;          /* Conjunction of CV_* bits      */
@@ -53,13 +57,20 @@ void *ScrBuffer  = 0;          /* If screen buffer allocated,   */
 Z80 CPU;                       /* Z80 CPU state                 */
 SN76489 PSG;                   /* SN76489 PSG state             */
 TMS9918 VDP;                   /* TMS9918 VDP state             */
+AY8910 AYPSG;                  /* AY8910 PSG state              */
+C24XX EEPROM;                  /* 24Cxx EEPROM state            */
 
 byte *RAM;                     /* CPU address space             */
 byte *ROMPage[8];              /* 8x8kB read-only (ROM) pages   */
 byte *RAMPage[8];              /* 8x8kB read-write (RAM) pages  */
+byte *EEPROMData;              /* 32kB EEPROM data buffer       */
 byte Port20;                   /* Adam port 0x20-0x3F (AdamNet) */
 byte Port60;                   /* Adam port 0x60-0x7F (memory)  */
-
+byte Port53;                   /* SGM port 0x53 (memory)        */
+byte MegaPage;                 /* Current MegaROM page          */
+byte MegaSize;                 /* MegaROM size in 16kB pages    */
+byte MegaCart;                 /* MegaROM page at 8000h         */
+         
 byte ExitNow;                  /* 1: Exit the emulator          */
 byte AdamROMs;                 /* 1: All Adam ROMs are loaded   */ 
 
@@ -71,26 +82,93 @@ unsigned int SpinState;        /* Spinner bit states            */
 
 char *SndName    = "LOG.MID";  /* Soundtrack log file           */
 char *StaName    = 0;          /* Emulation state save file     */
+char *SavName    = 0;          /* EEPROM data save file         */
 char *HomeDir    = 0;          /* Full path to home directory   */
 char *PrnName    = 0;          /* Printer redirection file      */
 FILE *PrnStream;
 
-#ifdef MEGACART
-#define MAX_MEGACART_SIZE 0x100000
-unsigned int MegaCartMask = 0;
-#endif
+byte CheatsON    = 0;          /* 1: Cheats are on              */
+int  CheatCount  = 0;          /* Number of cheats, <=MAXCHEATS */
 
-#ifdef ZLIB
-#define fopen           gzopen
-#define fclose          gzclose
-#define fread(B,N,L,F)  gzread(F,B,(L)*(N))
-#define fwrite(B,N,L,F) gzwrite(F,B,(L)*(N))
+/* Structure to store cheats */
+struct
+{
+  word Addr;
+  word Data;
+  word Orig;
+  byte Size;
+  byte Text[10];
+} CheatCodes[MAXCHEATS];
+
+/* Apply RAM-based cheats */
+static int ApplyCheats(void);
+/* Guess some hardware modes by ROM contents */
+static unsigned int GuessROM(const byte *ROM,unsigned int Size);
+/* Save/load EEPROM contents */
+static int SaveSAV(const char *FileName);
+static int LoadSAV(const char *FileName);
+
+#if defined(ANDROID)
+#undef  feof
+#define fopen           mopen
+#define fclose          mclose
+#define fread           mread
+#define fwrite          mwrite
+#define rewind          mrewind
+#define fseek           mseek
+#define ftell           mtell
+#define fgets           mgets
+#define feof            meof
+#elif defined(ZLIB)
+#undef  feof
+#define fopen(N,M)      (FILE *)gzopen(N,M)
+#define fclose(F)       gzclose((gzFile)(F))
+#define fread(B,N,L,F)  gzread((gzFile)(F),B,(L)*(N))
+#define fwrite(B,N,L,F) gzwrite((gzFile)(F),B,(L)*(N))
+#define rewind(F)       gzrewind((gzFile)(F))
+#define fseek(F,O,W)    gzseek((gzFile)(F),O,W)
+#define ftell(F)        gztell((gzFile)(F))
+#define fgets(B,L,F)    gzgets((gzFile)(F),B,L)
+#define feof(F)         gzeof((gzFile)(F))
 #endif
 
 #ifdef WII
 // The Coleco ROM
 static char coleco_rom[WII_MAX_PATH] = "";
 #endif
+
+/** gethex() *************************************************/
+/** Parse hexadecimal byte.                                 **/
+/*************************************************************/
+static byte gethex(const char *S)
+{
+  const char *Hex = "0123456789ABCDEF";
+  const char *P;
+  byte D;
+
+  P = strchr(Hex,toupper(S[0]));
+  D = P? P-Hex:0;
+  P = strchr(Hex,toupper(S[1]));
+  D = P? (D<<4)+(P-Hex):D;
+
+  return(D);
+}
+
+/** MakeFileName() *******************************************/
+/** Make a copy of the file name, replacing the extension.  **/
+/** Returns allocated new name or 0 on failure.             **/
+/*************************************************************/
+char *MakeFileName(const char *FileName,const char *Extension)
+{
+  char *Result,*P;
+
+  Result = malloc(strlen(FileName)+strlen(Extension)+1);
+  if(!Result) return(0);
+
+  strcpy(Result,FileName);
+  if((P=strrchr(Result,'.'))) strcpy(P,Extension); else strcat(Result,Extension);
+  return(Result);
+}
 
 /** StartColeco() ********************************************/
 /** Allocate memory, load ROM image, initialize hardware,   **/
@@ -123,25 +201,28 @@ int StartColeco(const char *Cartridge)
 #endif
 
   /* Zero everything */
-  RAM      = 0;
-  ExitNow  = 0;
-  AdamROMs = 0;
-  StaName  = 0;
+  RAM        = 0;
+  ExitNow    = 0;
+  AdamROMs   = 0;
+  StaName    = 0;
+  SavName    = 0;
+  MegaSize   = 2;
+  MegaCart   = 0;
+  EEPROMData = 0;
 
   /* Set up CPU modes */
   CPU.TrapBadOps = Verbose&0x04;
   CPU.IAutoReset = 1;
 
   /* Allocate memory for RAM and ROM */
-#ifdef MEGACART
-  unsigned int addressSpace = 0x40000-0x8000+MAX_MEGACART_SIZE;
-  if(!(RAM=malloc(addressSpace))) { if(Verbose) puts("FAILED");return(0); }
-  memset(RAM,NORAM,addressSpace);
-#else  
   if(Verbose) printf("Allocating 256kB for CPU address space...");  
   if(!(RAM=malloc(0x40000))) { if(Verbose) puts("FAILED");return(0); }
   memset(RAM,NORAM,0x40000);
-#endif
+
+  /* Allocate EEPROM data buffer */
+  if(Verbose) printf("Allocating 32kB for EEPROM data...");  
+  if(!(EEPROMData=malloc(0x8000))) { if(Verbose) puts("FAILED");return(0); }
+  memset(EEPROMData,NORAM,0x8000);  
 
   /* Create TMS9918 VDP */
   if(Verbose) printf("OK\nCreating VDP...");
@@ -158,7 +239,8 @@ int StartColeco(const char *Cartridge)
   else
   {
     if(!getcwd(CurDir,sizeof(CurDir))) CurDir[0]='\0';
-    chdir(HomeDir);
+    if(chdir(HomeDir))
+    { if(Verbose) printf("  Failed changing to '%s' directory!\n",HomeDir); }
   }
 
   /* COLECO.ROM: OS7 (ColecoVision BIOS) */
@@ -208,7 +290,7 @@ int StartColeco(const char *Cartridge)
 
 #ifdef WII
     // TODO: Fix this
-    wii_get_app_relative( "WRITER.ROM", rom );
+    wii_get_app_relative( "EOS.ROM", rom );
     if((F=fopen(rom,"rb")))
 #else
     if(F=fopen("EOS.ROM","rb"))
@@ -225,8 +307,10 @@ int StartColeco(const char *Cartridge)
   if(!AdamROMs) Mode&=~CV_ADAM;
 
   /* Done loading ROMs */
-  if(CurDir[0]) chdir(CurDir);
-  if(P) { if(Verbose) printf("%s\n",P);return(0); }
+  if(P && Verbose) printf("%s\n",P);
+  if(CurDir[0] && chdir(CurDir))
+  { if(Verbose) printf("  Failed changing to '%s' directory!\n",CurDir); }
+  if(P) return(0);
 
   /* Open stream for a printer */
   if(!PrnName) PrnStream=stdout;
@@ -269,23 +353,30 @@ int StartColeco(const char *Cartridge)
 int LoadROM(const char *Cartridge)
 {
   byte Buf[2],*P;
+  int J,I,Size;
+  char *T;
   FILE *F;
-  int J;
-
-#ifdef WII
-  // Fixes bug that occurred when you load a save state for a
-  // cartridge w/ a size smaller than the previous cart 
-  // (CRC fails)
-#ifdef MEGACART
-  memset(ROM_CARTRIDGE,0x0,MAX_MEGACART_SIZE);
-#else
-  memset(ROM_CARTRIDGE,0x0,0x8000);
-#endif
-#endif
 
   /* Open file */
   F=fopen(Cartridge,"rb");
   if(!F) return(0);
+
+  /* Determine size via ftell() or by reading entire [GZIPped] stream */
+  if(!fseek(F,0,SEEK_END)) Size=ftell(F);
+  else
+  {
+    /* Read file in 8kB increments */
+    for(Size=0;(J=fread(RAM_DUMMY,1,0x2000,F))==0x2000;Size+=J);
+    if(J>0) Size+=J;
+    /* Clean up the dummy RAM! */
+    memset(RAM_DUMMY,NORAM,0x2000);
+  }
+
+  /* Validate size */
+  if((Size<=0)||(Size>128*0x4000)) { fclose(F);return(0); }
+
+  /* Rewind file to the beginning */
+  rewind(F);
 
   /* Read magic number */
   if(fread(Buf,1,2,F)!=2) { fclose(F);return(0); }
@@ -302,147 +393,123 @@ int LoadROM(const char *Cartridge)
   sprintf( val, "Cartidge type: %p\n", P );
   net_print_string(__FILE__,__LINE__, val );  
 #endif
-  
-#ifdef MEGACART
-  if(!P) P = ROM_CARTRIDGE;
-#else
+  /* Rewind file to the beginning */
+  rewind(F);
+
+  /* Assume normal cartridge, not a MegaCart */
+  I = 0;
+
+  /* MegaCarts have magic number in the last 16kB page */
+  if(!P&&(Size>0x8000))
+  {
+    if(fseek(F,(Size&~0x3FFF)-0x4000,SEEK_SET)>=0)
+      if(fread(Buf,1,2,F)==2)
+        if(((Buf[0]==0x55)&&(Buf[1]==0xAA))||((Buf[0]==0xAA)&&(Buf[1]==0x55)))
+        {
+          I = 1;
+          P = ROM_CARTRIDGE;
+        }
+
+    rewind(F);
+  }
+
   /* If ROM not recognized, drop out */
   if(!P) { fclose(F);return(0); }
-#endif
 
-  /* Read the rest of the ROM */
-  P[0]=Buf[0];
-  P[1]=Buf[1];
-#ifdef MEGACART
-  J=2+fread(P+2,1,MAX_MEGACART_SIZE-2,F); 
-#else
-  J=2+fread(P+2,1,0x7FFE,F);
-#endif
+  /* If loading a cartridge... */
+  if(P==ROM_CARTRIDGE)
+  {
+    /* Pad to the nearest 16kB and find number of 16kB pages */
+    Size = ((Size+0x3FFF)&~0x3FFF)>>14;
 
-#ifdef WII
-  // Retain the current cartridge's size
-  CartSize = J;
-#endif
+    /* Round page number up to the nearest power of two */
+    for(J=2;J<Size;J<<=1);
 
-#ifdef WII_NETTRACE  
-  sprintf( val, "Cartidge size: %dk\n", CartSize / 1024 );
-  net_print_string(__FILE__,__LINE__, val );  
-#endif
+    /* If not enough space, reallocate memory */
+    if(J>MegaSize)
+    {
+      P = realloc(RAM,0x38000+(J<<14));
+      if(!P) { fclose(F);return(0); }
+      RAM = P;
+      P   = ROM_CARTRIDGE;
+    }
 
-#ifdef MEGACART
-  MegaCartMask = ( CartSize > 0x8000 ? ( CartSize / 0x4000 - 1 ) : 0 );
+    /* Set new MegaROM size, cancel all cheats */
+    Size       = J<<14;
+    MegaSize   = J;
+    MegaCart   = I? J-1:0;
+    CheatsON   = 0;
+    CheatCount = 0;
+  }
 
-#ifdef WII_NETTRACE  
-  sprintf( val, "Cartridge: %s\n", ( MegaCartMask ? "MegaCart" : "Normal" ) );
-  net_print_string(__FILE__,__LINE__, val );  
-#endif
-#endif
+  /* Rewind file to the beginning */
+  rewind(F);
+
+  /* Clear ROM buffer */
+  memset(P,NORAM,Size);
+
+  /* Read the ROM */
+  J=fread(P,1,Size,F);
 
   /* Done with the file */
   fclose(F);
 
-  /* Reset hardware */
-  ResetColeco(Mode);
+  /* Save EEPROM contents for the previous cartridge */
+  if(SavName) SaveSAV(SavName);
 
-#ifndef WII
-  /* Free previous state name */
+  /* Reset hardware, guessing some hardware modes */
+  ResetColeco((Mode&~(CV_EEPROM|CV_SRAM))|GuessROM(P,J));
+
+  /* Free previous file names */
   if(StaName) free(StaName);
+  if(SavName) free(SavName);
 
-  /* If allocated enough space for the state name... */
-  if(StaName=malloc(strlen(Cartridge)+4))
-  {
-    /* Compose state file name */
-    strcpy(StaName,Cartridge);
-    P=strrchr(StaName,'.');
-    if(P) strcpy(P,".sta"); else strcat(StaName,".sta");
-    /* Try loading state file */
-    LoadSTA(StaName);
-  }
-#endif
+  /* Generate save file name and try loading it */
+  if((SavName=MakeFileName(Cartridge,".sav"))) LoadSAV(SavName);
+
+  /* Generate state file name and try loading it */
+  if((StaName=MakeFileName(Cartridge,".sta"))) LoadSTA(StaName);
+
+  /* Generate cheat file name and try loading it */
+  if((T=MakeFileName(Cartridge,".cht"))) { LoadCHT(T);free(T); }
+
+  /* Generate palette file name and try loading it */
+  if((T=MakeFileName(Cartridge,".pal"))) { LoadPAL(T);free(T); }
 
   /* Done */
   return(J);
 }
 
-/** SaveSTA() ************************************************/
-/** Save emulation state to a given file. Returns 1 on      **/
-/** success, 0 on failure.                                  **/
+/** LoadCHT() ************************************************/
+/** Load cheats from .CHT file. Cheat format is either      **/
+/** XXXX-XX (one byte) or XXXX-XXXX (two bytes). Returns    **/
+/** the number of cheats on success, 0 on failure.          **/
 /*************************************************************/
-int SaveSTA(const char *StateFile)
+int LoadCHT(const char *Name)
 {
-  static byte Header[16] = "STF\032\001\0\0\0\0\0\0\0\0\0\0\0";
-  unsigned int State[256],J;
+  char Buf[256],S[16];
+  int Status;
   FILE *F;
 
-  /* Open saved state file */
-  if(!(F=fopen(StateFile,"wb"))) return(0);
+  /* Open .CHT text file with cheats */
+  F = fopen(Name,"rb");
+  if(!F) return(0);
 
-  /* Fill header */
-  J=CartCRC();
-  Header[5] = Mode&CV_ADAM;
-  Header[6] = J&0xFF;
-  Header[7] = (J>>8)&0xFF;
-  Header[8] = (J>>16)&0xFF;
-  Header[9] = (J>>24)&0xFF;
-  
-  /* Write out the header */
-  if(fwrite(Header,1,16,F)!=16) { fclose(F);return(0); }
+  /* Switch cheats off for now and remove all present cheats */
+  Status = Cheats(CHTS_QUERY);
+  Cheats(CHTS_OFF);
+  ResetCheats();
 
-  /* Generate hardware state */
-  J=0;
-  memset(State,0,sizeof(State));
-  State[J++] = Mode;
-  State[J++] = UPeriod;
-  State[J++] = ROMPage[0]-RAM;
-  State[J++] = ROMPage[1]-RAM;
-  State[J++] = ROMPage[2]-RAM;
-  State[J++] = ROMPage[3]-RAM;
-  State[J++] = ROMPage[4]-RAM;
-  State[J++] = ROMPage[5]-RAM;
-  State[J++] = ROMPage[6]-RAM;
-  State[J++] = ROMPage[7]-RAM;
-  State[J++] = RAMPage[0]-RAM;
-  State[J++] = RAMPage[1]-RAM;
-  State[J++] = RAMPage[2]-RAM;
-  State[J++] = RAMPage[3]-RAM;
-  State[J++] = RAMPage[4]-RAM;
-  State[J++] = RAMPage[5]-RAM;
-  State[J++] = RAMPage[6]-RAM;
-  State[J++] = RAMPage[7]-RAM;
-  State[J++] = JoyMode;
-  State[J++] = Port20;
-  State[J++] = Port60;
+  /* Try adding cheats loaded from file */
+  while(!feof(F))
+    if(fgets(Buf,sizeof(Buf),F) && (sscanf(Buf,"%9s",S)==1))
+      AddCheat(S);
 
-  /* Write out CPU state */
-  if(fwrite(&CPU,1,sizeof(CPU),F)!=sizeof(CPU))
-  { fclose(F);return(0); }
+  /* Done with the file */
+  fclose(F);
 
-  /* Write out VDP state */
-  if(fwrite(&VDP,1,sizeof(VDP),F)!=sizeof(VDP))
-  { fclose(F);return(0); }
-  
-  /* Write out PSG state */
-  if(fwrite(&PSG,1,sizeof(PSG),F)!=sizeof(PSG))
-  { fclose(F);return(0); }
-
-  /* Write out hardware state */
-  if(fwrite(State,1,sizeof(State),F)!=sizeof(State))
-  { fclose(F);return(0); }
-
-  /* Write out memory contents */
-  if(fwrite(RAM_BASE,1,0xA000,F)!=0xA000)
-  { fclose(F);return(0); }
-  if(fwrite(VDP.VRAM,1,0x4000,F)!=0x4000)
-  { fclose(F);return(0); }
-
-#ifdef WII
-  if( wii_coleco_db_entry.flags&LOTD_SRAM )
-  {
-      // Write out the Lord of the Dungeon SRAM
-      if(fwrite(ROM_CARTRIDGE+0x6000,1,0x2000,F)!=0x2000)
-      { fclose(F);return(0); }    
-  }
-#endif
+  /* Turn cheats back on, if they were on */
+  Cheats(Status);
 
 #ifdef WII_NETTRACE
   int i;
@@ -466,129 +533,59 @@ int SaveSTA(const char *StateFile)
 #endif
 
   /* Done */
-  fclose(F);
-  return(1);
+  return(CheatCount);
 }
 
-/** LoadSTA() ************************************************/
-/** Load emulation state from a given file. Returns 1 on    **/
-/** success, 0 on failure.                                  **/
+/** LoadPAL() ************************************************/
+/** Load new palette from .PAL file. Returns number of      **/
+/** loaded colors on success, 0 on failure.                 **/
 /*************************************************************/
-int LoadSTA(const char *StateFile)
+int LoadPAL(const char *Name)
 {
-  unsigned int State[256],J;
-  byte Header[16],*VRAM;
-#ifndef WII
-  int XPal[16];
-#endif
-  void *XBuf;
+  char S[256],*P,*T;
   FILE *F;
+  int J;
 
-  /* Open saved state file */
-  if(!(F=fopen(StateFile,"rb"))) return(0);
+  if(!(F=fopen(Name,"rb"))) return(0);
 
-  /* Read and check the header */
-  if(fread(Header,1,16,F)!=16)
-  { fclose(F);return(0); }
-
-  if(memcmp(Header,"STF\032\001",5))
-  { fclose(F);return(0); }
-  J=CartCRC();
-
-  if(
-    (Header[5]!=(Mode&CV_ADAM)) ||
-    (Header[6]!=(J&0xFF))       ||
-    (Header[7]!=((J>>8)&0xFF))  ||
-    (Header[8]!=((J>>16)&0xFF)) ||
-    (Header[9]!=((J>>24)&0xFF))
-  ) { fclose(F);return(0); }
-
-  /* Read CPU state */
-  if(fread(&CPU,1,sizeof(CPU),F)!=sizeof(CPU))
-  { fclose(F);ResetColeco(Mode);return(0); }
-
-  /* Read VDP state, preserving VRAM address */
-  VRAM        = VDP.VRAM;
-  XBuf        = VDP.XBuf;
-#ifndef WII
-  memcpy(XPal,VDP.XPal,sizeof(XPal));
-#endif
-  if(fread(&VDP,1,sizeof(VDP),F)!=sizeof(VDP))
-  { fclose(F);VDP.VRAM=VRAM;VDP.XBuf=XBuf;ResetColeco(Mode);return(0); }
-  VDP.ChrTab += VRAM-VDP.VRAM;
-  VDP.ChrGen += VRAM-VDP.VRAM;
-  VDP.SprTab += VRAM-VDP.VRAM;
-  VDP.SprGen += VRAM-VDP.VRAM;
-  VDP.ColTab += VRAM-VDP.VRAM;
-  VDP.VRAM    = VRAM;
-  VDP.XBuf    = XBuf;
-#ifndef WII
-  memcpy(VDP.XPal,XPal,sizeof(VDP.XPal));
-#endif
-
-  /* Read PSG state */
-  if(fread(&PSG,1,sizeof(PSG),F)!=sizeof(PSG))
-  { fclose(F);ResetColeco(Mode);return(0); }
-
-  /* Read hardware state */
-  if(fread(State,1,sizeof(State),F)!=sizeof(State))
-  { fclose(F);ResetColeco(Mode);return(0); }
-
-  /* Read memory contents */
-  if(fread(RAM_BASE,1,0xA000,F)!=0xA000)
-  { fclose(F);ResetColeco(Mode);return(0); }
-  if(fread(VDP.VRAM,1,0x4000,F)!=0x4000)
-  { fclose(F);ResetColeco(Mode);return(0); }
-
-#ifdef WII
-  if( wii_coleco_db_entry.flags&LOTD_SRAM )
+  for(J=0;(J<16)&&fgets(S,sizeof(S),F);++J)
   {
-      // Read back the Lord of the Dungeon SRAM
-      unsigned int readBytes = fread(ROM_CARTRIDGE+0x6000,1,0x2000,F);
-      if(readBytes!=0x2000&&readBytes!=0x0) // 0x0 is for back compatibility
-      { fclose(F);return(0); }    
+    /* Skip white space and optional '#' character */
+    for(P=S;*P&&(*P<=' ');++P);
+    if(*P=='#') ++P;
+    /* Make sure we have got six hexadecimal digits */
+    for(T=P;*T&&strchr("0123456789ABCDEF",toupper(*T));++T);
+    /* If we have got six digits, parse and set color */
+    if(T-P==6) VDP.XPal[J]=SetColor(J,gethex(P),gethex(P+2),gethex(P+4));
   }
-#endif
 
-  /* Done with the file */
   fclose(F);
-
-  /* Parse hardware state */
-  J=0;
-  Mode       = State[J++];
-  UPeriod    = State[J++];
-  ROMPage[0] = State[J++]+RAM;
-  ROMPage[1] = State[J++]+RAM;
-  ROMPage[2] = State[J++]+RAM;
-  ROMPage[3] = State[J++]+RAM;
-  ROMPage[4] = State[J++]+RAM;
-  ROMPage[5] = State[J++]+RAM;
-  ROMPage[6] = State[J++]+RAM;
-  ROMPage[7] = State[J++]+RAM;
-  RAMPage[0] = State[J++]+RAM;
-  RAMPage[1] = State[J++]+RAM;
-  RAMPage[2] = State[J++]+RAM;
-  RAMPage[3] = State[J++]+RAM;
-  RAMPage[4] = State[J++]+RAM;
-  RAMPage[5] = State[J++]+RAM;
-  RAMPage[6] = State[J++]+RAM;
-  RAMPage[7] = State[J++]+RAM;
-  JoyMode    = State[J++];
-  Port20     = State[J++];
-  Port60     = State[J++];
-
-  /* All PSG channels have been changed */
-  PSG.Changed = 0xFF;
-
-  /* Done */
-  return(1);
+  return(J);
 }
 
-#ifdef ZLIB
-#undef fopen
+/** State.h **************************************************/
+/** SaveState()/LoadState(), SaveSTA()/LoadSTA() functions  **/
+/** are implemented here.                                   **/
+/*************************************************************/
+#include "State.h"
+
+#if defined(ZLIB) || defined(ANDROID)
+#undef fopen 
 #undef fclose
-#undef fread
+#undef fread 
 #undef fwrite
+#undef rewind
+#undef fseek 
+#undef ftell 
+#undef fgets 
+#undef feof
+#endif
+
+#if defined(ANDROID)
+/* On Android, may need to open files for writing at an */
+/* alternative location, if the requested location is   */
+/* not available. OpenRealFile() WILL NOT USE ZLIB.     */
+#define fopen OpenRealFile
 #endif
 
 /** TrashColeco() ********************************************/
@@ -596,9 +593,14 @@ int LoadSTA(const char *StateFile)
 /*************************************************************/
 void TrashColeco(void)
 {
+  /* Save EEPROM contents */
+  if(SavName) SaveSAV(SavName);
+
   /* Free all memory and resources */
-  if(RAM)     free(RAM);
-  if(StaName) free(StaName);
+  if(RAM)        { free(RAM);RAM=0; }
+  if(EEPROMData) { free(EEPROMData);EEPROMData=0; }
+  if(StaName)    { free(StaName);StaName=0; }
+  if(SavName)    { free(SavName);SavName=0; }
 
   /* Close MIDI sound log */
   TrashMIDI();
@@ -610,83 +612,112 @@ void TrashColeco(void)
 /** SetMemory() **********************************************/
 /** Set memory pages according to passed values.            **/
 /*************************************************************/
-void SetMemory(byte NewPort60,byte NewPort20)
+void SetMemory(byte NewPort60,byte NewPort20,byte NewPort53)
 {
+  byte *P;
+
   /* Store new values */
   Port60 = NewPort60;
   Port20 = NewPort20;
+  Port53 = NewPort53;
 
   /* Lower 32kB ROM */
-  if(!(NewPort60&0x03)&&(NewPort20&0x02))
+  if(Mode&CV_ADAM)
   {
-    ROMPage[0] = RAM_DUMMY;
-    ROMPage[1] = RAM_DUMMY;
-    ROMPage[2] = ROM_EOS;
-    ROMPage[3] = ROM_EOS;
-  }
-  else
-  {
-    ROMPage[0] = RAM+((int)(NewPort60&0x03)<<15);
-    if(!(Mode&CV_ADAM))
+    // Coleco Adam
+    if(!(NewPort60&0x03)&&(NewPort20&0x02))
     {
+      // EOS enabled
+      ROMPage[0] = RAM_DUMMY;
       ROMPage[1] = RAM_DUMMY;
-      ROMPage[2] = RAM_DUMMY;
-      ROMPage[3] = RAM_BASE;
+      ROMPage[2] = ROM_EOS;
+      ROMPage[3] = ROM_EOS;
     }
-    else
+    else if(Mode&CV_ADAM)
     {
+      // Normal configuration
+      ROMPage[0] = RAM+((int)(NewPort60&0x03)<<15);
       ROMPage[1] = ((NewPort60&0x03)==3? RAM_MAIN_LO:ROMPage[0])+0x2000;
       ROMPage[2] = ROMPage[1]+0x2000;
       ROMPage[3] = ROMPage[1]+0x4000;
     }
   }
+  else if(Mode&CV_SGM)
+  {
+    // Super Game Module (SGM)
+    ROMPage[0] = NewPort60&0x02? ROM_BIOS:RAM_BASE;
+    if(NewPort53&0x01)
+    {
+      // 24kB RAM enabled
+      ROMPage[1] = RAM_BASE+0x2000;
+      ROMPage[2] = RAM_BASE+0x4000;
+      ROMPage[3] = RAM_BASE+0x6000;
+    }
+    else
+    {
+      // Normal configuration
+      ROMPage[1] = RAM_DUMMY;
+      ROMPage[2] = RAM_DUMMY;
+      ROMPage[3] = RAM_BASE;
+    }
+  }
+  else
+  {
+    // Regular ColecoVision
+    ROMPage[0] = ROM_BIOS;
+    ROMPage[1] = RAM_DUMMY;
+    ROMPage[2] = RAM_DUMMY;
+    ROMPage[3] = RAM_BASE;
+  }
 
   /* Upper 32kB ROM */
-#ifdef MEGACART
-  if( MegaCartMask )
-  {
-    ROMPage[4] = ROM_CARTRIDGE+(MegaCartMask << 14);
-    ROMPage[5] = ROMPage[4]+0x2000;
-    ROMPage[6] = ROM_CARTRIDGE;
-    ROMPage[7] = ROMPage[6]+0x2000;
-  }
-  else
-  {
-#endif
-    ROMPage[4] = RAM+((int)(NewPort60&0x0C)<<13)+0x20000;
-    ROMPage[5] = ROMPage[4]+0x2000;
-    ROMPage[6] = ROMPage[4]+0x4000;
-    ROMPage[7] = ROMPage[4]+0x6000;
-#ifdef MEGACART
-  }
-#endif
+  P          = RAM_MAIN_HI+((int)(NewPort60&0x0C)<<13);
+  ROMPage[4] = P + (MegaCart<<14);
+  ROMPage[5] = ROMPage[4]+0x2000;
+  ROMPage[6] = P + (((NewPort60&0x0C)==0x0C? (MegaPage&(MegaSize-1)):1)<<14);
+  ROMPage[7] = ROMPage[6]+0x2000;
 
   /* Lower 32kB RAM */
-  if(!(Port60&0x03))
+  if(Mode&CV_ADAM)
   {
-    RAMPage[0]=RAMPage[1]=RAMPage[2]=RAMPage[3]=RAM_DUMMY;
+    // Coleco Adam
+    if(!(NewPort60&0x03))
+      RAMPage[0]=RAMPage[1]=RAMPage[2]=RAMPage[3]=RAM_DUMMY;
+    else
+    {
+      RAMPage[0] = (NewPort60&0x03)==3? RAM_DUMMY:ROMPage[0]; 
+      RAMPage[1] = ROMPage[1];
+      RAMPage[2] = ROMPage[2];
+      RAMPage[3] = ROMPage[3];
+    }
   }
-  else
+  else if(Mode&CV_SGM)
   {
-    RAMPage[0] = (Port60&0x03)==3? RAM_DUMMY:ROMPage[0]; 
+    // Super Game Module (SGM)
+    RAMPage[0] = NewPort60&0x02? RAM_DUMMY:ROMPage[0]; 
     RAMPage[1] = ROMPage[1];
     RAMPage[2] = ROMPage[2];
     RAMPage[3] = ROMPage[3];
-
-#ifdef WII
-    if( wii_coleco_db_entry.flags&OPCODE_MEMORY )
-    {
-#ifdef WII_NETTRACE
-      net_print_string(__FILE__,__LINE__, "Opcode memory enabled.\n" );  
-#endif
-      ROMPage[1] = RAMPage[1] = RAM_MAIN_HI;
-      ROMPage[2] = RAMPage[2] = RAMPage[1]+0x2000;
-    }
-#endif
+  }
+  else
+  {
+    // Regular ColecoVision
+    RAMPage[0] = RAM_DUMMY; 
+    RAMPage[1] = ROMPage[1];
+    RAMPage[2] = ROMPage[2];
+    RAMPage[3] = ROMPage[3];
   }
 
+#ifdef WII
+  if(wii_coleco_db_entry.flags&OPCODE_MEMORY)
+  {
+    ROMPage[1] = RAMPage[1] = RAM_MAIN_HI;
+    ROMPage[2] = RAMPage[2] = RAMPage[1]+0x2000;
+  }
+#endif
+
   /* Upper 32kB RAM */
-  if(Port60&0x04)
+  if(NewPort60&0x04)
     RAMPage[4]=RAMPage[5]=RAMPage[6]=RAMPage[7]=RAM_DUMMY;
   else
   {
@@ -695,6 +726,9 @@ void SetMemory(byte NewPort60,byte NewPort20)
     RAMPage[6] = ROMPage[6];
     RAMPage[7] = ROMPage[7];
   }
+
+  /* Reset AdamNet */
+  if((Mode&CV_ADAM)&&(NewPort20==0x0F)) ResetPCB();
 }
 
 /** CartCRC() ************************************************/
@@ -702,40 +736,14 @@ void SetMemory(byte NewPort60,byte NewPort20)
 /*************************************************************/
 unsigned int CartCRC(void)
 {
-  unsigned int I,J;
+  unsigned int I=0,J=0;
 #ifdef WII
-  // The CRC was taking into consideration all of the cartridge RAM when 
-  // calculating the CRC. In reality, it should only calculate based on
-  // the size of the cartridge. This simple fix ignores anything after
-  // the cartridge's size. This is done to retain backward compatibility
-  // with previous saves.
-
-#ifdef MEGACART
-  unsigned int maxCartSize = ( MegaCartMask ? MAX_MEGACART_SIZE : 0x8000 );
-#else
-  unsigned int maxCartSize = 0x8000;
-#endif 
-
-  unsigned int size = CartSize;
-  if( wii_coleco_db_entry.flags&LOTD_SRAM && size == 0x8000 )
-  {
-    // 32k version is really 24k plus SRAM
-    size = 0x6000;
+  // TODO: Fix this to properly calculate the CRC (ignoring SRAM)
+  if(!(Mode&CV_SRAM)) {
+#endif
+    for(J=I=0;J<0x8000;++J) I+=ROM_CARTRIDGE[J];
+#ifdef WII
   }
-
-  for(J=I=0;J<maxCartSize;++J) 
-  {
-    if( J < size )
-    {
-      I+=ROM_CARTRIDGE[J];
-    }
-    else
-    { 
-      I+=0xFF; // Old NORAM value
-    }      
-  }
-#else
-  for(J=I=0;J<0x8000;++J) I+=ROM_CARTRIDGE[J];
 #endif
   return(I);
 }
@@ -751,10 +759,9 @@ int ResetColeco(int NewMode)
   /* Disable Adam if not all ROMs are loaded */
   if(!AdamROMs) NewMode&=~CV_ADAM;
 
-  /* Set new modes into effect */
+  /* Set new modes into effect and initialize hardware */
   Mode      = NewMode;
-
-  /* Initialize hardware */
+  MegaPage  = 1;
   JoyMode   = 0;
   JoyState  = 0;
   SpinState = 0;
@@ -763,28 +770,35 @@ int ResetColeco(int NewMode)
 
   /* Clear memory (important for NetPlay, to  */
   /* keep states at both sides consistent)    */
-  memset(RAM_MAIN_LO,NORAM,0x8000);
-  memset(RAM_MAIN_HI,NORAM,0x8000);
-  memset(RAM_EXP_LO,NORAM,0x8000);
-  memset(RAM_EXP_HI,NORAM,0x8000);
-  memset(RAM_OS7,NORAM,0x2000);
+  /* Clearing to zeros (Heist) */
+  memset(RAM_MAIN_LO,0x00,0x8000);
+  memset(RAM_MAIN_HI,0x00,0x8000);
+  memset(RAM_EXP_LO,0x00,0x8000);
+  memset(RAM_EXP_HI,0x00,0x8000);
+  memset(RAM_OS7,0x00,0x2000);
 
   /* Set up memory pages */
-  SetMemory(Mode&CV_ADAM? 0x00:0x0F,0x00);
+  SetMemory(Mode&CV_ADAM? 0x00:0x0F,0x00,0x00);
+
+  /* Set scanline parameters according to video type */
+  /* (this has to be done before CPU and VDP are reset) */
+  VDP.MaxSprites = Mode&CV_ALLSPRITE? 255:TMS9918_MAXSPRITES; 
+  VDP.Scanlines  = Mode&CV_PAL? TMS9929_LINES:TMS9918_LINES;
+  CPU.IPeriod    = Mode&CV_PAL? TMS9929_LINE:TMS9918_LINE;
 
   /* Reset TMS9918 VDP */
   Reset9918(&VDP,ScrBuffer,ScrWidth,ScrHeight);
-  /* Set sprite limit */
-  VDP.MaxSprites = Mode&CV_ALLSPRITE? 255:TMS9918_MAXSPRITES; 
   /* Reset SN76489 PSG */
-  Reset76489(&PSG,0);
+  Reset76489(&PSG,CPU_CLOCK,0);
   Sync76489(&PSG,SN76489_SYNC);
+  /* Reset AY8910 PSG */
+  Reset8910(&AYPSG,CPU_CLOCK/2, SN76489_CHANNELS);
+  Sync8910(&AYPSG,AY8910_SYNC);
+  /* Reset 24Cxx EEPROM */
+  I = (Mode&CV_EEPROM)==CV_24C256? C24XX_24C256:C24XX_24C08;
+  Reset24XX(&EEPROM,EEPROMData,I|(Verbose&0x08? C24XX_DEBUG:0));
   /* Reset Z80 CPU */
   ResetZ80(&CPU);
-
-  /* Set scanline parameters according to video type */
-  VDP.Scanlines = Mode&CV_PAL? TMS9929_LINES:TMS9918_LINES;
-  CPU.IPeriod   = Mode&CV_PAL? TMS9929_LINE:TMS9918_LINE;
 
   /* Set up the palette */
   I = Mode&CV_PALETTE;
@@ -802,45 +816,86 @@ int ResetColeco(int NewMode)
 /*************************************************************/
 void WrZ80(register word A,register byte V)
 {
-#ifndef WII
-  if(Mode&CV_ADAM) RAMPage[A>>13][A&0x1FFF]=V;
-  else if((A>=0x6000)&&(A<0x8000))
-       {
-         A&=0x03FF;
-         RAM_BASE[A]       =RAM_BASE[0x0400+A]=
-         RAM_BASE[0x0800+A]=RAM_BASE[0x0C00+A]=
-         RAM_BASE[0x1000+A]=RAM_BASE[0x1400+A]=
-         RAM_BASE[0x1800+A]=RAM_BASE[0x1C00+A]=V;
-       }
-#else
-  if(Mode&CV_ADAM) 
+  if(Mode&CV_ADAM)
   {
+    /* Write to RAM */
+    RAMPage[A>>13][A&0x1FFF]=V;
+    /* Adam may try writing AdamNet */
+    if(PCBTable[A]) WritePCB(A,V);
+  }
+  else if((Mode&CV_SGM)&&(Port53&0x01))
+  {
+    /* Write to RAM */
     RAMPage[A>>13][A&0x1FFF]=V;
   }
-  else
+  else if((A>=0x6000)&&(A<0x8000))
   {
-    if((A>=0x6000)&&(A<0x8000))
-    {
-      A&=0x03FF;
-      RAM_BASE[A]       =RAM_BASE[0x0400+A]=
-      RAM_BASE[0x0800+A]=RAM_BASE[0x0C00+A]=
-      RAM_BASE[0x1000+A]=RAM_BASE[0x1400+A]=
-      RAM_BASE[0x1800+A]=RAM_BASE[0x1C00+A]=V;
-    }
-    else if((wii_coleco_db_entry.flags&LOTD_SRAM)&&(A>=0xE000)&&(A<0xE800))
-    {
-      // To support Lord of the Dungeon writes to SRAM
-      A&=0x07FF;
-      ROM_CARTRIDGE[0x6000+A]=ROM_CARTRIDGE[0x6800+A]=
-      ROM_CARTRIDGE[0x7000+A]=ROM_CARTRIDGE[0x7800+A]=V;
-    }
-    else if((wii_coleco_db_entry.flags&OPCODE_MEMORY)&&(A>=0x2000)&&(A<0x5FFF))
-	  {
-      // To support Opcode RAM expansion
-	    RAMPage[A>>13][A&0x1FFF]=V;
-	  }
+    A&=0x03FF;
+    RAM_BASE[A]       =RAM_BASE[0x0400+A]=
+    RAM_BASE[0x0800+A]=RAM_BASE[0x0C00+A]=
+    RAM_BASE[0x1000+A]=RAM_BASE[0x1400+A]=
+    RAM_BASE[0x1800+A]=RAM_BASE[0x1C00+A]=V;
   }
-#endif
+  else if((A>=0xFF80)&&(MegaSize>2)&&(ROMPage[7]!=RAMPage[7]))
+  {
+    /* Cartridges, containing EEPROM, use [1111 1111 11xx 0000] addresses */
+    if(Mode&CV_EEPROM)
+    {
+      switch(A)
+      {
+        case 0xFFC0: Write24XX(&EEPROM,EEPROM.Pins&~C24XX_SCL);break;
+        case 0xFFD0: Write24XX(&EEPROM,EEPROM.Pins|C24XX_SCL);break;
+        case 0xFFE0: Write24XX(&EEPROM,EEPROM.Pins&~C24XX_SDA);break;
+        case 0xFFF0: Write24XX(&EEPROM,EEPROM.Pins|C24XX_SDA);break;
+      }
+    }
+
+    /* MegaCarts use [1111 1111 11xx xxxx] addresses */
+    if(MegaCart)
+    {
+      if(A>=0xFFC0)
+      {
+        /* Set new MegaCart ROM page at C000h */
+        MegaPage   = (A-0xFFC0)&(MegaSize-1);
+        ROMPage[6] = ROM_CARTRIDGE + (MegaPage<<14);
+        ROMPage[7] = ROMPage[6]+0x2000;
+      }
+    }
+    else switch(A)
+    {
+      case 0xFF90:
+      case 0xFFA0:
+      case 0xFFB0:
+        /* Cartridges, containing EEPROM, use [1111 1111 10xx 0000] addresses */
+        if(MegaSize==4)
+        {
+          MegaPage   = (A>>4)&3&(MegaSize-1);
+          ROMPage[6] = ROM_CARTRIDGE + (MegaPage<<14);
+          ROMPage[7] = ROMPage[6]+0x2000;
+        }
+        break;
+      case 0xFFFF:
+        /* SGM multipage ROMs write page number to FFFFh */
+        MegaPage   = V&(MegaSize-1);
+        ROMPage[6] = ROM_CARTRIDGE + (MegaPage<<14);
+        ROMPage[7] = ROMPage[6]+0x2000;
+        break;
+    }
+  }
+  else if((A>=0xE000)&&(A<0xE800)&&(Mode&CV_SRAM))
+  {
+    /* SRAM at E800h..EFFFh, writable via E000h..E7FFh */
+    ROMPage[A>>13][(A+0x0800)&0x1FFF] = V;
+  }
+  else if((wii_coleco_db_entry.flags&OPCODE_MEMORY)&&(A>=0x2000)&&(A<0x5FFF))
+  {
+    // To support Opcode RAM expansion
+    RAMPage[A>>13][A&0x1FFF]=V;
+  }
+  else if(Verbose)
+  {
+//    printf("Illegal write RAM[%04Xh] = %02Xh\n",A,V);
+  }
 }
 
 /** RdZ80() **************************************************/
@@ -848,7 +903,27 @@ void WrZ80(register word A,register byte V)
 /** address A of Z80 address space. Copied to Z80.c and     **/
 /** made inlined to speed things up.                        **/
 /*************************************************************/
-byte RdZ80(register word A) { return(ROMPage[A>>13][A&0x1FFF]); }
+byte RdZ80(register word A)
+{
+  /* If trying to switch MegaCart... */
+  if((A>=0xFFC0)&&MegaCart&&(ROMPage[7]!=RAMPage[7]))
+  {
+    /* Set new MegaCart ROM page */
+    MegaPage   = (A-0xFFC0)&(MegaSize-1);
+    ROMPage[6] = ROM_CARTRIDGE + (MegaPage<<14);
+    ROMPage[7] = ROMPage[6]+0x2000;
+  }
+  else if((A==0xFF80)&&(MegaSize>2)&&(ROMPage[7]!=RAMPage[7])&&(Mode&CV_EEPROM))
+  {
+    /* Return EEPROM output bit */
+    return(Read24XX(&EEPROM));
+  }
+
+  /* Adam may try reading AdamNet */
+  if((Mode&CV_ADAM)&&PCBTable[A]) ReadPCB(A);
+
+  return(ROMPage[A>>13][A&0x1FFF]);
+}
 
 /** PatchZ80() ***********************************************/
 /** Z80 emulation calls this function when it encounters a  **/
@@ -865,10 +940,13 @@ byte InZ80(register word Port)
   /* Coleco uses 8bit port addressing */
   Port&=0x00FF;
 
+//printf("InZ80(0x%X)\n",Port);
+
   switch(Port&0xE0)
   {
-    case 0x40: /* Printer Status */
+    case 0x40: /* Printer Status and SGM Module */
       if((Mode&CV_ADAM)&&(Port==0x40)) return(0xFF);
+      if((Mode&CV_SGM)&&(Port==0x52))  return(RdData8910(&AYPSG));
       break;
 
     case 0x20: /* AdamNet Control */
@@ -889,11 +967,7 @@ byte InZ80(register word Port)
   }
 
   /* No such port */
-#ifdef WII
-  return(0xFF); // Old NORAM value
-#else
   return(NORAM);
-#endif
 }
 
 /** OutZ80() *************************************************/
@@ -904,6 +978,8 @@ void OutZ80(register word Port,register byte Value)
 {
   /* Coleco uses 8bit port addressing */
   Port&=0x00FF;
+
+//printf("OutZ80(0x%X,0x%X)\n",Port,Value);
 
   switch(Port&0xE0)
   {
@@ -918,14 +994,20 @@ void OutZ80(register word Port,register byte Value)
 
     case 0x40:
       if((Mode&CV_ADAM)&&(Port==0x40)) fputc(Value,PrnStream);
+      if(Mode&CV_SGM)
+      {
+        if(Port==0x53)      SetMemory(Port60,Port20,Value);
+        else if(Port==0x50) WrCtrl8910(&AYPSG,Value);
+        else if(Port==0x51) WrData8910(&AYPSG,Value);
+      }
       break;
 
     case 0x20:
-      if(Mode&CV_ADAM) SetMemory(Port60,Value);
+      if(Mode&CV_ADAM) SetMemory(Port60,Value,Port53);
       break;
 
     case 0x60:
-      if(Mode&CV_ADAM) SetMemory(Value,Port20);
+      if(Mode&(CV_ADAM|CV_SGM)) SetMemory(Value,Port20,Port53);
       break;
   }
 }
@@ -937,6 +1019,7 @@ void OutZ80(register word Port,register byte Value)
 word LoopZ80(Z80 *R)
 {
   static byte ACount=0;
+  register int J;
 
   /* If emulating spinners... */
   if(Mode&CV_SPINNERS)
@@ -1023,14 +1106,304 @@ word LoopZ80(Z80 *R)
   }
 
   /* Count ticks for MIDI ouput */
-  MIDITicks(1000/(Mode&CV_PAL? TMS9929_FRAMES:TMS9918_FRAMES));
+  J = 1000/(Mode&CV_PAL? TMS9929_FRAMES:TMS9918_FRAMES);
+  MIDITicks(J);
+#ifdef WII
+  //Loop8910(&AYPSG,J*1000);
+#endif  
 
   /* Flush any accumulated sound changes */
   Sync76489(&PSG,SN76489_FLUSH|(Mode&CV_DRUMS? SN76489_DRUMS:0));
+  Sync8910(&AYPSG,AY8910_FLUSH|(Mode&CV_DRUMS? AY8910_DRUMS:0));
+
+  /* Apply RAM-based cheats */
+  if(CheatsON&&CheatCount) ApplyCheats();
 
   /* If exit requested, return INT_QUIT */
   if(ExitNow) return(INT_QUIT);
 
   /* Generate interrupt if needed */
   return(R->IRequest);
+}
+
+/** SaveCHT() ************************************************/
+/** Save cheats to a given text file. Returns the number of **/
+/** cheats on success, 0 on failure.                        **/
+/*************************************************************/
+int SaveCHT(const char *Name)
+{
+  FILE *F;
+  int J;
+
+  /* Open .CHT text file with cheats */
+  F = fopen(Name,"wb");
+  if(!F) return(0);
+
+  /* Save cheats */
+  for(J=0;J<CheatCount;++J)
+    fprintf(F,"%s\n",CheatCodes[J].Text);
+
+  /* Done */
+  fclose(F);
+  return(CheatCount);
+}
+
+/** AddCheat() ***********************************************/
+/** Add a new cheat. Returns 0 on failure or the number of  **/
+/** cheats on success.                                      **/
+/*************************************************************/
+int AddCheat(const char *Cheat)
+{
+  static const char *Hex = "0123456789ABCDEF";
+  unsigned int D;
+  char *P;
+  int J,N;
+
+  /* Table full: no more cheats */
+  if(CheatCount>=MAXCHEATS) return(0);
+
+  /* Check cheat length and decode */
+  N=strlen(Cheat);
+  if((N!=9)&&(N!=7)) return(0);
+  for(J=0,D=0;J<N;J++)
+    if(J==4) { if(Cheat[J]!='-') return(0); }
+    else
+    {
+      P=strchr(Hex,toupper(Cheat[J]));
+      if(!P) return(0); else D=(D<<4)|(P-Hex);
+    }
+
+  /* Add cheat */
+  strcpy((char *)CheatCodes[CheatCount].Text,Cheat);
+  if(N==9)
+  {
+    CheatCodes[CheatCount].Addr = D>>16;
+    CheatCodes[CheatCount].Data = D&0xFFFF;
+    CheatCodes[CheatCount].Size = 2;
+  }
+  else
+  {
+    CheatCodes[CheatCount].Addr = D>>8;
+    CheatCodes[CheatCount].Data = D&0xFF;
+    CheatCodes[CheatCount].Size = 1;
+  }
+
+  /* Successfully added a cheat! */
+  return(++CheatCount);
+}
+
+/** DelCheat() ***********************************************/
+/** Delete a cheat. Returns 0 on failure, 1 on success.     **/
+/*************************************************************/
+int DelCheat(const char *Cheat)
+{
+  int I,J;
+
+  /* Scan all cheats */
+  for(J=0;J<CheatCount;++J)
+  {
+    /* Match cheat text */
+    for(I=0;Cheat[I]&&CheatCodes[J].Text[I];++I)
+      if(CheatCodes[J].Text[I]!=toupper(Cheat[I])) break;
+    /* If cheat found... */
+    if(!Cheat[I]&&!CheatCodes[J].Text[I])
+    {
+      /* Shift cheats by one */
+      if(--CheatCount!=J)
+        memcpy(&CheatCodes[J],&CheatCodes[J+1],(CheatCount-J)*sizeof(CheatCodes[0]));
+      /* Cheat deleted */
+      return(1);
+    }
+  }
+
+  /* Cheat not found */
+  return(0);
+}
+
+/** ResetCheats() ********************************************/
+/** Remove all cheats.                                      **/
+/*************************************************************/
+void ResetCheats(void) { Cheats(CHTS_OFF);CheatCount=0; }
+
+/** ApplyCheats() ********************************************/
+/** Apply RAM-based cheats. Returns the number of applied   **/
+/** cheats.                                                 **/
+/*************************************************************/
+int ApplyCheats(void)
+{
+  int J,I;
+
+  /* For all current cheats that fall into RAM address range... */
+  for(J=I=0;J<CheatCount;++J)
+    if((CheatCodes[J].Addr>=0x6000)&&(CheatCodes[J].Addr<0x6400))
+    {
+      WrZ80(CheatCodes[J].Addr,CheatCodes[J].Data&0xFF);
+      if(CheatCodes[J].Size>1)
+        WrZ80(CheatCodes[J].Addr+1,CheatCodes[J].Data>>8);
+      ++I;
+    }
+
+  /* Return number of applied cheats */
+  return(I);
+}
+
+/** Cheats() *************************************************/
+/** Toggle cheats on (1), off (0), inverse state (2) or     **/
+/** query (3).                                              **/
+/*************************************************************/
+int Cheats(int Switch)
+{
+  int J,Size;
+  byte *P;
+
+  switch(Switch)
+  {
+    case CHTS_ON:
+    case CHTS_OFF:    if(Switch==CheatsON) return(CheatsON);
+    case CHTS_TOGGLE: Switch=!CheatsON;break;
+    default:          return(CheatsON);
+  }
+
+  /* Compute total ROM size */
+  Size = MegaSize<<14;
+
+  /* If toggling cheats... */
+  if(Switch!=CheatsON)
+  {
+    /* If enabling cheats... */
+    if(Switch)
+    {
+      /* Patch ROM with the cheat values */
+      for(J=0;J<CheatCount;++J)
+        if((CheatCodes[J].Addr<0x6000)||(CheatCodes[J].Addr>=0x6400))
+          if(CheatCodes[J].Addr+CheatCodes[J].Size<=Size)
+          {
+            P = ROM_CARTRIDGE + CheatCodes[J].Addr;
+            CheatCodes[J].Orig = P[0];
+            P[0] = CheatCodes[J].Data;
+            if(CheatCodes[J].Size>1)
+            {
+              CheatCodes[J].Orig |= (int)P[1]<<8;
+              P[1] = CheatCodes[J].Data>>8;
+            }
+          }
+    }
+    else
+    {
+      /* Restore original ROM values */
+      for(J=0;J<CheatCount;++J)
+        if((CheatCodes[J].Addr<0x6000)||(CheatCodes[J].Addr>=0x6400))
+          if(CheatCodes[J].Addr+CheatCodes[J].Size<=Size)
+          {
+            P = ROM_CARTRIDGE + CheatCodes[J].Addr;
+            P[0] = CheatCodes[J].Orig;
+            if(CheatCodes[J].Size>1)
+              P[1] = CheatCodes[J].Orig>>8;
+          }
+    }
+
+    /* Done toggling cheats */
+    CheatsON = Switch;
+  }
+
+  /* Done */
+  if(Verbose) printf("Cheats %s\n",CheatsON? "ON":"OFF");
+  return(CheatsON);
+}
+
+/** SaveSAV() ************************************************/
+/** Save EEPROM memory contents to a given file. Returns 1  **/
+/** on success, 0 on failure.                               **/
+/*************************************************************/
+int SaveSAV(const char *FileName)
+{
+  unsigned int Size = Size24XX(&EEPROM);
+  unsigned int J;
+  byte *P = EEPROMData;
+  FILE *F;
+
+  /* If no EEPROM, see if we have 2kB SRAM */
+  if(!P||!Size) { if(!(Mode&CV_SRAM)) return(0); else { P=ROMPage[7]+0x800;Size=0x800; } }
+
+  /* Check if EEPROM has data */
+  for(J=0;(J<Size)&&(P[J]==NORAM);++J);
+
+  /* If EEPROM or SRAM has no data... */
+  if(J==Size)
+  {
+    /* Do not save file if it does not exist yet */
+    if(!(F=fopen(FileName,"rb"))) return(1); else fclose(F);
+  }
+
+  /* Must have file */
+  if(!(F=fopen(FileName,"wb"))) return(0);
+
+  /* Save */
+  J = fwrite(P,1,Size,F);
+
+  /* Done */
+  fclose(F);
+  return(J==Size);
+}
+
+/** LoadSAV() ************************************************/
+/** Load EEPROM memory contents from a given file. Returns  **/
+/** 1 on success, 0 on failure.                             **/
+/*************************************************************/
+int LoadSAV(const char *FileName)
+{
+  unsigned int Size = Size24XX(&EEPROM);
+  unsigned int J;
+  byte *P = EEPROMData;
+  FILE *F;
+
+  /* If no EEPROM, see if we have 2kB SRAM */
+  if(!P||!Size) { if(!(Mode&CV_SRAM)) return(0); else { P=ROMPage[7]+0x800;Size=0x800; } }
+
+  /* Must have file */
+  if(!(F=fopen(FileName,"rb"))) return(0);
+
+  /* Load */
+  J = fread(P,1,Size,F);
+
+  /* Done */
+  fclose(F);
+  return(J==Size);
+}
+
+/** GuessROM() ***********************************************/
+/** Guess some emulation modes by ROM CRC. Returns sum of   **/
+/** guessed bits.                                           **/
+/*************************************************************/
+unsigned int GuessROM(const byte *ROM,unsigned int Size)
+{
+  static struct { const char *Name;unsigned int CRC,Mode; } Games[] =
+  {
+    { "Boxxle",             0x62DACF07,CV_24C256 }, /* 32kB EEPROM */
+    { "Black Onyx",         0xDDDD1396,CV_24C08  }, /* 256-byte EEPROM */
+    { "Lord Of The Dungeon",0xFEE15196,CV_SRAM   }, /* 24kB ROM + 8kB garbage + 2kB SRAM */
+    { "Lord Of The Dungeon",0x1053F610,CV_SRAM   }, /* 24kB ROM + 2kB SRAM */
+    { 0,0,0 }
+  };
+  unsigned int CRC,J;
+  unsigned int Guess;
+
+  /* Nothing guessed yet */
+  Guess = 0;
+
+  /* Compute game CRC */
+  CRC = ComputeCRC32(0,ROM,Size);
+
+  /* Find game by CRC */
+  for(J=0;Games[J].Mode;++J)
+    if(CRC==Games[J].CRC) { Guess=Games[J].Mode;break; }
+
+  if(Verbose)
+  {
+    if(Games[J].Mode) printf("identified as %s...",Games[J].Name);
+    else printf("CRC=%08Xh...",CRC);
+  }
+
+  /* Return whatever has been guessed */
+  return(Guess);
 }

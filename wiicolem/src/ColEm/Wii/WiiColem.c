@@ -123,13 +123,10 @@ int InitMachine(void)
   // Reset timing information
   ResetCycleTiming();
 
-  /* Initialize audio */
-  if(InitSound(UseSound,150))
-  {
-    SndSwitch=(1<<SN76489_CHANNELS)-1;
-    SndVolume=255/SN76489_CHANNELS;
-    SetChannels(SndVolume,SndSwitch);
-  }
+  InitSound(UseSound,150);
+  SndSwitch=(1<<(SN76489_CHANNELS+AY8910_CHANNELS))-1;
+  SndVolume=255/(SN76489_CHANNELS+AY8910_CHANNELS);
+  SetChannels(SndVolume,SndSwitch);
 
   return(1);
 }

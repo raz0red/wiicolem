@@ -40,8 +40,8 @@ distribution.
 
 // Cartridge flags
 #define OPCODE_MEMORY           0x00000001
-#define LOTD_SRAM               0x00000002
-#define IGNORE_R4_MASK          0x00000004
+#define CART_SRAM               0x00000002
+#define IGNORE_R4_MASK          0x00000004 // No longer used
 #define DISABLE_SPINNER         0x00000008
 #define KPAD_AS_DPAD            0x00000010
 

@@ -97,6 +97,12 @@ export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 #---------------------------------------------------------------------------------
 CFILES      := \
     Coleco.c \
+    AdamNet.c \
+    AY8910.c \
+    Hunt.c \
+    Record.c \
+    C24XX.c \
+    CRC32.c \
     SN76489.c \
     TMS9918.c \
     DRV9918.c \

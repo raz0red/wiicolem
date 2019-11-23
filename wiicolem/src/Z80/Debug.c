@@ -6,7 +6,7 @@
 /** the Z80 emulator which is called on each Z80 step when  **/
 /** Trap!=0.                                                **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1995-2008                 **/
+/** Copyright (C) Marat Fayzullin 1995-2019                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -270,40 +270,38 @@ static int DAsm(char *S,word A)
     default:   T=Mnemonics[RdZ80(B++)];
   }
 
-  if(P=strchr(T,'^'))
+  if((P=strchr(T,'^')))
   {
     strncpy(R,T,P-T);R[P-T]='\0';
     sprintf(H,"%02X",RdZ80(B++));
     strcat(R,H);strcat(R,P+1);
   }
   else strcpy(R,T);
-  if(P=strchr(R,'%')) *P=C;
+  if((P=strchr(R,'%'))) *P=C;
 
-  if(P=strchr(R,'*'))
+  if((P=strchr(R,'*')))
   {
     strncpy(S,R,P-R);S[P-R]='\0';
     sprintf(H,"%02X",RdZ80(B++));
     strcat(S,H);strcat(S,P+1);
   }
-  else
-    if(P=strchr(R,'@'))
-    {
-      strncpy(S,R,P-R);S[P-R]='\0';
-      if(!J) Offset=RdZ80(B++);
-      strcat(S,Offset&0x80? "-":"+");
-      J=Offset&0x80? 256-Offset:Offset;
-      sprintf(H,"%02X",J);
-      strcat(S,H);strcat(S,P+1);
-    }
-    else
-      if(P=strchr(R,'#'))
-      {
-        strncpy(S,R,P-R);S[P-R]='\0';
-        sprintf(H,"%04X",RdZ80(B)+256*RdZ80(B+1));
-        strcat(S,H);strcat(S,P+1);
-        B+=2;
-      }
-      else strcpy(S,R);
+  else if((P=strchr(R,'@')))
+  {
+    strncpy(S,R,P-R);S[P-R]='\0';
+    if(!J) Offset=RdZ80(B++);
+    strcat(S,Offset&0x80? "-":"+");
+    J=Offset&0x80? 256-Offset:Offset;
+    sprintf(H,"%02X",J);
+    strcat(S,H);strcat(S,P+1);
+  }
+  else if((P=strchr(R,'#')))
+  {
+    strncpy(S,R,P-R);S[P-R]='\0';
+    sprintf(H,"%04X",RdZ80(B)+256*RdZ80(B+1));
+    strcat(S,H);strcat(S,P+1);
+    B+=2;
+  }
+  else strcpy(S,R);
 
   return(B-A);
 }
@@ -341,7 +339,8 @@ byte DebugZ80(Z80 *R)
     printf("\n[Command,'?']-> ");
     fflush(stdout);fflush(stdin);
 
-    fgets(S,50,stdin);
+    if(!fgets(S,50,stdin)) return(1);
+
     for(J=0;S[J]>=' ';J++)
       S[J]=toupper(S[J]);
     S[J]='\0';
@@ -376,7 +375,7 @@ byte DebugZ80(Z80 *R)
       case 'J':  if(strlen(S)>=2)
                  { sscanf(S+1,"%hX",&(R->PC.W));R->Trace=0;return(1); }
                  break;
-      case 'C':  R->Trap=0xFFFF;R->Trace=0;return(1); 
+      case 'C':  R->Trap=0xFFFF;R->Trace=0;return(1);
       case 'Q':  return(0);
 
       case 'M':
