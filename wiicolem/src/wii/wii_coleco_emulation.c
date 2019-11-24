@@ -50,10 +50,17 @@ extern void WII_SetRenderCallback( void (*cb)(void) );
 
 extern void wii_render_callback();
 
+/**
+ * Returns the mode flags for ColEm
+ *
+ * return The mode flags for ColEm
+ */
 static int get_coleco_mode() {
   return wii_coleco_mode 
     | (wii_coleco_db_entry.flags&CART_SRAM ? CV_SRAM : 0) 
-    | CV_SGM;
+    | (wii_coleco_db_entry.eeprom == EEPROM_24C256 ? CV_24C256 :
+        (wii_coleco_db_entry.eeprom == EEPROM_24C08 ? CV_24C08 : 0))                  
+    | (wii_super_game_module ? CV_SGM : 0);
 }
 
 /*
@@ -71,7 +78,7 @@ BOOL wii_start_emulation( char *romfile, const char *savefile, BOOL reset, BOOL 
 {
   // Write out the current config
   wii_write_config();
-
+  
   BOOL succeeded = true;
   char autosavename[WII_MAX_PATH] = "";
 
@@ -95,11 +102,18 @@ BOOL wii_start_emulation( char *romfile, const char *savefile, BOOL reset, BOOL 
     // Start emulation
     if( !reset && !resume )
     {
+      // Determine the state file name
+      char state_file[WII_MAX_PATH];
+      char filename[WII_MAX_PATH];            
+      Util_splitpath( romfile, NULL, filename );
+      snprintf( state_file, WII_MAX_PATH, "%s%s.%s",  
+        wii_get_states_dir(), filename, WII_STATE_GAME_EXT );
+    
       // Clear the Coleco DB entry
       memset( &wii_coleco_db_entry, 0x0, sizeof( ColecoDBEntry ) );
 
-      BOOL loadsave = ( savefile != NULL && strlen( savefile ) > 0 );
-      succeeded = LoadROM( romfile );
+      BOOL loadsave = ( savefile != NULL && strlen( savefile ) > 0 );                  
+      succeeded = LoadROM( romfile, state_file );
       if( succeeded )
       {
         // Calculate the hash
@@ -180,7 +194,9 @@ BOOL wii_start_emulation( char *romfile, const char *savefile, BOOL reset, BOOL 
       ResetCycleTiming();
       // Set volume
       // 255/SN76489_CHANNELS = 63
-      SetChannels((wii_volume==0?0:(3+(wii_volume*4))),MasterSwitch);
+      // 255/SN76489_CHANNELS+AY8910_CHANNELS = 25.5
+      // TODO: This seems odd, what was I thinking?
+      SetChannels((wii_volume==0?0:(int)(wii_volume*1.667)),MasterSwitch);
 
       // Set render callback
       WII_SetRenderCallback( &wii_render_callback );

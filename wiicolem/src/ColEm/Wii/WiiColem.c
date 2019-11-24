@@ -497,6 +497,16 @@ static void render_screen()
   if( wii_vsync == VSYNC_ENABLED ) VIDEO_WaitVSync();
 }
 
+/**
+ * Returns the ticks since SDL initialization
+ *
+ * @return  The ticks since SDL initialization
+ */
+static u64 getTicks() {
+  u64 ticks = SDL_GetTicks();
+  return ticks * 1000;
+}
+
 /** RefreshScreen() ******************************************/
 /** Refresh screen. This function is called in the end of   **/
 /** refresh cycle to show the entire screen.                **/
@@ -509,19 +519,19 @@ void RefreshScreen(void *Buffer,int Width,int Height)
   // Wait if needed
   if( ResetTiming )
   {
-    NextTick = ( SDL_GetTicks() * 100 ) + TicksPerUpdate;
+    NextTick = getTicks() + TicksPerUpdate;
 
     if( wii_debug )
     {
       TimerCount = 0;
-      StartTick = SDL_GetTicks() * 100;
+      StartTick = getTicks();
     }
 
     ResetTiming = FALSE;
   }
   else
   {
-    do { CurrentTick = ( SDL_GetTicks() * 100 ); }
+    do { CurrentTick = getTicks(); }
     while (CurrentTick < NextTick);
     NextTick += TicksPerUpdate;  
 

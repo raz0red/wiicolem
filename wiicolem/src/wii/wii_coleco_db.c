@@ -414,6 +414,7 @@ static void write_entry( FILE* file, char* hash, ColecoDBEntry *entry )
   fprintf( file, "controlsMode=%d\n", entry->controlsMode );
   fprintf( file, "wmHorizontal=%d\n", entry->wiiMoteHorizontal );
   fprintf( file, "flags=%d\n", entry->flags );
+  fprintf( file, "eeprom=%d\n", entry->eeprom );
   fprintf( file, "sensitivity=%d\n", entry->sensitivity );
   fprintf( file, "keypadPause=%d\n", entry->keypadPause );
   fprintf( file, "keypadSize=%d\n", entry->keypadSize );
@@ -507,6 +508,10 @@ void wii_coleco_db_get_entry( char* hash, ColecoDBEntry* entry )
           {
             entry->flags = Util_sscandec( ptr );
           }
+          else if( !strcmp( buff, "eeprom" ) )
+          {
+            entry->eeprom = Util_sscandec( ptr );
+          }          
           else if( !strcmp( buff, "keypadPause" ) )
           {
             entry->keypadPause = Util_sscandec( ptr );

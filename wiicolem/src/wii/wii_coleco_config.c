@@ -106,6 +106,10 @@ void wii_config_handle_read_value( char *name, char* value )
   {
     wii_mote_menu_vertical = Util_sscandec( value );				
   }
+  else if( strcmp( name, "SUPER_GAME_MODULE" ) == 0 )
+  {
+    wii_super_game_module = Util_sscandec( value );				
+  }  
 }
 
 /*
@@ -131,6 +135,7 @@ void wii_config_handle_write_config( FILE *fp )
   fprintf( fp, "SCREEN_Y=%d\n", wii_screen_y );
   fprintf( fp, "SEL_OFFSET=%d\n", wii_menu_sel_offset );  
   fprintf( fp, "MOTE_MENU_VERTICAL=%d\n", wii_mote_menu_vertical );  
+  fprintf( fp, "SUPER_GAME_MODULE=%d\n", wii_super_game_module );  
 
   char hex[64] = "";
   Util_rgbatohex( &wii_menu_sel_color, hex );

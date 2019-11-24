@@ -59,6 +59,8 @@ BOOL wii_keypad_pause = TRUE;
 u8 wii_keypad_size = KEYPAD_SIZE_MED;
 // Overlay mode
 BOOL wii_use_overlay = TRUE;
+// Super Game Module Enabled
+BOOL wii_super_game_module = TRUE;
 // Volume
 u8 wii_volume = 7;
 // Maximum frame rate
@@ -155,6 +157,25 @@ char* wii_get_saves_dir()
 
   return saves_dir;
 }
+
+// The states dir
+static char states_dir[WII_MAX_PATH] = "";
+
+/*
+ * Returns the states directory
+ *
+ * return   The states directory
+ */
+char* wii_get_states_dir()
+{
+  if( states_dir[0] == '\0' )
+  {
+    snprintf( states_dir, WII_MAX_PATH, "%s%s", wii_get_fs_prefix(), WII_STATES_DIR );
+  }
+
+  return states_dir;
+}
+
 
 // The overlays dir
 static char overlays_dir[WII_MAX_PATH] = "";

@@ -167,7 +167,11 @@ void MenuColeco(void);
 /** Load given cartridge ROM file. Returns number of bytes  **/
 /** on success, 0 on failure.                               **/
 /*************************************************************/
+#ifdef WII
+int LoadROM(const char *Cartridge, const char* WiiStateFile);
+#else
 int LoadROM(const char *Cartridge);
+#endif
 
 /** LoadCHT() ************************************************/
 /** Load cheats from .CHT file. Cheat format is either      **/

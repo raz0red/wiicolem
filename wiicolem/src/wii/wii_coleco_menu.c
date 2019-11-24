@@ -218,6 +218,11 @@ void wii_coleco_menu_init()
     NODETYPE_OPCODE_MEMORY, "Opcode memory " );
   child->x = -2; child->value_x = -3;
   wii_add_child( cartadvanced, child );
+  
+  child = wii_create_tree_node( 
+    NODETYPE_EEPROM, "EEPROM " );
+  child->x = -2; child->value_x = -3;
+  wii_add_child( cartadvanced, child );  
 
   child = wii_create_tree_node( NODETYPE_SPACER, "" );
   wii_add_child( cartadvanced, child );
@@ -307,6 +312,11 @@ void wii_coleco_menu_init()
     NODETYPE_USE_OVERLAY, "Keypad overlays " );
   child->x = -2; child->value_x = -3;
   wii_add_child( advanced, child );  
+  
+  child = wii_create_tree_node( 
+    NODETYPE_SUPER_GAME_MODULE, "Super Game Module " );
+  child->x = -2; child->value_x = -3;
+  wii_add_child( advanced, child );    
 
   child = wii_create_tree_node( NODETYPE_SPACER, "" );
   wii_add_child( advanced, child );
@@ -442,10 +452,14 @@ void wii_menu_handle_get_node_name(
     case NODETYPE_SPINNER:
     case NODETYPE_KEYPAD_PAUSE:
     case NODETYPE_USE_OVERLAY:
+    case NODETYPE_SUPER_GAME_MODULE:    
       {
         BOOL enabled = FALSE;
         switch( node->node_type )
         {
+          case NODETYPE_SUPER_GAME_MODULE:    
+            enabled = wii_super_game_module;
+            break;
           case NODETYPE_SPINNER:
             enabled = !( wii_coleco_db_entry.flags&DISABLE_SPINNER );
             break;
@@ -631,6 +645,20 @@ void wii_menu_handle_get_node_name(
       }
       snprintf( value, WII_MENU_BUFF_SIZE, "%s", strmode );
       break;
+    case NODETYPE_EEPROM:
+      switch( wii_coleco_db_entry.eeprom )
+      {
+        case EEPROM_24C08:
+          strmode = "24c08";
+          break;
+        case EEPROM_24C256:
+          strmode = "24c256";
+          break;
+        default:
+          strmode = "None";
+      }
+      snprintf( value, WII_MENU_BUFF_SIZE, "%s", strmode );
+      break;      
     case NODETYPE_CYCLE_ADJUST:
       snprintf( value, WII_MENU_BUFF_SIZE, "%d", wii_coleco_db_entry.cycleAdjust );
       break;
@@ -687,6 +715,13 @@ void wii_menu_handle_select_node( TREENODE *node )
         wii_coleco_db_entry.maxFrames = 30;
       }
       break;
+    case NODETYPE_EEPROM:
+      wii_coleco_db_entry.eeprom++;
+      if( wii_coleco_db_entry.eeprom > EEPROM_24C256 )
+      {
+        wii_coleco_db_entry.eeprom = 0;
+      }
+      break;      
     case NODETYPE_CYCLE_ADJUST:
       wii_coleco_db_entry.cycleAdjust++;
       if( wii_coleco_db_entry.cycleAdjust == 51 )
@@ -758,6 +793,9 @@ void wii_menu_handle_select_node( TREENODE *node )
       break;
     case NODETYPE_DEBUG_MODE:
       wii_debug ^= 1;
+      break;
+    case NODETYPE_SUPER_GAME_MODULE:
+      wii_super_game_module ^= 1;
       break;
     case NODETYPE_AUTO_LOAD_STATE:
       wii_auto_load_state ^= 1;

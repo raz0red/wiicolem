@@ -34,8 +34,19 @@ distribution.
 #define COLECO_HEIGHT 200
 
 // Default screen size
-#define DEFAULT_SCREEN_X 757 /*732*/
-#define DEFAULT_SCREEN_Y 463 /*504*/
+//#define DEFAULT_SCREEN_X 757 /*732*/
+//#define DEFAULT_SCREEN_Y 463 /*504*/
+// 256x192: Coleco
+// 272x200: Colem
+// 640x480: Wii
+// xRatio = 256/272 = .94
+// yRatio = 192/200 = .96
+// 320/256 = 1.25
+// 240/192 = 1.25
+// 320*2*1.25 = 800 * .94 = 752
+// 240*2*1.25 = 600 * .96 = 576
+#define DEFAULT_SCREEN_X 752 
+#define DEFAULT_SCREEN_Y 576 
 
 // Wii width and height
 #define WII_WIDTH 640
@@ -100,6 +111,8 @@ extern BOOL wii_keypad_pause;
 extern u8 wii_keypad_size;
 // Overlay mode
 extern BOOL wii_use_overlay;
+// Super Game Module enabled
+extern BOOL wii_super_game_module;
 // Volume 
 extern u8 wii_volume;
 // Maximum frame rate
@@ -122,6 +135,13 @@ extern char* wii_get_roms_dir();
  * return   The saves directory
  */
 extern char* wii_get_saves_dir();
+
+/*
+ * Returns the states directory
+ *
+ * return   The states directory
+ */
+extern char* wii_get_states_dir();
 
 /*
  * Returns the overlays directory

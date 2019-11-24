@@ -56,6 +56,11 @@ distribution.
 #define KEYPAD_SIZE_MED         2
 #define KEYPAD_SIZE_LARGE       3
 
+// EEPROM
+#define EEPROM_NONE     0
+#define EEPROM_24C08    1
+#define EEPROM_24C256   2
+
 // Max frames default
 #define MAX_FRAMES_DEFAULT      0
 
@@ -104,6 +109,7 @@ typedef struct ColecoDBEntry
   u8 overlayMode;       // Whether the overlay is enabled/disabled/default
   s32 cycleAdjust;      // Adjust the cycles per scanline (hack)
   s32 maxFrames;        // Maximum frames
+  u8 eeprom;            // EEPROM
   u32 button[MAPPED_BUTTON_COUNT];  // Button mappings  
   char buttonDesc[COLECO_BUTTON_NAME_COUNT][255]; // Button description
   ColecoOverlay overlay;

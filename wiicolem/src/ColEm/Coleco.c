@@ -328,6 +328,7 @@ int StartColeco(const char *Cartridge)
   ResetColeco(Mode);
 
   /* Load cartridge */
+#ifndef WII  
   if(Cartridge)
   {
     if(Verbose) printf("  Opening %s...",Cartridge);
@@ -338,6 +339,7 @@ int StartColeco(const char *Cartridge)
       else  printf("FAILED\n");
     }
   }
+#endif  
 
   if(Verbose) printf("RUNNING ROM CODE...\n");
   J=RunZ80(&CPU);
@@ -350,7 +352,11 @@ int StartColeco(const char *Cartridge)
 /** Load given cartridge ROM file. Returns number of bytes  **/
 /** on success, 0 on failure.                               **/
 /*************************************************************/
+#ifdef WII
+int LoadROM(const char *Cartridge, const char* WiiStateFile)
+#else
 int LoadROM(const char *Cartridge)
+#endif
 {
   byte Buf[2],*P;
   int J,I,Size;
@@ -465,7 +471,14 @@ int LoadROM(const char *Cartridge)
   if(SavName) free(SavName);
 
   /* Generate save file name and try loading it */
+#ifdef WII  
+  if(WiiStateFile) {
+    SavName=strdup(WiiStateFile);
+    LoadSAV(SavName);
+  }
+#else
   if((SavName=MakeFileName(Cartridge,".sav"))) LoadSAV(SavName);
+#endif  
 
   /* Generate state file name and try loading it */
   if((StaName=MakeFileName(Cartridge,".sta"))) LoadSTA(StaName);
