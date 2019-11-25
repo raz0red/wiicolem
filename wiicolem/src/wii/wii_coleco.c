@@ -39,6 +39,8 @@ distribution.
 
 #include "font_ttf.h"
 
+extern void WII_SetWidescreen(int wide);
+
 // The last ColecoVision cartridge hash
 char wii_cartridge_hash[33];
 // The ColecoVision database entry for current game
@@ -69,6 +71,14 @@ u8 wii_max_frames = 60;
 int wii_screen_x = DEFAULT_SCREEN_X;
 // The screen Y size
 int wii_screen_y = DEFAULT_SCREEN_Y;
+// 16:9 correction
+BOOL wii_16_9_correction = FALSE;
+// Full widescreen
+int wii_full_widescreen = WS_AUTO;
+// Auto widescreen value (from startup)
+static BOOL widescreen_auto = FALSE;
+// Whether to filter the display
+BOOL wii_filter = FALSE; 
 
 /*
  * Initializes the application
@@ -86,9 +96,47 @@ void wii_handle_init()
 
   // FreeTypeGX
   InitFreeType( (uint8_t*)font_ttf, (FT_Long)font_ttf_size  );
+  
+  // Determine widescreen auto value
+  widescreen_auto = ( CONF_GetAspectRatio() == CONF_ASPECT_16_9 );
+  wii_update_widescreen();
 
   // Initialize the colecovision menu
   wii_coleco_menu_init();
+}
+
+/*
+ * Updates the widescreen mode
+ */
+void wii_update_widescreen() 
+{
+  int ws = 
+    ( wii_full_widescreen == WS_AUTO ? 
+        widescreen_auto : wii_full_widescreen );
+  WII_SetWidescreen( ws );
+}
+
+/*
+ * Returns the screen size
+ *
+ * inX  Input x
+ * inY  Input y
+ * x    Out x
+ * y    Out y 
+ */
+void wii_get_screen_size( int inX, int inY, int *x, int *y )
+{
+    int xs = inX;
+    int ys = inY;      
+    if( wii_16_9_correction )
+    {
+      xs = (xs*3)/4; // Widescreen correct
+    }            
+    xs = ((xs+1)&~1);
+    ys = ((ys+1)&~1);      
+    
+    *x = xs;
+    *y = ys;
 }
 
 /*

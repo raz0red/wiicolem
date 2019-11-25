@@ -34,19 +34,11 @@ distribution.
 #define COLECO_HEIGHT 200
 
 // Default screen size
-//#define DEFAULT_SCREEN_X 757 /*732*/
-//#define DEFAULT_SCREEN_Y 463 /*504*/
 // 256x192: Coleco
 // 272x200: Colem
 // 640x480: Wii
-// xRatio = 256/272 = .94
-// yRatio = 192/200 = .96
-// 320/256 = 1.25
-// 240/192 = 1.25
-// 320*2*1.25 = 800 * .94 = 752
-// 240*2*1.25 = 600 * .96 = 576
-#define DEFAULT_SCREEN_X 752 
-#define DEFAULT_SCREEN_Y 576 
+#define DEFAULT_SCREEN_X 775
+#define DEFAULT_SCREEN_Y 480
 
 // Wii width and height
 #define WII_WIDTH 640
@@ -89,6 +81,11 @@ distribution.
 #define WII_CLASSIC_CV_7  ( WPAD_CLASSIC_BUTTON_ZR )
 #define WII_CLASSIC_CV_8  ( WPAD_CLASSIC_BUTTON_ZL )
 
+// widescreen modes
+#define WS_DISABLED 0
+#define WS_ENABLED  1
+#define WS_AUTO     2
+
 // The last ColecoVision cartridge hash
 extern char wii_cartridge_hash[33];
 // The ColecoVision Mode
@@ -121,6 +118,12 @@ extern u8 wii_max_frames;
 extern int wii_screen_x;
 // The screen Y size
 extern int wii_screen_y;
+// 16:9 correction
+extern BOOL wii_16_9_correction;
+// Full widescreen
+extern int wii_full_widescreen;
+// Whether to filter the display
+extern BOOL wii_filter; 
 
 /*
  * Returns the roms directory
@@ -157,6 +160,21 @@ extern char* wii_get_overlays_dir();
  * return     The current state of the specified joystick
  */
 extern u32 wii_coleco_poll_joystick( int joyIndex );
+
+/*
+ * Updates the widescreen mode
+ */
+extern void wii_update_widescreen();
+
+/*
+ * Returns the screen size
+ *
+ * inX  Input x
+ * inY  Input y
+ * x    Out x
+ * y    Out y 
+ */
+extern void wii_get_screen_size( int inX, int inY, int *x, int *y );
 
 #if 0
 extern void wii_coleco_patch_rom();

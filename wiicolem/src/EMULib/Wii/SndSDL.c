@@ -56,9 +56,10 @@ static volatile int AudioPaused = 0; /* 1: Audio paused      */
 /** AudioHandler() *******************************************/
 /** Callback invoked by SDL to play audio.                  **/
 /*************************************************************/
-void AudioHandler(void *UserData,sample *Stream,int Length)
+void AudioHandler(void *UserData,Uint8 *StreamIn,int Length)
 {
   int J;
+  sample* Stream = (sample*)StreamIn;
 
   /* Need to have valid playback rate */
   if(!SndRate) return;

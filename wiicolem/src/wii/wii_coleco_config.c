@@ -86,11 +86,11 @@ void wii_config_handle_read_value( char *name, char* value )
   {
     wii_max_frames = Util_sscandec( value );
   }
-  else if( strcmp( name, "SCREEN_X" ) == 0 )
+  else if( strcmp( name, "SCREEN_SIZE_X" ) == 0 )
   {
     wii_screen_x = Util_sscandec( value );
   }
-  else if( strcmp( name, "SCREEN_Y" ) == 0 )
+  else if( strcmp( name, "SCREEN_SIZE_Y" ) == 0 )
   {
     wii_screen_y = Util_sscandec( value );
   }
@@ -109,6 +109,18 @@ void wii_config_handle_read_value( char *name, char* value )
   else if( strcmp( name, "SUPER_GAME_MODULE" ) == 0 )
   {
     wii_super_game_module = Util_sscandec( value );				
+  }  
+  else if( strcmp( name, "16_9_CORRECTION" ) == 0 )
+  {
+    wii_16_9_correction = Util_sscandec( value );
+  }    
+  else if( strcmp( name, "FULL_WIDESCREEN" ) == 0 )
+  {
+    wii_full_widescreen = Util_sscandec( value );
+  }  
+  else if( strcmp( name, "VIDEO_FILTER" ) == 0 )
+  {
+    wii_filter = Util_sscandec( value );
   }  
 }
 
@@ -131,11 +143,14 @@ void wii_config_handle_write_config( FILE *fp )
   fprintf( fp, "USE_OVERLAY=%d\n", wii_use_overlay );
   fprintf( fp, "VOLUME=%d\n", wii_volume );
   fprintf( fp, "MAX_FRAMES=%d\n", wii_max_frames );  
-  fprintf( fp, "SCREEN_X=%d\n", wii_screen_x );
-  fprintf( fp, "SCREEN_Y=%d\n", wii_screen_y );
+  fprintf( fp, "SCREEN_SIZE_X=%d\n", wii_screen_x );
+  fprintf( fp, "SCREEN_SIZE_Y=%d\n", wii_screen_y );
   fprintf( fp, "SEL_OFFSET=%d\n", wii_menu_sel_offset );  
   fprintf( fp, "MOTE_MENU_VERTICAL=%d\n", wii_mote_menu_vertical );  
-  fprintf( fp, "SUPER_GAME_MODULE=%d\n", wii_super_game_module );  
+  fprintf( fp, "SUPER_GAME_MODULE=%d\n", wii_super_game_module ); 
+  fprintf( fp, "16_9_CORRECTION=%d\n", wii_16_9_correction );  
+  fprintf( fp, "FULL_WIDESCREEN=%d\n", wii_full_widescreen );   
+  fprintf( fp, "VIDEO_FILTER=%d\n", wii_filter );  
 
   char hex[64] = "";
   Util_rgbatohex( &wii_menu_sel_color, hex );

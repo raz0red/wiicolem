@@ -504,7 +504,7 @@ static void render_screen()
  */
 static u64 getTicks() {
   u64 ticks = SDL_GetTicks();
-  return ticks * 1000;
+  return ticks * 100;
 }
 
 /** RefreshScreen() ******************************************/

@@ -47,6 +47,7 @@ extern int MasterSwitch;
 extern void WII_VideoStop();
 extern void WII_ChangeSquare(int xscale, int yscale, int xshift, int yshift);
 extern void WII_SetRenderCallback( void (*cb)(void) );
+extern void WII_SetFilter( BOOL filter );
 
 extern void wii_render_callback();
 
@@ -201,8 +202,14 @@ BOOL wii_start_emulation( char *romfile, const char *savefile, BOOL reset, BOOL 
       // Set render callback
       WII_SetRenderCallback( &wii_render_callback );
 
-      // Scale the screen
-      WII_ChangeSquare( wii_screen_x, wii_screen_y, 0, 0 );
+      // Get the screen size
+      int x, y;
+      wii_get_screen_size(wii_screen_x, wii_screen_y, &x, &y);
+      // VI+GX
+      //WII_SetStandardVideoMode( xs, ys, 256 /*COLECO_WIDTH*/ );      
+      // Scale the screen (GX)
+      WII_SetFilter( wii_filter );      
+      WII_ChangeSquare( x, y, 0, 0 );
 
       // Set spinner controls
       Mode&=~CV_SPINNERS;

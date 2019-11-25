@@ -34,6 +34,9 @@ extern void WII_ChangeSquare(int xscale, int yscale, int xshift, int yshift);
 extern void WII_VideoStart();
 extern void WII_VideoStop();
 
+// TODO: Fix this so there isn't a dependency on coleco
+extern void wii_get_screen_size( int inX, int inY, int *x, int *y );
+
 // Whether the aspect ratio is locked
 static BOOL arlocked = TRUE;
 // The current aspect ratio
@@ -142,7 +145,9 @@ void wii_resize_screen_gui( resize_info* rinfo )
 
   reset_aspect_ratio( currentX, currentY );
 
-  WII_ChangeSquare( currentX, currentY, 0, 0 );
+  int x, y;
+  wii_get_screen_size( currentX, currentY, &x, &y );
+  WII_ChangeSquare( x, y, 0, 0 );
   WII_SetRenderCallback( &wii_resize_render_callback );  
 
   WII_VideoStart();   
@@ -155,7 +160,9 @@ void wii_resize_screen_gui( resize_info* rinfo )
   BOOL loop = TRUE;
   while( loop && !wii_hw_button )
   {
-    WII_ChangeSquare(  currentX, currentY, 0, 0 );
+    int x, y;
+    wii_get_screen_size( currentX, currentY, &x, &y );
+    WII_ChangeSquare( x, y, 0, 0 );
 
     // Scan the Wii and Gamecube controllers
     WPAD_ScanPads();

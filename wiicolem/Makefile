@@ -100,7 +100,6 @@ CFILES      := \
     AdamNet.c \
     AY8910.c \
     Hunt.c \
-    Record.c \
     C24XX.c \
     CRC32.c \
     SN76489.c \

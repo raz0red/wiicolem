@@ -42,6 +42,7 @@ distribution.
 
 extern void WII_VideoStart();
 extern void WII_VideoStop();
+extern void WII_SetDefaultVideoMode();
 extern int PauseAudio(int Switch);
 extern void ResetAudio();
 
@@ -290,6 +291,22 @@ void wii_coleco_menu_init()
   child->x = -2; child->value_x = -3;
   wii_add_child( display, child );     
 
+  child = wii_create_tree_node( NODETYPE_FULL_WIDESCREEN, 
+    "Full widescreen " );
+  child->x = -2; child->value_x = -3;    
+  wii_add_child( display, child );
+  
+  child = wii_create_tree_node( NODETYPE_16_9_CORRECTION, 
+    "16:9 correction " );
+  child->x = -2; child->value_x = -3;
+  wii_add_child( display, child );  
+  
+  child = wii_create_tree_node( NODETYPE_FILTER, 
+    "Bilinear filter " );
+  child->x = -2; child->value_x = -3;    
+  wii_add_child( display, child );  
+  
+
   //
   // The advanced menu
   //
@@ -424,6 +441,11 @@ void wii_menu_handle_get_node_name(
         ( ( wii_screen_x == DEFAULT_SCREEN_X && 
           wii_screen_y == DEFAULT_SCREEN_Y ) ? "(default)" : "Custom" ) );
       break;
+    case NODETYPE_FULL_WIDESCREEN:
+      snprintf( value, WII_MENU_BUFF_SIZE, "%s", 
+        ( wii_full_widescreen == WS_AUTO ? "(auto)" :
+          ( wii_full_widescreen ? "Enabled" : "Disabled" ) ) );
+      break;      
     case NODETYPE_VOLUME:
       snprintf( value, WII_MENU_BUFF_SIZE, "%d", wii_volume );
       break;
@@ -453,10 +475,18 @@ void wii_menu_handle_get_node_name(
     case NODETYPE_KEYPAD_PAUSE:
     case NODETYPE_USE_OVERLAY:
     case NODETYPE_SUPER_GAME_MODULE:    
+    case NODETYPE_16_9_CORRECTION:   
+    case NODETYPE_FILTER: 
       {
         BOOL enabled = FALSE;
         switch( node->node_type )
         {
+          case NODETYPE_FILTER:
+            enabled = wii_filter;
+            break;        
+          case NODETYPE_16_9_CORRECTION:
+            enabled = wii_16_9_correction;
+            break;        
           case NODETYPE_SUPER_GAME_MODULE:    
             enabled = wii_super_game_module;
             break;
@@ -683,13 +713,20 @@ void wii_menu_handle_select_node( TREENODE *node )
         wii_resize_screen_draw_border( blit_surface, 0, COLECO_HEIGHT );
         wii_sdl_put_image_normal( 1 );
         wii_sdl_flip(); 
-        resize_info rinfo = { 
-          DEFAULT_SCREEN_X, DEFAULT_SCREEN_Y, wii_screen_x, wii_screen_y };
+        resize_info rinfo = { DEFAULT_SCREEN_X, DEFAULT_SCREEN_Y, wii_screen_x, wii_screen_y };
         wii_resize_screen_gui( &rinfo );
         wii_screen_x = rinfo.currentX;
         wii_screen_y = rinfo.currentY;
       }
       break;
+    case NODETYPE_FULL_WIDESCREEN:
+      wii_full_widescreen++;
+      if( wii_full_widescreen > WS_AUTO )
+      {
+        wii_full_widescreen = 0;
+      }
+      wii_update_widescreen();
+      break;      
     case NODETYPE_VOLUME:
       wii_volume++;
       if( wii_volume > 15 )
@@ -803,6 +840,12 @@ void wii_menu_handle_select_node( TREENODE *node )
     case NODETYPE_AUTO_SAVE_STATE:
       wii_auto_save_state ^= 1;
       break;
+    case NODETYPE_16_9_CORRECTION:
+      wii_16_9_correction ^= 1;
+      break;      
+    case NODETYPE_FILTER:
+      wii_filter ^= 1;
+      break;        
     case NODETYPE_KEYPAD_PAUSE:
       wii_keypad_pause ^= 1;
       break;
@@ -1213,6 +1256,7 @@ void wii_menu_handle_pre_loop()
   }
 
   // Stop SDL video
+  WII_SetDefaultVideoMode();
   WII_VideoStop();
 
   // Stop the sound
