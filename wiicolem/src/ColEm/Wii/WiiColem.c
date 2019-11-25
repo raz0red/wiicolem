@@ -125,7 +125,7 @@ int InitMachine(void)
 
   InitSound(UseSound,150);
   SndSwitch=(1<<(SN76489_CHANNELS+AY8910_CHANNELS))-1;
-  SndVolume=255/(SN76489_CHANNELS+AY8910_CHANNELS);
+  SndVolume=255/SN76489_CHANNELS;
   SetChannels(SndVolume,SndSwitch);
 
   return(1);

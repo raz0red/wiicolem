@@ -173,9 +173,7 @@ void Sound(int Channel,int Freq,int Volume)
   }
 
   /* Call sound driver if present */
-  if(SndDriver.Sound) {
-    (*SndDriver.Sound)(Channel,Freq,Volume);
-  }
+  if(SndDriver.Sound) (*SndDriver.Sound)(Channel,Freq,Volume);
 
   /* Log sound to MIDI file */
   MIDISound(Channel,Freq,Volume);
@@ -714,6 +712,8 @@ void RenderAudio(int *Wave,unsigned int Samples)
           K  = WaveCH[J].Rate>0?
                (SndRate<<15)/WaveCH[J].Freq/WaveCH[J].Rate
              : (SndRate<<15)/WaveCH[J].Freq/WaveCH[J].Length;
+          /* Do not allow high frequencies (GBC Frogger) */
+          if(K<0x8000) break;
           L1 = WaveCH[J].Pos%WaveCH[J].Length;
           L2 = WaveCH[J].Count;
           A1 = WaveCH[J].Data[L1]*V;

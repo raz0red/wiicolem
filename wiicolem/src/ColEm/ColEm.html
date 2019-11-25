@@ -6,7 +6,7 @@
 <BODY BGCOLOR=#FFFFFF LINK=#006000 VLINK=#006000>
 
 <CENTER>
-<H1><FONT COLOR=#FF0000>ColEm<BR>version 4.7</FONT></H1>
+<H1><FONT COLOR=#FF0000>ColEm<BR>version 4.8</FONT></H1>
 <H3>by <A HREF="http://fms.komkon.org/">Marat Fayzullin</A></H3>
 </CENTER>>
 
@@ -25,11 +25,12 @@
 <H1>New in This Version</H1>
 </A>
 <UL>
-<LI>Fixed sprite collision code to take into account early-sync flag.
-<LI>Fixed scoring in the <I>Carnival</I> bear scene. 
-<LI>Fixed saved state compatibility between 32bit and 64bit architectures.
-<LI>Fixed several problems with saving and loading TMS9918 states.
-<LI>Fixed PulseAudio hangup on exit in ColEm-Linux.
+<LI>Fixed state saves for games using SRAM.
+<LI>Fixed wrong SRAM contents being saved.
+<LI>Fixed SGM AY8910 wave effects.
+<LI>Now updating sound every 8 scanlines.
+<LI>Now muting AY8910 channels when Fnum is set to 0.
+<LI>Enabled AY8910 sound channels in ColEm-Unix.
 </UL>
 
 <A NAME="LABC">
@@ -235,6 +236,14 @@ drivers included into official ColEm distribution.
 <A NAME="LABK">
 <H1>History</H1>
 </A>
+<H2>New in ColEm 4.7</H2>
+<UL>
+<LI>Fixed sprite collision code to take into account early-sync flag.
+<LI>Fixed scoring in the <I>Carnival</I> bear scene. 
+<LI>Fixed saved state compatibility between 32bit and 64bit architectures.
+<LI>Fixed several problems with saving and loading TMS9918 states.
+<LI>Fixed PulseAudio hangup on exit in ColEm-Linux.
+</UL>
 <H2>New in ColEm 4.6</H2>
 <UL>
 <LI>Made replay save states approximately every 170ms.

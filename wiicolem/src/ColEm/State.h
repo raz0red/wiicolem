@@ -202,7 +202,7 @@ int SaveSTA(const char *Name)
   if(!F) { free(Buf);return(0); }
 
   /* Fill header */
-  J = CartCRC();
+  J = LastCRC;
   Header[5] = Mode&CV_ADAM;
   Header[6] = J&0xFF;
   Header[7] = (J>>8)&0xFF;
@@ -240,7 +240,7 @@ int LoadSTA(const char *Name)
   /* Read and check the header */
   if(fread(Header,1,16,F)!=16)       { fclose(F);return(0); }
   if(memcmp(Header,"STF\032\002",5)) { fclose(F);return(0); }
-  J = CartCRC();
+  J = LastCRC;
   if(
     (Header[5]!=(Mode&CV_ADAM)) ||
     (Header[6]!=(J&0xFF))       ||

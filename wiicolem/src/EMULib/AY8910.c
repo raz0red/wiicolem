@@ -283,7 +283,9 @@ void Sync8910(register AY8910 *D,register byte Sync)
           /* Compute melodic channel frequency */
           K = J<<1;
           K = ((int)(D->R[K+1]&0x0F)<<8)+D->R[K];
-          Freq = D->Clock/(K? K:0x1000);
+          // Eggerland Mystery 1 (MSX) uses 0 to silence sound
+          //Freq = D->Clock/(K? K:0x1000);
+          Freq = K? D->Clock/K:0;
         }
         else
         {

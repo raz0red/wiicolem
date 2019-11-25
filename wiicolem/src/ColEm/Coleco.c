@@ -70,6 +70,7 @@ byte Port53;                   /* SGM port 0x53 (memory)        */
 byte MegaPage;                 /* Current MegaROM page          */
 byte MegaSize;                 /* MegaROM size in 16kB pages    */
 byte MegaCart;                 /* MegaROM page at 8000h         */
+unsigned int LastCRC;          /* Last computed cartridge CRC   */
          
 byte ExitNow;                  /* 1: Exit the emulator          */
 byte AdamROMs;                 /* 1: All Adam ROMs are loaded   */ 
@@ -209,6 +210,7 @@ int StartColeco(const char *Cartridge)
   MegaSize   = 2;
   MegaCart   = 0;
   EEPROMData = 0;
+  LastCRC    = 0;
 
   /* Set up CPU modes */
   CPU.TrapBadOps = Verbose&0x04;
@@ -448,6 +450,9 @@ int LoadROM(const char *Cartridge)
     CheatCount = 0;
   }
 
+  /* Save EEPROM/SRAM contents for the previous cartridge */
+  if(SavName) SaveSAV(SavName);
+
   /* Rewind file to the beginning */
   rewind(F);
 
@@ -460,8 +465,8 @@ int LoadROM(const char *Cartridge)
   /* Done with the file */
   fclose(F);
 
-  /* Save EEPROM contents for the previous cartridge */
-  if(SavName) SaveSAV(SavName);
+  /* Keep initial cartridge CRC (may change after SRAM writes) */
+  if(P==ROM_CARTRIDGE) LastCRC=CartCRC();
 
   /* Reset hardware, guessing some hardware modes */
   ResetColeco((Mode&~(CV_EEPROM|CV_SRAM))|GuessROM(P,J));
@@ -749,15 +754,9 @@ void SetMemory(byte NewPort60,byte NewPort20,byte NewPort53)
 /*************************************************************/
 unsigned int CartCRC(void)
 {
-  unsigned int I=0,J=0;
-#ifdef WII
-  // TODO: Fix this to properly calculate the CRC (ignoring SRAM)
-  if(!(Mode&CV_SRAM)) {
-#endif
+  unsigned int I,J;
+
     for(J=I=0;J<0x8000;++J) I+=ROM_CARTRIDGE[J];
-#ifdef WII
-  }
-#endif
   return(I);
 }
 
@@ -1068,7 +1067,26 @@ word LoopZ80(Z80 *R)
 
   /* Refresh VDP */
   if(Loop9918(&VDP)) R->IRequest=INT_NMI;
-  
+
+#if 0 // Appears to cause corruption (Caverns of Titan intro)
+  /* Every few scanlines, refresh sound */
+  if(!(VDP.Line&0x07))
+  {
+    /* Compute number of microseconds */
+    int J = (unsigned int)(1000000L*(CPU_HPERIOD<<3)/CPU_CLOCK);
+
+    /* Only hit drums once in a frame */
+    int D = !VDP.Line && (Mode&CV_DRUMS);
+
+    /* Update AY8910 state */
+    Loop8910(&AYPSG,J);
+
+    /* Flush changes to sound channels */
+    Sync76489(&PSG,SN76489_FLUSH|(D? SN76489_DRUMS:0));
+    Sync8910(&AYPSG,AY8910_FLUSH|(D? AY8910_DRUMS:0));
+  }
+#endif
+
   /* Drop out unless end of screen is reached */
   if(VDP.Line!=TMS9918_END_LINE) return(R->IRequest);
 
@@ -1121,9 +1139,6 @@ word LoopZ80(Z80 *R)
   /* Count ticks for MIDI ouput */
   J = 1000/(Mode&CV_PAL? TMS9929_FRAMES:TMS9918_FRAMES);
   MIDITicks(J);
-#ifdef WII
-  //Loop8910(&AYPSG,J*1000);
-#endif  
 
   /* Flush any accumulated sound changes */
   Sync76489(&PSG,SN76489_FLUSH|(Mode&CV_DRUMS? SN76489_DRUMS:0));

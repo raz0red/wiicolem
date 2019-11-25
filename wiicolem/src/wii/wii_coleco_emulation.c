@@ -195,9 +195,7 @@ BOOL wii_start_emulation( char *romfile, const char *savefile, BOOL reset, BOOL 
       ResetCycleTiming();
       // Set volume
       // 255/SN76489_CHANNELS = 63
-      // 255/SN76489_CHANNELS+AY8910_CHANNELS = 25.5
-      // TODO: This seems odd, what was I thinking?
-      SetChannels((wii_volume==0?0:(int)(wii_volume*1.667)),MasterSwitch);
+      SetChannels((wii_volume==0?0:(3+(wii_volume*4))),MasterSwitch);
 
       // Set render callback
       WII_SetRenderCallback( &wii_render_callback );

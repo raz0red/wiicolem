@@ -32,6 +32,7 @@ extern "C" {
 #define MAX_STASIZE   0xF000  /* Maximal state data size     */
 
 #define CPU_CLOCK     TMS9918_CLOCK        /* Z80 clock, Hz  */
+#define CPU_HPERIOD   TMS9918_LINE       /* Scanline, clocks */
 
 /** Cheats() Arguments ***************************************/
 #define CHTS_OFF      0               /* Turn all cheats off */
