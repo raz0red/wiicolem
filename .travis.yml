@@ -9,4 +9,4 @@ script:
   - pwd
   - ls -l
   - docker pull raz0red/devkitppc
-  - docker run -v $(pwd)/wiicolem:/source raz0red/devkitppc  bash -c 'cd /source; make"'
+  - docker run -v $(pwd)/wiicolem:/source raz0red/devkitppc  bash -c 'cd /source; make'
