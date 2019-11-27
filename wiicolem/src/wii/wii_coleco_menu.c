@@ -300,15 +300,15 @@ void wii_coleco_menu_init()
     "16:9 correction " );
   child->x = -2; child->value_x = -3;
   wii_add_child( display, child );  
+    
+  child = wii_create_tree_node( NODETYPE_GX_VI_SCALER, "Scaler " );
+  child->x = -2; child->value_x = -3;    
+  wii_add_child( display, child );  
   
   child = wii_create_tree_node( NODETYPE_FILTER, 
     "Bilinear filter " );
   child->x = -2; child->value_x = -3;    
-  wii_add_child( display, child );  
-  
-  child = wii_create_tree_node( NODETYPE_GX_VI_SCALER, "Scaler " );
-  child->x = -2; child->value_x = -3;    
-  wii_add_child( display, child );  
+  wii_add_child( display, child );    
 
   //
   // The advanced menu
@@ -1063,8 +1063,8 @@ BOOL wii_menu_handle_is_node_visible( TREENODE *node )
     case NODETYPE_SPINNER:
       return wii_coleco_db_entry.controlsMode == CONTROLS_MODE_SUPERACTION;
       break;
-    case NODETYPE_GX_VI_SCALER:
-      return !wii_filter;
+    case NODETYPE_FILTER:
+      return !wii_gx_vi_scaler;
       break;      
     case NODETYPE_KEYPAD_PAUSE:
     case NODETYPE_KEYPAD_PAUSE_CART:
