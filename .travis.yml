@@ -1,0 +1,8 @@
+sudo: false
+
+services:
+  - docker
+
+script:
+  - docker pull raz0red/devkitppc
+  - docker run -v ./wiicolem:/source raz0red/devkitppc make -C /source
