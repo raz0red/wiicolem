@@ -6,6 +6,7 @@ services:
   - docker
 
 script:
+  - pwd
   - ls -l
   - docker pull raz0red/devkitppc
   - docker run -v wiicolem:/source raz0red/devkitppc make -C /source
