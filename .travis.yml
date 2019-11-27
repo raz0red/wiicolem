@@ -7,4 +7,4 @@ services:
 
 script:
   - docker pull raz0red/devkitppc
-  - docker run -v /wiicolem:/source raz0red/devkitppc make -C /source
+  - docker run -v wiicolem:/source raz0red/devkitppc make -C /source
