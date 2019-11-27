@@ -1031,7 +1031,6 @@ void OutZ80(register word Port,register byte Value)
 word LoopZ80(Z80 *R)
 {
   static byte ACount=0;
-  register int J;
 
   /* If emulating spinners... */
   if(Mode&CV_SPINNERS)
@@ -1068,7 +1067,6 @@ word LoopZ80(Z80 *R)
   /* Refresh VDP */
   if(Loop9918(&VDP)) R->IRequest=INT_NMI;
 
-#if 0 // Appears to cause corruption (Caverns of Titan intro)
   /* Every few scanlines, refresh sound */
   if(!(VDP.Line&0x07))
   {
@@ -1085,7 +1083,6 @@ word LoopZ80(Z80 *R)
     Sync76489(&PSG,SN76489_FLUSH|(D? SN76489_DRUMS:0));
     Sync8910(&AYPSG,AY8910_FLUSH|(D? AY8910_DRUMS:0));
   }
-#endif
 
   /* Drop out unless end of screen is reached */
   if(VDP.Line!=TMS9918_END_LINE) return(R->IRequest);
@@ -1137,12 +1134,7 @@ word LoopZ80(Z80 *R)
   }
 
   /* Count ticks for MIDI ouput */
-  J = 1000/(Mode&CV_PAL? TMS9929_FRAMES:TMS9918_FRAMES);
-  MIDITicks(J);
-
-  /* Flush any accumulated sound changes */
-  Sync76489(&PSG,SN76489_FLUSH|(Mode&CV_DRUMS? SN76489_DRUMS:0));
-  Sync8910(&AYPSG,AY8910_FLUSH|(Mode&CV_DRUMS? AY8910_DRUMS:0));
+  MIDITicks(1000/(Mode&CV_PAL? TMS9929_FRAMES:TMS9918_FRAMES));
 
   /* Apply RAM-based cheats */
   if(CheatsON&&CheatCount) ApplyCheats();

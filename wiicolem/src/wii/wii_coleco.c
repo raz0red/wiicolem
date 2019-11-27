@@ -40,6 +40,12 @@ distribution.
 #include "font_ttf.h"
 
 extern void WII_SetWidescreen(int wide);
+extern void WII_VideoStop();
+extern void WII_VideoStart();
+extern void WII_ChangeSquare(int xscale, int yscale, int xshift, int yshift);
+extern void WII_SetFilter( BOOL filter );
+extern void WII_SetDefaultVideoMode();
+extern void WII_SetStandardVideoMode( int xscale, int yscale, int width );
 
 // The last ColecoVision cartridge hash
 char wii_cartridge_hash[33];
@@ -72,13 +78,15 @@ int wii_screen_x = DEFAULT_SCREEN_X;
 // The screen Y size
 int wii_screen_y = DEFAULT_SCREEN_Y;
 // 16:9 correction
-BOOL wii_16_9_correction = FALSE;
+BOOL wii_16_9_correction = TRUE;
 // Full widescreen
 int wii_full_widescreen = WS_AUTO;
-// Auto widescreen value (from startup)
-static BOOL widescreen_auto = FALSE;
+// Whether the WII is in widescreen mode
+BOOL is_widescreen = FALSE;
 // Whether to filter the display
 BOOL wii_filter = FALSE; 
+// Whether to use the GX/VI scaler
+BOOL wii_gx_vi_scaler = TRUE;
 
 /*
  * Initializes the application
@@ -97,8 +105,8 @@ void wii_handle_init()
   // FreeTypeGX
   InitFreeType( (uint8_t*)font_ttf, (FT_Long)font_ttf_size  );
   
-  // Determine widescreen auto value
-  widescreen_auto = ( CONF_GetAspectRatio() == CONF_ASPECT_16_9 );
+  // Determine widescreen
+  is_widescreen = ( CONF_GetAspectRatio() == CONF_ASPECT_16_9 );
   wii_update_widescreen();
 
   // Initialize the colecovision menu
@@ -112,7 +120,7 @@ void wii_update_widescreen()
 {
   int ws = 
     ( wii_full_widescreen == WS_AUTO ? 
-        widescreen_auto : wii_full_widescreen );
+        is_widescreen : wii_full_widescreen );
   WII_SetWidescreen( ws );
 }
 
@@ -128,7 +136,7 @@ void wii_get_screen_size( int inX, int inY, int *x, int *y )
 {
     int xs = inX;
     int ys = inY;      
-    if( wii_16_9_correction )
+    if( is_widescreen && wii_16_9_correction )
     {
       xs = (xs*3)/4; // Widescreen correct
     }            
@@ -137,6 +145,31 @@ void wii_get_screen_size( int inX, int inY, int *x, int *y )
     
     *x = xs;
     *y = ys;
+}
+
+/*
+ * Sets the video mode
+ *
+ * allowVi  Whether to allow the GX+VI mode
+ */
+void wii_set_video_mode(BOOL allowVi) 
+{
+    // Get the screen size
+    int x, y;
+    wii_get_screen_size(wii_screen_x, wii_screen_y, &x, &y);
+    
+    if( allowVi && wii_gx_vi_scaler && !wii_filter )
+    {
+      // VI+GX
+      WII_SetStandardVideoMode( x, y, TMS9918_WIDTH );      
+    }
+    else
+    {
+      // Scale the screen (GX)
+      WII_SetDefaultVideoMode();
+      WII_SetFilter( wii_filter );      
+      WII_ChangeSquare( x, y, 0, 0 );
+    }
 }
 
 /*
@@ -162,6 +195,15 @@ void wii_handle_run()
   if( InitMachine() )
   {
     StartColeco( NULL );
+        
+    // Clear the screen prior to exiting
+    wii_sdl_black_screen();
+    if (wii_gx_vi_scaler) {
+      WII_VideoStart();
+      wii_set_video_mode(TRUE);
+      WII_VideoStop();
+    }        
+        
     TrashColeco();
     TrashMachine();
   }

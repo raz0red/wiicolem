@@ -86,6 +86,9 @@ extern Mtx gx_view;
 
 char debug_str[255] = "";
 
+extern void WII_VideoStop();
+extern void WII_VideoStart();
+
 /** TrashMachine() *******************************************/
 /** Deallocate all resources taken by InitMachine().        **/
 /*************************************************************/
@@ -295,7 +298,10 @@ unsigned int Joystick(void)
     //
     if( ( down & WII_BUTTON_HOME ) || ( gcDown & GC_BUTTON_HOME ) || wii_hw_button )
     {
-      wii_menu_show();
+      wii_menu_show();      
+      if (wii_gx_vi_scaler) {
+        padvisible = FALSE;
+      }
     }
 
     //
@@ -303,8 +309,8 @@ unsigned int Joystick(void)
     //
     keypad = wii_keypad_poll_joysticks();
     
-    if( wii_keypad_is_pause_enabled( &wii_coleco_db_entry ) )
-    {
+    if( wii_keypad_is_pause_enabled( &wii_coleco_db_entry ) || wii_gx_vi_scaler )
+    {    
       if( wii_keypad_is_visible( 0 ) || wii_keypad_is_visible( 1 ) )
       {        
         if( keypad )
@@ -327,6 +333,13 @@ unsigned int Joystick(void)
 
             // Dim the screen
             wii_keypad_set_dim_screen( TRUE );
+
+            // Force GX without VI             
+            if (wii_gx_vi_scaler) {
+              WII_VideoStop();
+              wii_set_video_mode(FALSE);
+              WII_VideoStart();
+            }
           }
 
           // Make sure audio is paused
@@ -343,6 +356,13 @@ unsigned int Joystick(void)
 
       if( !loop && padvisible )
       {
+        // Restart selected video mode
+        if (wii_gx_vi_scaler) {
+          WII_VideoStop();
+          wii_set_video_mode(TRUE);
+          WII_VideoStart();
+        }
+      
         // Un-dim the screen
         wii_keypad_set_dim_screen( FALSE );
 

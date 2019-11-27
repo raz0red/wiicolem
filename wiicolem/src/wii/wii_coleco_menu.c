@@ -306,6 +306,9 @@ void wii_coleco_menu_init()
   child->x = -2; child->value_x = -3;    
   wii_add_child( display, child );  
   
+  child = wii_create_tree_node( NODETYPE_GX_VI_SCALER, "Scaler " );
+  child->x = -2; child->value_x = -3;    
+  wii_add_child( display, child );  
 
   //
   // The advanced menu
@@ -441,6 +444,10 @@ void wii_menu_handle_get_node_name(
         ( ( wii_screen_x == DEFAULT_SCREEN_X && 
           wii_screen_y == DEFAULT_SCREEN_Y ) ? "(default)" : "Custom" ) );
       break;
+    case NODETYPE_GX_VI_SCALER:
+      snprintf( value, WII_MENU_BUFF_SIZE, "%s", 
+        ( wii_gx_vi_scaler ? "GX + VI" : "GX" ) );
+      break;      
     case NODETYPE_FULL_WIDESCREEN:
       snprintf( value, WII_MENU_BUFF_SIZE, "%s", 
         ( wii_full_widescreen == WS_AUTO ? "(auto)" :
@@ -845,10 +852,13 @@ void wii_menu_handle_select_node( TREENODE *node )
       break;      
     case NODETYPE_FILTER:
       wii_filter ^= 1;
-      break;        
+      break;
+      case NODETYPE_GX_VI_SCALER:
+        wii_gx_vi_scaler ^= 1;
+        break;              
     case NODETYPE_KEYPAD_PAUSE:
       wii_keypad_pause ^= 1;
-      break;
+      break;      
     case NODETYPE_KEYPAD_SIZE:
       wii_keypad_size++;
       if( wii_keypad_size > KEYPAD_SIZE_LARGE )
@@ -1053,6 +1063,16 @@ BOOL wii_menu_handle_is_node_visible( TREENODE *node )
     case NODETYPE_SPINNER:
       return wii_coleco_db_entry.controlsMode == CONTROLS_MODE_SUPERACTION;
       break;
+    case NODETYPE_GX_VI_SCALER:
+      return !wii_filter;
+      break;      
+    case NODETYPE_KEYPAD_PAUSE:
+    case NODETYPE_KEYPAD_PAUSE_CART:
+      return !wii_gx_vi_scaler;
+      break;
+    case NODETYPE_16_9_CORRECTION:
+      return is_widescreen;
+      break;
     case NODETYPE_SENSITIVITY:
       return 
         ( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_ROLLER ) ||
@@ -1224,7 +1244,7 @@ static void wii_read_save_state_list( TREENODE *menu )
 void wii_menu_handle_post_loop()
 {
   if( !ExitNow )
-  {
+  {        
     // Resume SDL Video
     WII_VideoStart();
 
@@ -1256,8 +1276,9 @@ void wii_menu_handle_pre_loop()
   }
 
   // Stop SDL video
-  WII_SetDefaultVideoMode();
   WII_VideoStop();
+  WII_SetDefaultVideoMode();
+
 
   // Stop the sound
   PauseAudio(1);

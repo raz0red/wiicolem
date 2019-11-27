@@ -51,6 +51,10 @@ extern void WII_SetFilter( BOOL filter );
 
 extern void wii_render_callback();
 
+#if 1
+extern u32 cur_xfb;
+#endif
+
 /**
  * Returns the mode flags for ColEm
  *
@@ -178,13 +182,27 @@ BOOL wii_start_emulation( char *romfile, const char *savefile, BOOL reset, BOOL 
       }
 
       wii_last_rom = last;
-
+#if 1
+      for(int i = 0; i <2; i++) {  
+        cur_xfb ^= 1;
+        u32 *fb = wii_xfb[cur_xfb];  
+        VIDEO_SetNextFramebuffer( fb );
+        VIDEO_ClearFrameBuffer( vmode, fb, COLOR_BLACK );
+        VIDEO_SetBlack(FALSE);
+        VIDEO_Flush();	
+        VIDEO_WaitVSync();
+      }  
+#endif        
+      
       if( !resume )
       {
         // Reset the keypad
         wii_keypad_reset();      
         // Clear the screen
         wii_sdl_black_screen();
+#if 1
+        wii_sdl_black_screen();
+#endif        
       }
 
       // Wait until no buttons are pressed
@@ -199,15 +217,9 @@ BOOL wii_start_emulation( char *romfile, const char *savefile, BOOL reset, BOOL 
 
       // Set render callback
       WII_SetRenderCallback( &wii_render_callback );
-
-      // Get the screen size
-      int x, y;
-      wii_get_screen_size(wii_screen_x, wii_screen_y, &x, &y);
-      // VI+GX
-      //WII_SetStandardVideoMode( xs, ys, 256 /*COLECO_WIDTH*/ );      
-      // Scale the screen (GX)
-      WII_SetFilter( wii_filter );      
-      WII_ChangeSquare( x, y, 0, 0 );
+      
+      // Set the video mode
+      wii_set_video_mode(TRUE);
 
       // Set spinner controls
       Mode&=~CV_SPINNERS;

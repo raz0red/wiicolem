@@ -322,13 +322,11 @@ static void render_pad( keypad *pad )
         pad == &keypad0 ?
           PAD_X + -WII_WIDTH_DIV2 : 
           WII_WIDTH_DIV2 - PAD_X - idata->width;
-      int pady = WII_HEIGHT_DIV2 - PAD_Y;
-      
-      //padx = padx / 2;
+      int pady = WII_HEIGHT_DIV2 - PAD_Y;     
 
       wii_gx_drawimage( padx, pady, 
         idata->width, idata->height, idata->data, 
-        0, 1.0 /*0.5*/, 1.0, 0xFF );
+        0, 1.0, 1.0, 0xFF );
 
       wii_gx_drawrectangle( 
         padx + offsetx + 

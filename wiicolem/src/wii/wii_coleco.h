@@ -30,14 +30,15 @@ distribution.
 #include "wii_main.h"
 #include "wii_coleco_db.h"
 
+#define TMS9918_WIDTH 280
 #define COLECO_WIDTH 272
 #define COLECO_HEIGHT 200
 
 // Default screen size
 // 256x192: Coleco
 // 272x200: Colem
-// 640x480: Wii
-#define DEFAULT_SCREEN_X 775
+// 280x: TMS9981 (PAR 1.143)
+#define DEFAULT_SCREEN_X 732
 #define DEFAULT_SCREEN_Y 480
 
 // Wii width and height
@@ -124,6 +125,10 @@ extern BOOL wii_16_9_correction;
 extern int wii_full_widescreen;
 // Whether to filter the display
 extern BOOL wii_filter; 
+// Whether to use the GX/VI scaler
+extern BOOL wii_gx_vi_scaler;
+// Whether the WII is in widescreen mode
+extern BOOL is_widescreen;
 
 /*
  * Returns the roms directory
@@ -175,6 +180,13 @@ extern void wii_update_widescreen();
  * y    Out y 
  */
 extern void wii_get_screen_size( int inX, int inY, int *x, int *y );
+
+/*
+ * Sets the video mode
+ *
+ * allowVi  Whether to allow the GX+VI mode
+ */
+extern void wii_set_video_mode(BOOL allowVi);
 
 #if 0
 extern void wii_coleco_patch_rom();

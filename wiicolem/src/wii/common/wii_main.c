@@ -92,7 +92,7 @@ static u32* about_buff = NULL;
 // Properties of the about image
 static PNGUPROP about_props;
 // The current frame buffer
-static u32 cur_xfb = 0;
+u32 cur_xfb = 0;
 // The first item to display in the menu (paging, etc.)
 static s16 menu_start_idx = 0;
 
@@ -761,7 +761,7 @@ void wii_menu_show()
 
     VIDEO_WaitVSync();
   }
-
+  
   // Invoke post loop handler
   wii_menu_handle_post_loop();
 }

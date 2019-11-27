@@ -122,6 +122,10 @@ void wii_config_handle_read_value( char *name, char* value )
   {
     wii_filter = Util_sscandec( value );
   }  
+  else if( strcmp( name, "VI_GX_SCALER" ) == 0 )
+  {
+    wii_gx_vi_scaler = Util_sscandec( value );
+  }  
 }
 
 /*
@@ -151,6 +155,7 @@ void wii_config_handle_write_config( FILE *fp )
   fprintf( fp, "16_9_CORRECTION=%d\n", wii_16_9_correction );  
   fprintf( fp, "FULL_WIDESCREEN=%d\n", wii_full_widescreen );   
   fprintf( fp, "VIDEO_FILTER=%d\n", wii_filter );  
+  fprintf( fp, "VI_GX_SCALER=%d\n", wii_gx_vi_scaler );  
 
   char hex[64] = "";
   Util_rgbatohex( &wii_menu_sel_color, hex );
