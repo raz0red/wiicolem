@@ -41,7 +41,7 @@ INCLUDES	:= \
     src/Colem \
     src/Z80 \
     src/EMULib \
-    src/Colem/Wii \
+    src/ColEm/Wii \
     src/EMULib/Wii \
     thirdparty/freetype/include \
     thirdparty/zlib/include \
