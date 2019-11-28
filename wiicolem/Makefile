@@ -26,7 +26,7 @@ SOURCES		:= \
     src/wii/common/FreeTypeGX \
     src/ColEm src/Z80 \
     src/EMULib \
-    src/Colem/Wii \
+    src/ColEm/Wii \
     src/EMULib/Wii 
 DATA		:= \
     src/wii/res/fonts \
