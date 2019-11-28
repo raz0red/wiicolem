@@ -12,4 +12,4 @@ jobs:
     - run: pwd
     - run: ls -l
     - run: docker pull raz0red/devkitppc
-    - run: docker run -v $(pwd)/wiicolem:/source raz0red/devkitppc bash -c 'cd /source; make; ls -l /source'
+    - run: docker run -v $(pwd)/wiicolem:/source raz0red/devkitppc make -c $(pwd)/wiicolem
