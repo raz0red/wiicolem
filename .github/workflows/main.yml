@@ -8,9 +8,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Build
-      run: |
-        pwd
-        ls -l
-        docker pull raz0red/devkitppc
-        docker run -v $(pwd):/source raz0red/devkitppc bash -c 'cd /source; make; ls -l /source'
+      - name: Build
+      - uses: actions/checkout@v1
+      - run: |
+          pwd
+          ls -l
+          docker pull raz0red/devkitppc
+          docker run -v $(pwd)/wiicolem:/source raz0red/devkitppc bash -c 'cd /source; make; ls -l /source'
