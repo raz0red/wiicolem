@@ -39,7 +39,7 @@ INCLUDES	:= \
     src/wii/common/netprint \
     src/wii/common/pngu \
     src/wii/common/FreeTypeGX \
-    src/Colem \
+    src/ColEm \
     src/Z80 \
     src/EMULib \
     src/ColEm/Wii \
