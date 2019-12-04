@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010
+Copyright (C) 2011
 raz0red (www.twitchasylum.com)
 
 This software is provided 'as-is', without any express or implied
@@ -33,6 +33,9 @@ distribution.
 extern "C" {
 #endif
 
+#define GX_X(x) (-320+(x))
+#define GX_Y(y) (240-(y))
+
 /*
  * Structure for loading images
  */
@@ -42,6 +45,22 @@ typedef struct gx_imagedata
   int width;
   int height;
 } gx_imagedata;
+
+/*
+ * Pushes the specified callback. It will be set as the active callback.
+ *
+ * rendercallback   The callback to activate
+ * renderscreen     Whether we want to render the SDL screen (main surface)
+ * precallback      The pre render callback
+ */
+extern void wii_gx_push_callback( 
+  void (*rendercallback)(void), BOOL renderscreen, void (*precallback)(void) );
+
+/*
+ * Pops the active callback. The previous callback (if it exists) will be 
+ * restored.
+ */
+extern void wii_gx_pop_callback();
 
 /*
  * Draws a rectangle at the specified position
@@ -66,7 +85,7 @@ void wii_gx_drawrectangle(
  * textStyle  The style(s) for the text (FreeTypeGX)
  */
 void wii_gx_drawtext( 
-  int16_t x, int16_t y, FT_UInt pixelSize, char *text, GXColor color, 
+  int16_t x, int16_t y, FT_UInt pixelSize, const char *text, GXColor color, 
   uint16_t textStyle );
 
 /**

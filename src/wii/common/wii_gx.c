@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010
+Copyright (C) 2011
 raz0red (www.twitchasylum.com)
 
 This software is provided 'as-is', without any express or implied
@@ -31,8 +31,66 @@ distribution.
 #include "wii_sdl.h"
 
 extern Mtx gx_view;
+extern void WII_SetRenderCallback( void (*cb)(void) );
+extern void WII_SetPreRenderCallback( void (*cb)(void) );
+extern void WII_SetRenderScreen( BOOL render );
 
 static gx_imagedata* getimagedata( IMGCTX ctx );
+
+// Render callback state information
+typedef struct callbackstate
+{
+  void (*rendercallback)(void);
+  BOOL renderscreen;
+  void (*precallback)(void);
+} callbackstate;
+
+// The callback state stack
+static callbackstate cbstate_stack[16];
+// The head of the callback state stack
+static s8 cbstate_head = -1;
+
+/*
+ * Pushes the specified callback. It will be set as the active callback.
+ *
+ * rendercallback   The callback to activate
+ * renderscreen     Whether we want to render the SDL screen (main surface)
+ * precallback      The pre render callback
+ */
+void wii_gx_push_callback( 
+  void (*rendercallback)(void), BOOL renderscreen, void (*precallback)(void) )
+{
+  cbstate_stack[++cbstate_head].rendercallback = rendercallback;
+  cbstate_stack[cbstate_head].renderscreen = renderscreen;
+  cbstate_stack[cbstate_head].precallback = precallback;
+
+  WII_SetRenderCallback( rendercallback );
+  WII_SetRenderScreen( renderscreen );
+  WII_SetPreRenderCallback( precallback );  
+}
+
+/*
+ * Pops the active callback. The previous callback (if it exists) will be 
+ * restored.
+ */
+void wii_gx_pop_callback()
+{
+  if( cbstate_head <= 0 )
+  {
+    return;
+  }
+
+  cbstate_stack[cbstate_head].precallback = NULL;
+  cbstate_stack[cbstate_head].rendercallback = NULL;
+  cbstate_stack[cbstate_head--].renderscreen = FALSE;
+
+  if( cbstate_head >= 0 )
+  {
+    WII_SetRenderCallback( cbstate_stack[cbstate_head].rendercallback );
+    WII_SetRenderScreen( cbstate_stack[cbstate_head].renderscreen );
+    WII_SetPreRenderCallback( cbstate_stack[cbstate_head].precallback );  
+  }
+}
 
 /*
  * Draws a rectangle at the specified position
@@ -85,10 +143,10 @@ void wii_gx_drawrectangle(
  * textStyle  The style(s) for the text (FreeTypeGX)
  */
 void wii_gx_drawtext( 
-  int16_t x, int16_t y, FT_UInt pixelSize, char *text, GXColor color, 
+  int16_t x, int16_t y, FT_UInt pixelSize, const char *text, GXColor color, 
   uint16_t textStyle )
 {
-  FT_DrawText( x, y, pixelSize, text, color, textStyle );
+  FT_DrawText( x, y, pixelSize, (char*)text, color, textStyle );
 }
 
 /**
@@ -126,6 +184,7 @@ void wii_gx_drawimage(
   GXTexObj texObj;
   
   GX_InitTexObj( &texObj, data, width, height, GX_TF_RGBA8, GX_CLAMP, GX_CLAMP, GX_FALSE );
+  //GX_InitTexObjLOD(&texObj,GX_NEAR,GX_NEAR_MIP_NEAR,0.0,10.0,0.0,GX_FALSE,GX_FALSE,GX_ANISO_1);
   GX_LoadTexObj( &texObj, GX_TEXMAP0 );
   GX_InvalidateTexAll();
 

@@ -93,6 +93,20 @@ int Util_sscandec(const char *s)
   }
 }
 
+u32 Util_sscandec_u32(const char *s)
+{
+  int result = 0;
+  for (;;) {
+    if (*s >= '0' && *s <= '9')
+      result = 10 * result + *s - '0';
+    else if (*s == '\0')
+      return result;
+    else
+      return -1;
+    s++;
+  }
+}
+
 char *Util_strlcpy(char *dest, const char *src, size_t size)
 {
   strncpy(dest, src, size);
@@ -187,7 +201,10 @@ int Util_hextodec( const char* hex )
 void Util_hextorgba( const char* hex, RGBA* rgba )
 {
   memset( rgba, 0, sizeof( RGBA ) );
-  if( !hex || strlen( hex ) != 8 ) return;    
+  if( !hex ) return;
+
+  int len = strlen( hex );
+  if( len != 6 && len != 8 ) return;    
   
   char tmp[3];
   tmp[2] = '\0';
@@ -199,8 +216,11 @@ void Util_hextorgba( const char* hex, RGBA* rgba )
   rgba->G = Util_hextodec( tmp );
   tmp[0] = hex[index++]; tmp[1] = hex[index++];  
   rgba->B = Util_hextodec( tmp );
+  if( len == 8 )
+  {
   tmp[0] = hex[index++]; tmp[1] = hex[index];  
   rgba->A = Util_hextodec( tmp );
+}
 }
 
 void Util_dectohex( int dec, char *hex, int fill )
@@ -254,4 +274,51 @@ void Util_rgbatohex( RGBA* rgba, char *hex )
   Util_dectohex( rgba->A, tmp, 2 );
   hex[index++] = tmp[0];
   hex[index] = tmp[1];  
+}
+
+/*
+ * Converts the RGBA to an integer value
+ *
+ * rgba   The RGBA
+ * includeAlpha Whether to include alpha in the value
+ * return The RGBA as an integer value
+ */
+u32 Util_rgbatovalue( RGBA* rgba, BOOL includeAlpha )
+{
+  u32 val = 0;
+  val |= rgba->R;
+  val <<= 8;
+  val |= rgba->G;
+  val <<= 8;
+  val |= rgba->B;
+  if( includeAlpha )
+  {
+    val <<=  8;
+    val |= rgba->A;
+  }
+  return val;
+}
+
+/*
+ * Converts the specified Ansi string to UTF-8
+ * NOTE: out must be at least twice the size of in
+ *
+ * in   The Ansi string
+ * out  The UTF-8 string 
+ */
+void Util_ansitoUTF8( unsigned char* in, unsigned char* out )
+{
+  while( *in )
+  {
+    if( *in <128 ) 
+    { 
+      *out++ = *in++;
+    }
+    else
+    {
+      *out++ = 0xc2+(*in>0xbf);
+      *out++ = (*in++&0x3f)+0x80;
+    }
+  }
+  *out = '\0';
 }

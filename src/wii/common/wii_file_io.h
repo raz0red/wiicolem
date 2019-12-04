@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010
+Copyright (C) 2011
 raz0red (www.twitchasylum.com)
 
 This software is provided 'as-is', without any express or implied
@@ -25,26 +25,8 @@ distribution.
 #ifndef WII_FILE_IO_H
 #define WII_FILE_IO_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <gctypes.h>
-
-/*
- * Unmounts the file system
- */
-extern void wii_unmount();
-
-/*
- * Mounts the file system
- *
- * return   Whether we mounted the file system successfully
- */
-extern BOOL wii_mount();
-
-#ifdef __cplusplus
-}
-#endif
+void wii_unmount();
+bool wii_mount();
+void wii_remount();
 
 #endif

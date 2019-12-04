@@ -26,6 +26,12 @@ distribution.
 #include <fat.h>
 #include <sdcard/wiisd_io.h>
 #include <ogc/usbstorage.h>
+#include <SDL.h>
+
+#ifdef WII_NETTRACE
+#include <network.h>
+#include "net_print.h"  
+#endif
 
 #include "wii_app.h"
 
