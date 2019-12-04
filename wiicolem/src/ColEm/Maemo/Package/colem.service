@@ -1,4 +1,0 @@
-# Service description file
-[D-BUS Service]
-Name=com.fms.colem
-Exec=/usr/bin/colem
