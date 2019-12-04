@@ -1,4 +1,4 @@
-# WiiColEm v0.3-pre release README
+# WiiColEm
 
 Ported by raz0red
 
