@@ -59,8 +59,6 @@ int wii_vsync = -1;
 // The last rom that was successfully executed
 char *wii_last_rom = NULL;
 
-// The average FPS from testing vsync 
-static float test_fps = 0.0;
 // Whether the Wii is PAL or NTSC
 BOOL wii_is_pal = 0;
 // Whether the wiimote (for the menu) is horizontal or vertical
@@ -85,6 +83,12 @@ s16 menu_cur_idx = -1;
 int wii_menu_sel_offset = 0;
 // The menu selection color
 RGBA wii_menu_sel_color = { 0, 0, 0xC0, 0 };
+// Whether the WII is in widescreen mode
+BOOL is_widescreen = FALSE;
+// Full widescreen
+int wii_full_widescreen = WS_AUTO;
+// 16:9 correction
+BOOL wii_16_9_correction = FALSE;
 
 // Buffer containing the about image
 static u32* about_buff = NULL;
@@ -956,6 +960,9 @@ int main(int argc,char *argv[])
 
   // Clear the stack
   memset( &wii_menu_stack, 0, sizeof(wii_menu_stack) );
+
+  // Determine widescreen auto value
+  is_widescreen = ( CONF_GetAspectRatio() == CONF_ASPECT_16_9 );
 
   // Initializes the application
   init_app(); 
