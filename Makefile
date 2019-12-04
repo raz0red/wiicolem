@@ -24,6 +24,7 @@ SOURCES		:= \
     src/wii/common/netprint \
     src/wii/common/pngu \
     src/wii/common/FreeTypeGX \
+    src/wii/common/i18n \
     src/ColEm \
     src/Z80 \
     src/EMULib \
@@ -39,6 +40,7 @@ INCLUDES	:= \
     src/wii/common/netprint \
     src/wii/common/pngu \
     src/wii/common/FreeTypeGX \
+    src/wii/common/i18n \
     src/ColEm \
     src/Z80 \
     src/EMULib \
@@ -113,13 +115,11 @@ CFILES      := \
     net_print.c \
     wii_app.c \
     wii_config.c \
-    wii_file_io.c \
     wii_freetype.c \
     wii_gx.c \
     wii_hash.c \
     wii_hw_buttons.c \
     wii_input.c \
-    wii_main.c \
     wii_resize_screen.c \
     wii_sdl.c \
     wii_snapshot.c \
@@ -135,8 +135,13 @@ CFILES      := \
     wii_coleco_snapshot.c     
     
 CPPFILES    := \
+    wii_main.cpp \
     FreeTypeGX.cpp \
-    Metaphrasis.cpp
+    Metaphrasis.cpp \
+    wii_file_io.cpp \
+    vi_encoder.cpp \
+    networkop.cpp \
+    gettext.cpp
 
 sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))

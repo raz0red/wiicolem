@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010
+Copyright (C) 2011
 raz0red (www.twitchasylum.com)
 
 This software is provided 'as-is', without any express or implied
@@ -62,8 +62,7 @@ char *wii_last_rom = NULL;
 // The average FPS from testing vsync 
 static float test_fps = 0.0;
 // Whether the Wii is PAL or NTSC
-static BOOL is_pal = 0;
-
+BOOL wii_is_pal = 0;
 // Whether the wiimote (for the menu) is horizontal or vertical
 BOOL wii_mote_menu_vertical = TRUE;
 // Whether to return to the top menu after exiting a game
@@ -108,18 +107,12 @@ static void wii_free_node( TREENODE* node );
  */
 static void wii_test_pal()
 {
-  // TODO: Can we simply use the current TV mode to determine this?
-  int start = SDL_GetTicks();
-  int i;
-  for( i = 0; i < 40; i++ )
-  {
-    VIDEO_WaitVSync();
-  }
-  int time = SDL_GetTicks() - start;
+  wii_is_pal = 
+    ( VIDEO_GetPreferredMode(NULL)->viTVMode >> 2 ) == VI_PAL;
 
-  test_fps = time / 40.0;
-
-  is_pal = test_fps > 17.5;
+#ifdef WII_NETTRACE
+  net_print_string(NULL,0, "pal test: %d\n", wii_is_pal );  
+#endif
 }
 
 /*
@@ -977,7 +970,8 @@ int main(int argc,char *argv[])
   // Set the vsync based on whether or not we are PAL or NTSC
   if( wii_vsync == -1 )
   {
-    wii_set_vsync( !is_pal );
+    // Set the vsync based on whether or not we are PAL or NTSC
+    wii_set_vsync( !wii_is_pal );
   }
 
   // Runs the application

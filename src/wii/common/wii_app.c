@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010
+Copyright (C) 2011
 raz0red (www.twitchasylum.com)
 
 This software is provided 'as-is', without any express or implied
@@ -24,13 +24,18 @@ distribution.
 
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <wiiuse/wpad.h>
 
 #include "wii_input.h"
 #include "wii_main.h"
+#include "wii_hw_buttons.h"
 
+#include "wii_app.h"
 #include "wii_app_common.h"
+
+#include "gettext.h"
 
 #ifdef WII_NETTRACE
 #include <network.h>
@@ -44,7 +49,7 @@ static char app_path[WII_MAX_PATH] = "";
 char wii_status_message[WII_MENU_BUFF_SIZE] = "";
 
 // The status message display count down
-u8 wii_status_message_count = 0;
+u32 wii_status_message_count = 0;
 
 // Whether we are installed on a USB drive
 BOOL wii_is_usb = FALSE;
@@ -86,7 +91,7 @@ void wii_set_app_path( int argc, char *argv[] )
       ( strchr( argv[0], ':' ) != NULL ) ) // To support wiiload
   {
 #ifdef WII_NETTRACE
-    net_print_string(__FILE__,__LINE__, "Found drive prefix" );  
+    net_print_string(__FILE__,__LINE__, "Found drive prefix\n" );  
 #endif
 
     char temp_path[WII_MAX_PATH];
@@ -99,6 +104,12 @@ void wii_set_app_path( int argc, char *argv[] )
     if (loc != NULL)
     {
       *loc = '\0'; 
+    }
+
+    // Convert the prefix to lowercase (consistent with our mapped drive)
+    for( loc = temp_path; *loc && *loc != ':'; ++loc )
+    {
+      *loc = tolower( *loc );
     }
 
     snprintf( app_path, WII_MAX_PATH, "%s/", temp_path );
@@ -134,6 +145,20 @@ void wii_pause()
   int done = 0;
   while( !done )
   {		
+    if( wii_check_button_pressed() )
+    {	
+      done = 1;
+    }
+  }
+}
+
+/*
+ * Checks whether a button was pressed
+ *
+ * return   1 if a button was pressed, -1 if home/hadware was pressed
+ */
+int wii_check_button_pressed()
+{
     WPAD_ScanPads();
     PAD_ScanPads();
 
@@ -141,17 +166,35 @@ void wii_pause()
     WPAD_Expansion( 0, &exp );        
     bool isClassic = ( exp.type == WPAD_EXP_CLASSIC );
 
-    u32 down = WPAD_ButtonsDown(0);
-    u32 gcDown = PAD_ButtonsDown(0);
+  u32 pressed = WPAD_ButtonsDown( 0 );
+  u32 held = WPAD_ButtonsHeld( 0 );  
+  u32 gcPressed = PAD_ButtonsDown( 0 );
+  u32 gcHeld = PAD_ButtonsHeld( 0 );
 
-    if( ( down & ( WII_BUTTON_A | 
-          ( isClassic ? 
-            WII_CLASSIC_BUTTON_A : WII_NUNCHUK_BUTTON_A ) ) ) || 
-        ( gcDown & GC_BUTTON_A ) )
-    {	
-      done = 1;
-    }
+  if( ( pressed & WII_BUTTON_HOME ) ||
+    ( gcPressed & GC_BUTTON_HOME ) || 
+    ( wii_hw_button ) )
+  {
+    return -1;
   }
+
+  return ( 
+    ( held & 
+      ( WPAD_BUTTON_A | WPAD_BUTTON_B | WPAD_BUTTON_1 | WPAD_BUTTON_2 |
+        WPAD_BUTTON_PLUS | WPAD_BUTTON_MINUS |
+          ( isClassic ? 
+          ( WPAD_CLASSIC_BUTTON_PLUS | WPAD_CLASSIC_BUTTON_MINUS | 
+            WPAD_CLASSIC_BUTTON_X | WPAD_CLASSIC_BUTTON_A | 
+            WPAD_CLASSIC_BUTTON_Y | WPAD_CLASSIC_BUTTON_B ) : 
+          ( WPAD_NUNCHUK_BUTTON_Z | WPAD_NUNCHUK_BUTTON_C ) 
+        ) 
+      ) 
+    ) || 
+    ( gcHeld & 
+        ( PAD_BUTTON_START | PAD_BUTTON_A | PAD_BUTTON_B | 
+          PAD_BUTTON_X | PAD_BUTTON_Y ) 
+    )
+  );
 }
 
 /*
@@ -182,6 +225,8 @@ void wii_console_init( void *fb )
  */ 
 void wii_set_status_message( const char *message )
 {
-  wii_status_message_count = 3;
-  snprintf( wii_status_message, sizeof(wii_status_message), "%s", message );
+  //LOCK_RENDER_MUTEX();
+  wii_status_message_count = ( wii_is_pal ? 50 : 60 ) * 5; // 5 seconds
+  snprintf( wii_status_message, sizeof(wii_status_message), "%s", gettextmsg(message) );
+  //UNLOCK_RENDER_MUTEX();
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010
+Copyright (C) 2011
 raz0red (www.twitchasylum.com)
 
 This software is provided 'as-is', without any express or implied
@@ -29,10 +29,19 @@ distribution.
 #include "wii_app.h"
 #include "wii_sdl.h"
 
+#ifdef WII_NETTRACE
+#include <network.h>
+#include "net_print.h"  
+#endif
+
 // The Wii surface
 SDL_Surface *back_surface = NULL;
-// The Coleco surface
+// The BLIT surface
 SDL_Surface *blit_surface = NULL;
+// The render mutex
+static SDL_mutex *render_mutex = NULL;
+// mutext lock count
+static int mutex_lock_count = 0;
 
 // Fonts
 TTF_Font *sdl_font_18 = NULL;
@@ -44,6 +53,39 @@ TTF_Font *sdl_font_12 = NULL;
 SDL_Color SDL_COLOR_WHITE = { 255, 255, 255, 0 };
 SDL_Color SDL_COLOR_BLACK = { 0, 0, 0, 0 };
 SDL_Color SDL_COLOR_RED = { 255, 0, 0, 0 };
+
+/* Locks the render mutext */
+void LOCK_RENDER_MUTEX()
+{
+  if( render_mutex != NULL )
+  {
+    SDL_mutexP( render_mutex );
+    mutex_lock_count++;
+#ifdef WII_NETTRACE
+    //net_print_string( NULL, 0, "RenderMutexLock:%d\n", mutex_lock_count ); 
+#endif
+  }
+}
+
+/* Unlocks the render mutext */
+void UNLOCK_RENDER_MUTEX()
+{
+  if( render_mutex != NULL )
+  {
+    --mutex_lock_count;
+#ifdef WII_NETTRACE
+    //net_print_string( NULL, 0, "RenderMutexUnlock:%d\n", mutex_lock_count ); 
+#endif
+    if( !mutex_lock_count )
+    {
+#ifdef WII_NETTRACE
+    //net_print_string( NULL, 0, "MutexUnlocked\n" ); 
+#endif
+      SDL_mutexV( render_mutex );
+    }
+  }
+}
+
 
 /*
 * Maps the specified color into the back surface.
@@ -176,7 +218,7 @@ void wii_sdl_render_text(
  * y        The y location
  * return   A pointer to the specified x,y location in the Wii surface
  */
-static u8* wii_sdl_get_vram_addr( SDL_Surface* surface, uint x, uint y )
+static void* wii_sdl_get_vram_addr( SDL_Surface* surface, uint x, uint y )
 {
   u8 *vram = (u8*)surface->pixels;
   return vram + x + ( y * surface->w );
@@ -194,7 +236,7 @@ static u8* wii_sdl_get_vram_addr( SDL_Surface* surface, uint x, uint y )
  * xor      Exclusive or...
  */
 void wii_sdl_draw_rectangle( 
-  SDL_Surface* surface, int x, int y, int w, int h, int border, BOOL exor ) 
+  SDL_Surface* surface, int x, int y, int w, int h, u32 border, BOOL exor ) 
 {
   if( x < 0 ) { w += x; x = 0; }
   if( y < 0 ) { h += y; y = 0; }
@@ -256,7 +298,7 @@ void wii_sdl_draw_rectangle(
  * color    The color
  */
 void wii_sdl_fill_rectangle( 
-  SDL_Surface* surface, int x, int y, int w, int h, int color )
+  SDL_Surface* surface, int x, int y, int w, int h, u32 color )
 {
   if( x < 0 ) { w += x; x = 0; }
   if( y < 0 ) { h += y; y = 0; }
@@ -281,12 +323,15 @@ void wii_sdl_fill_rectangle(
  */
 int wii_sdl_init()
 {
+  render_mutex = SDL_CreateMutex();
+
   // App initialization of the SDL
   wii_sdl_handle_init();
 
   // Don't show the cursor
   SDL_ShowCursor( SDL_DISABLE );
 
+#if 0
   // True type fonts
   TTF_Init();
 
@@ -298,6 +343,7 @@ int wii_sdl_init()
   sdl_font_13 = TTF_OpenFontRW( rw, 1, 13 );
   rw = SDL_RWFromMem( (u8*)font_ttf, font_ttf_size );
   sdl_font_12 = TTF_OpenFontRW( rw, 1, 12 );  
+#endif
 
   return 1;
 }
@@ -323,6 +369,7 @@ void wii_sdl_free_resources()
   {
     SDL_FreeSurface( blit_surface );
   }
+#if 0
   if( sdl_font_18 != NULL )
   {
     TTF_CloseFont( sdl_font_18 );    
@@ -339,5 +386,6 @@ void wii_sdl_free_resources()
   {
     TTF_CloseFont( sdl_font_12 );    
   }
+#endif
 }
 

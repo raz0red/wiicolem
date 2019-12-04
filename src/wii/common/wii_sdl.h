@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010
+Copyright (C) 2011
 raz0red (www.twitchasylum.com)
 
 This software is provided 'as-is', without any express or implied
@@ -36,7 +36,7 @@ extern "C" {
 
 // The Wii surface
 extern SDL_Surface* back_surface;
-// The Coleco surface
+// The Blit surface
 extern SDL_Surface* blit_surface;
 
 // Fonts
@@ -120,7 +120,7 @@ extern void wii_sdl_get_text_size(
  * color    The color
  */
 extern void wii_sdl_fill_rectangle( 
-  SDL_Surface* surface, int x, int y, int w, int h, int color );
+  SDL_Surface* surface, int x, int y, int w, int h, u32 color );
 
 /*
  * Renders a rectangle to the back (Wii) surface
@@ -134,12 +134,18 @@ extern void wii_sdl_fill_rectangle(
  * exor     Whether to exclusive or the rectangle's lines
  */
 extern void wii_sdl_draw_rectangle( 
-  SDL_Surface* surface, int x, int y, int w, int h, int border, BOOL exor );
+  SDL_Surface* surface, int x, int y, int w, int h, u32 border, BOOL exor );
 
 /*
  * Frees the SDL resources
  */
 extern void wii_sdl_free_resources();
+
+/* Locks the render mutext */
+extern void LOCK_RENDER_MUTEX();
+
+/* Unlocks the render mutext */
+extern void UNLOCK_RENDER_MUTEX();
 
 //
 // Methods to be implemented by application

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010
+Copyright (C) 2011
 raz0red (www.twitchasylum.com)
 
 This software is provided 'as-is', without any express or implied
@@ -35,7 +35,7 @@ extern "C" {
 extern char wii_status_message[WII_MENU_BUFF_SIZE];
 
 // The status message display count down
-extern u8 wii_status_message_count;
+extern u32 wii_status_message_count;
 
 // Whether we are installed on a USB drive
 extern BOOL wii_is_usb;
@@ -68,6 +68,13 @@ extern void wii_set_app_path( int argc, char *argv[] );
  * Pause and wait for input. Usually used when debugging.
  */
 extern void wii_pause();
+
+/*
+ * Checks whether a button was pressed
+ *
+ * return   1 if a button was pressed, -1 if home/hadware was pressed
+ */
+extern int wii_check_button_pressed();
 
 /*
  * Writes the specified string to the VT display

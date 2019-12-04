@@ -87,6 +87,8 @@ extern char *wii_last_rom;
 extern int wii_menu_sel_offset;
 // The menu selection color
 extern RGBA wii_menu_sel_color;
+// Whether the Wii is PAL or NTSC
+extern BOOL wii_is_pal;
 
 // The display mode (from SDL)
 extern GXRModeObj *vmode;
