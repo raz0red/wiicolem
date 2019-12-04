@@ -77,12 +77,6 @@ u8 wii_max_frames = 60;
 int wii_screen_x = DEFAULT_SCREEN_X;
 // The screen Y size
 int wii_screen_y = DEFAULT_SCREEN_Y;
-// 16:9 correction
-BOOL wii_16_9_correction = TRUE;
-// Full widescreen
-int wii_full_widescreen = WS_AUTO;
-// Whether the WII is in widescreen mode
-BOOL is_widescreen = FALSE;
 // Whether to filter the display
 BOOL wii_filter = FALSE; 
 // Whether to use the GX/VI scaler
@@ -105,8 +99,6 @@ void wii_handle_init()
   // FreeTypeGX
   InitFreeType( (uint8_t*)font_ttf, (FT_Long)font_ttf_size  );
   
-  // Determine widescreen
-  is_widescreen = ( CONF_GetAspectRatio() == CONF_ASPECT_16_9 );
   wii_update_widescreen();
 
   // Initialize the colecovision menu

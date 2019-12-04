@@ -82,11 +82,6 @@ distribution.
 #define WII_CLASSIC_CV_7  ( WPAD_CLASSIC_BUTTON_ZR )
 #define WII_CLASSIC_CV_8  ( WPAD_CLASSIC_BUTTON_ZL )
 
-// widescreen modes
-#define WS_DISABLED 0
-#define WS_ENABLED  1
-#define WS_AUTO     2
-
 // The last ColecoVision cartridge hash
 extern char wii_cartridge_hash[33];
 // The ColecoVision Mode
@@ -119,10 +114,6 @@ extern u8 wii_max_frames;
 extern int wii_screen_x;
 // The screen Y size
 extern int wii_screen_y;
-// 16:9 correction
-extern BOOL wii_16_9_correction;
-// Full widescreen
-extern int wii_full_widescreen;
 // Whether to filter the display
 extern BOOL wii_filter; 
 // Whether to use the GX/VI scaler

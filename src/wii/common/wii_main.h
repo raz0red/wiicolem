@@ -63,6 +63,11 @@ typedef struct treenode {
 #define VSYNC_DISABLED 0
 #define VSYNC_ENABLED 1
 
+// widescreen modes
+#define WS_DISABLED 0
+#define WS_ENABLED  1
+#define WS_AUTO     2
+
 // The root of the menu
 extern TREENODE *wii_menu_root;
 // Whether the wiimote (for the menu) is horizontal or vertical
@@ -89,6 +94,12 @@ extern int wii_menu_sel_offset;
 extern RGBA wii_menu_sel_color;
 // Whether the Wii is PAL or NTSC
 extern BOOL wii_is_pal;
+// Whether the WII is in widescreen mode
+extern BOOL is_widescreen;
+// Full widescreen
+extern int wii_full_widescreen;
+// 16:9 correction
+extern BOOL wii_16_9_correction;
 
 // The display mode (from SDL)
 extern GXRModeObj *vmode;
