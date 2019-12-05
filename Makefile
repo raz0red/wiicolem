@@ -14,7 +14,7 @@
 #                                                                           #
 #  Copyright (C) 2019 raz0red                                               #
 #                                                                           #
-#  The license for Colem as indicated by Marat Fayzullin, the author of     #
+#  The license for ColEm as indicated by Marat Fayzullin, the author of     #
 #  ColEm is detailed below:                                                 #
 #                                                                           #
 #  ColEm sources are available under three conditions:                      #
