@@ -1,11 +1,11 @@
-[![License](https://img.shields.io/badge/license-ColEm%20(custom)-blue)](https://github.com/raz0red/wiicolem/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/License-ColEm%20(custom)-blue)](https://github.com/raz0red/wiicolem/blob/master/LICENSE)
 [![Actions Status](https://github.com/raz0red/wiicolem/workflows/Build/badge.svg)](https://github.com/raz0red/wiicolem/actions)
 
 # WiiColEm
 
 Ported by raz0red
 
-_WiiColem Video_
+_WiiColEm Video_
 
 <a href='http://www.youtube.com/watch?feature=player_embedded&v=UdHW9kOBeiE' target='_blank'><img src='http://img.youtube.com/vi/UdHW9kOBeiE/0.jpg' width='425' height=344 /></a>
 
