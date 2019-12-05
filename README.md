@@ -1,3 +1,4 @@
+[![License](https://img.shields.io/badge/license-ColEm%20(custom)-blue)](https://github.com/raz0red/wiicolem/blob/master/LICENSE)
 [![Actions Status](https://github.com/raz0red/wiicolem/workflows/Build/badge.svg)](https://github.com/raz0red/wiicolem/actions)
 
 # WiiColEm
