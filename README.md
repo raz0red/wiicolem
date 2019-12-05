@@ -5,7 +5,7 @@
 
 Ported by raz0red
 
-_WiiColem Video_
+_WiiColEm Video_
 
 <a href='http://www.youtube.com/watch?feature=player_embedded&v=UdHW9kOBeiE' target='_blank'><img src='http://img.youtube.com/vi/UdHW9kOBeiE/0.jpg' width='425' height=344 /></a>
 
