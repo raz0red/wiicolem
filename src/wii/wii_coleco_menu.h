@@ -24,7 +24,7 @@
 //     the original source code.                                             //
 //  3) You provide a link to http://fms.komkon.org/ColEm/                    //
 //                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+//---------------------------------------------------------------------------//
 
 #ifndef WII_COLECO_MENU_H
 #define WII_COLECO_MENU_H
