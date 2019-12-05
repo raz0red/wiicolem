@@ -65,7 +65,7 @@ static char db_old_file[WII_MAX_PATH] = "";
  * The assignments of Wii controller buttons to their assigned "button" 
  * index (1-8) cannot be changed.
  */
-char* WiiButtonDescriptions[MAPPED_BUTTON_COUNT][CONTROLLER_NAME_COUNT] =
+const char* WiiButtonDescriptions[MAPPED_BUTTON_COUNT][CONTROLLER_NAME_COUNT] =
 { 
 /*
     (None)       Wiimote   Nunchuk   Classic        GameCube
@@ -83,7 +83,7 @@ char* WiiButtonDescriptions[MAPPED_BUTTON_COUNT][CONTROLLER_NAME_COUNT] =
 /*
  * The names of the Wii controllers 
  */
-char* WiiControllerNames[CONTROLLER_NAME_COUNT] =
+const char* WiiControllerNames[CONTROLLER_NAME_COUNT] =
 {
   "(None)", "Wiimote", "Nunchuk",  "Classic", "GameCube"
 };
@@ -304,7 +304,7 @@ int wii_coleco_db_is_button_available( u16 index, u8 mode )
 void wii_coleco_db_get_button_name( 
     char* buff, int buffsize, u32 value, ColecoDBEntry* entry )
 {
-  char *btnName = 0;
+  const char *btnName = 0;
   int i;
   for( i = 0; i < COLECO_BUTTON_NAME_COUNT; i++ )
   {

@@ -28,7 +28,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/iosupport.h>
 
 #include "Coleco.h"
 
@@ -37,23 +36,33 @@
 #include "wii_sdl.h"
 #include "wii_snapshot.h"
 #include "wii_util.h"
+#include "fileop.h"
+#include "networkop.h"
 
 #include "wii_coleco.h"
 #include "wii_coleco_emulation.h"
 #include "wii_coleco_snapshot.h"
 
-extern void WII_VideoStart();
-extern void WII_VideoStop();
-extern void WII_SetDefaultVideoMode();
-extern int PauseAudio(int Switch);
-extern void ResetAudio();
+extern "C" {
+  void WII_VideoStart();
+  void WII_VideoStop();
+  void WII_SetDefaultVideoMode();
+  int PauseAudio(int Switch);
+  void ResetAudio();
+}
 
+// Whether we are loading a game
+static BOOL loading_game = FALSE;
 // Have we read the games list yet?
 static BOOL games_read = FALSE;
+// Whether we are pending a drive mount
+static BOOL mount_pending = TRUE;
 // Have we read the save state list yet?
 static BOOL save_states_read = FALSE;
 // The index of the last rom that was run
 static s16 last_rom_index = 1;
+// The roms node
+static TREENODE *roms_menu;
 
 // Forward refs
 static void wii_read_save_state_list( TREENODE *menu );
@@ -96,6 +105,7 @@ void wii_coleco_menu_init()
   wii_add_child( wii_menu_root, child );
 
   child = wii_create_tree_node( NODETYPE_LOAD_ROM, "Load cartridge" );
+  roms_menu = child;
   wii_add_child( wii_menu_root, child );
 
   child = wii_create_tree_node( NODETYPE_SPACER, "" );
@@ -180,7 +190,7 @@ void wii_coleco_menu_init()
   int button;
   for( button = NODETYPE_BUTTON1; button <= NODETYPE_BUTTON8; button++ )
   {
-    child = wii_create_tree_node( button, "Button " );
+    child = wii_create_tree_node( (NODETYPE)button, "Button " );
     child->x = -2; child->value_x = -3;
     wii_add_child( controls, child );
   }
@@ -384,7 +394,10 @@ void wii_menu_handle_get_header( TREENODE* menu, char *buffer )
     case NODETYPE_LOAD_ROM:
       if( !games_read )
       {
-        snprintf( buffer, WII_MENU_BUFF_SIZE, "Reading game list..." );                
+        snprintf( buffer, WII_MENU_BUFF_SIZE, 
+            mount_pending ? 
+              "Attempting to mount drive..." :
+              "Reading game list..." );                
       }
       break;
     case NODETYPE_LOAD_STATE:
@@ -414,11 +427,11 @@ void wii_menu_handle_get_footer( TREENODE* menu, char *buffer )
     case NODETYPE_LOAD_ROM:
       if( games_read )
       {
-        wii_get_list_footer( menu, "cartridge", buffer );
+        wii_get_list_footer( menu, "item", "items", buffer );
       }
       break;
     case NODETYPE_LOAD_STATE:
-      wii_get_list_footer( menu, "state save", buffer );
+      wii_get_list_footer( menu, "state save", "state saves", buffer );
       break;
     default:
       break;
@@ -435,13 +448,37 @@ void wii_menu_handle_get_footer( TREENODE* menu, char *buffer )
 void wii_menu_handle_get_node_name( 
   TREENODE* node, char *buffer, char* value )
 {
-  char *strmode = NULL;
+  const char *strmode = NULL;
   int index;
 
   snprintf( buffer, WII_MENU_BUFF_SIZE, "%s", node->name );
 
   switch( node->node_type )
   {
+    case NODETYPE_ROOT_DRIVE:
+      {
+        int device;
+        FindDevice( node->name, &device );
+        switch( device )
+        {
+          case DEVICE_SD:
+            snprintf( buffer, WII_MENU_BUFF_SIZE, "[%s]", 
+              "SD Card" );
+            break;
+          case DEVICE_USB:
+            snprintf( buffer, WII_MENU_BUFF_SIZE, "[%s]",
+              "USB Device" );
+            break;
+          case DEVICE_SMB:
+            snprintf( buffer, WII_MENU_BUFF_SIZE, "[%s]",
+              "Network Share" );
+            break;
+        }
+      }
+      break;  
+    case NODETYPE_DIR:
+      snprintf( buffer, WII_MENU_BUFF_SIZE, "[%s]", node->name );
+      break;  
     case NODETYPE_RESIZE_SCREEN:
       snprintf( value, WII_MENU_BUFF_SIZE, "%s", 
         ( ( wii_screen_x == DEFAULT_SCREEN_X && 
@@ -723,7 +760,11 @@ void wii_menu_handle_select_node( TREENODE *node )
         wii_resize_screen_draw_border( blit_surface, 0, COLECO_HEIGHT );
         wii_sdl_put_image_normal( 1 );
         wii_sdl_flip(); 
-        resize_info rinfo = { DEFAULT_SCREEN_X, DEFAULT_SCREEN_Y, wii_screen_x, wii_screen_y };
+        resize_info rinfo = { 
+          (float)DEFAULT_SCREEN_X, 
+          (float)DEFAULT_SCREEN_Y, 
+          (float)wii_screen_x, 
+          (float)wii_screen_y };
         wii_resize_screen_gui( &rinfo );
         wii_screen_x = rinfo.currentX;
         wii_screen_y = rinfo.currentY;
@@ -872,6 +913,44 @@ void wii_menu_handle_select_node( TREENODE *node )
     case NODETYPE_USE_OVERLAY:
       wii_use_overlay ^= 1;
       break;
+    case NODETYPE_ROOT_DRIVE:
+    case NODETYPE_UPDIR:
+    case NODETYPE_DIR:
+      if( node->node_type == NODETYPE_ROOT_DRIVE )
+      {
+        char path[WII_MAX_PATH];
+        snprintf( path, sizeof(path), "%s/", node->name );
+        wii_set_roms_dir( path );
+        mount_pending = TRUE;
+      }
+      else if( node->node_type == NODETYPE_UPDIR )
+      {
+        const char* romsDir = wii_get_roms_dir();
+        int len = strlen( romsDir );
+        if( len > 1 && romsDir[len-1] == '/' )
+        {
+          char dirpart[WII_MAX_PATH] = "";
+          char filepart[WII_MAX_PATH] = "";
+          Util_splitpath( romsDir, dirpart, filepart );
+          len = strlen(dirpart);
+          if( len > 0 )
+          {
+            dirpart[len] = '/';
+            dirpart[len+1] = '\0';
+          }
+          wii_set_roms_dir( dirpart );
+        }
+      }
+      else
+      {
+        char newDir[WII_MAX_PATH];
+        snprintf( newDir, sizeof(newDir), "%s%s/", 
+          wii_get_roms_dir(), node->name );
+        wii_set_roms_dir( newDir );
+      }
+      games_read = FALSE;
+      last_rom_index = 1;
+      break;            
     case NODETYPE_SAVE_STATE_MANAGEMENT:
     case NODETYPE_ADVANCED:
     case NODETYPE_LOAD_ROM:     
@@ -1122,10 +1201,45 @@ void wii_menu_handle_update( TREENODE *menu )
     case NODETYPE_LOAD_ROM:
       if( !games_read )
       {
+        if( mount_pending )
+        {
+          const char* roms = wii_get_roms_dir();
+          if( strlen( roms ) > 0 )
+          {
+            char mount[WII_MAX_PATH];
+            Util_strlcpy( mount, roms, sizeof(mount) );
+
+            resetSmbErrorMessage(); // Reset the SMB error message
+            if( !ChangeInterface( mount, FS_RETRY_COUNT ) )
+            {
+              wii_set_roms_dir( "" );
+              const char* netMsg = getSmbErrorMessage();
+              if( netMsg != NULL )
+              {
+                wii_set_status_message( netMsg );
+              }
+              else
+              {
+                char msg[256];
+                snprintf( msg, sizeof(msg), "%s: %s", 
+                  "Unable to mount", mount );
+                wii_set_status_message( msg );
+              }
+            }
+          }
+          mount_pending = FALSE;
+        }
+
+        wii_read_game_list( roms_menu );  
+        wii_menu_reset_indexes();    
+        wii_menu_move( roms_menu, 1 );
+        wii_menu_force_redraw = 1;
+#if 0      
         wii_read_game_list( menu );  
         wii_menu_reset_indexes();    
         wii_menu_move( menu, 1 );
         wii_menu_force_redraw = 1;
+#endif        
       }
       break;
     case NODETYPE_LOAD_STATE:
@@ -1144,48 +1258,91 @@ void wii_menu_handle_update( TREENODE *menu )
 }
 
 /*
+* Used for comparing menu names when sorting (qsort)
+*
+* a        The first tree node to compare
+* b        The second tree node to compare
+* return   The result of the comparison
+*/
+static int game_name_compare( const void *a, const void *b )
+{
+  TREENODE** aptr = (TREENODE**)a;
+  TREENODE** bptr = (TREENODE**)b;
+  int type = (*aptr)->node_type - (*bptr)->node_type;
+  return type != 0 ? type : strcasecmp( (*aptr)->name, (*bptr)->name );
+}
+
+/*
  * Reads the list of games into the specified menu
  *
  * menu     The menu to read the games into
  */
 static void wii_read_game_list( TREENODE *menu )
 {
-  DIR *romdir = opendir( wii_get_roms_dir() );
-  if( romdir != NULL)
+  const char* roms = wii_get_roms_dir();
+
+  wii_menu_clear_children( menu ); // Clear the children
+
+#ifdef WII_NETTRACE
+net_print_string( NULL, 0, "ReadGameList: %s\n", roms, strlen(roms) );
+#endif
+
+  BOOL success = FALSE;
+  if( strlen( roms ) > 0 )
   {
-    struct dirent *dent;
-    struct stat statbuf;
-    while ((dent = readdir(romdir)) != NULL)
-    {   
-      char* filepath = dent->d_name;
-      char path[WII_MAX_PATH];
-      sprintf(path,"%s/%s", wii_get_roms_dir(), filepath);
-      stat(path, &statbuf);
-      if( strcmp( ".", filepath ) != 0 && 
-        strcmp( "..", filepath ) != 0 )
-      {
-        if( !S_ISDIR( statbuf.st_mode ) )
-        {
+    DIR *romdir = opendir( roms );
+
+#ifdef WII_NETTRACE
+net_print_string( NULL, 0, "OpenDir: %d\n", roms, romdir);
+#endif
+
+    if( romdir != NULL)
+    {
+      wii_add_child(
+        menu, wii_create_tree_node( NODETYPE_UPDIR, "[..]" ) );
+
+      struct dirent* entry = NULL;
+      while( ( entry = readdir( romdir ) ) != NULL )
+      {               
+        if( ( strcmp( ".", entry->d_name ) && strcmp( "..", entry->d_name ) ) )
+        {				                
           TREENODE *child = 
-            wii_create_tree_node( NODETYPE_ROM, filepath );
+            wii_create_tree_node( 
+              ( entry->d_type == DT_DIR ? NODETYPE_DIR : NODETYPE_ROM ), 
+              entry->d_name );
 
           wii_add_child( menu, child );
         }
       }
+      closedir( romdir );
+
+      // Sort the games list
+      qsort( menu->children, menu->child_count, 
+        sizeof(*(menu->children)), game_name_compare );
+
+      success = TRUE;
     }
-
-    closedir( romdir );
+    else
+    {
+      char msg[256];
+      snprintf( msg, sizeof(msg), "%s: %s", 
+        "Error opening", roms );
+      wii_set_status_message( msg );
+    }
   }
-  else
+
+  if( !success )
   {
-    wii_set_status_message( "Error opening roms directory." );
+    wii_set_roms_dir( "" );
+    wii_add_child( menu, 
+      wii_create_tree_node( NODETYPE_ROOT_DRIVE, "sd:" ) );
+    wii_add_child( menu, 
+      wii_create_tree_node( NODETYPE_ROOT_DRIVE, "usb:" ) );
+    wii_add_child( menu, 
+      wii_create_tree_node( NODETYPE_ROOT_DRIVE, "smb:" ) );
   }
-
-  // Sort the games list
-  qsort( menu->children, menu->child_count, 
-    sizeof(*(menu->children)), wii_menu_name_compare );
-
-  games_read = 1;
+  
+  games_read = TRUE;
 }
 
 /*

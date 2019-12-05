@@ -131,6 +131,13 @@ extern BOOL is_widescreen;
 extern char* wii_get_roms_dir();
 
 /*
+ * Sets the current rom directory
+ *
+ * newDir   The new roms directory
+ */
+extern void wii_set_roms_dir( const char* newDir );
+
+/*
  * Returns the saves directory
  *
  * return   The saves directory
@@ -165,16 +172,6 @@ extern u32 wii_coleco_poll_joystick( int joyIndex );
 extern void wii_update_widescreen();
 
 /*
- * Returns the screen size
- *
- * inX  Input x
- * inY  Input y
- * x    Out x
- * y    Out y 
- */
-extern void wii_get_screen_size( int inX, int inY, int *x, int *y );
-
-/*
  * Sets the video mode
  *
  * allowVi  Whether to allow the GX+VI mode
@@ -184,6 +181,24 @@ extern void wii_set_video_mode(BOOL allowVi);
 #if 0
 extern void wii_coleco_patch_rom();
 extern void wii_coleco_unpatch_rom();
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*
+ * Returns the screen size
+ *
+ * inX  Input x
+ * inY  Input y
+ * x    Out x
+ * y    Out y 
+ */
+void wii_get_screen_size( int inX, int inY, int *x, int *y );
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

@@ -43,15 +43,17 @@
 #include "wii_coleco_keypad.h"
 #include "wii_coleco_snapshot.h"
 
-extern void ResetCycleTiming(void);
 extern int MasterSwitch;
 
-extern void WII_VideoStop();
-extern void WII_ChangeSquare(int xscale, int yscale, int xshift, int yshift);
-extern void WII_SetRenderCallback( void (*cb)(void) );
-extern void WII_SetFilter( BOOL filter );
-
 extern void wii_render_callback();
+extern void ResetCycleTiming(void);  
+
+extern "C" {   
+  void WII_VideoStop();
+  void WII_ChangeSquare(int xscale, int yscale, int xshift, int yshift);
+  void WII_SetRenderCallback( void (*cb)(void) );
+  void WII_SetFilter( BOOL filter );  
+}
 
 #if 1
 extern u32 cur_xfb;

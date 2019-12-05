@@ -95,7 +95,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS    :=  -lSDL_ttf -lSDL -lSDL_image -lpng -lfreetype -lfat -lwiiuse \
+LIBS    :=  -ltinysmb -lSDL_ttf -lSDL -lSDL_image -lpng -lfreetype -lfat -lwiiuse \
             -lbte -logc -lz -lm -lwiikeyboard
 
 #---------------------------------------------------------------------------------
@@ -138,7 +138,6 @@ CFILES      := \
     Z80.c \
     Sound.c \
     SndSDL.c \
-    WiiColem.c \
     pngu.c \
     net_print.c \
     wii_app.c \
@@ -152,22 +151,24 @@ CFILES      := \
     wii_sdl.c \
     wii_snapshot.c \
     wii_util.c \
-    wii_video.c \
-    wii_coleco.c \
-    wii_coleco_config.c \
-    wii_coleco_db.c \
-    wii_coleco_emulation.c \
-    wii_coleco_keypad.c \
-    wii_coleco_menu.c \
-    wii_coleco_sdl.c \
-    wii_coleco_snapshot.c     
-    
+    wii_video.c
+        
 CPPFILES    := \
+    WiiColem.cpp \
+    wii_coleco.cpp \
+    wii_coleco_config.cpp \
+    wii_coleco_db.cpp \
+    wii_coleco_emulation.cpp \
+    wii_coleco_keypad.cpp \
+    wii_coleco_menu.cpp \
+    wii_coleco_sdl.cpp \
+    wii_coleco_snapshot.cpp \
     wii_main.cpp \
     FreeTypeGX.cpp \
     Metaphrasis.cpp \
     wii_file_io.cpp \
     vi_encoder.cpp \
+    fileop.cpp \
     networkop.cpp \
     gettext.cpp
 

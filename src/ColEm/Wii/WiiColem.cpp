@@ -81,16 +81,18 @@ static float FpsCounter = 0.0;
 // Whether we should display the initial menu
 static BOOL InitialMenuDisplay = TRUE;
 
-extern int PauseAudio(int Switch);
-
 static void render_screen();
 
 extern Mtx gx_view;
 
 char debug_str[255] = "";
 
-extern void WII_VideoStop();
-extern void WII_VideoStart();
+extern "C" {
+  int PauseAudio(int Switch);
+
+  void WII_VideoStop();
+  void WII_VideoStart();
+}
 
 /** TrashMachine() *******************************************/
 /** Deallocate all resources taken by InitMachine().        **/

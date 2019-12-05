@@ -39,6 +39,10 @@ distribution.
 #include "about_png.h"
 #endif
 
+#ifdef TRACK_UNIQUE_MSGIDS
+  extern void dump_unique_msgids();
+#endif
+
 #include "wii_main.h"
 #include "wii_app.h"
 #include "wii_hw_buttons.h"
@@ -46,6 +50,10 @@ distribution.
 #include "wii_file_io.h"
 #include "wii_freetype.h"
 #include "wii_video.h"
+#include "fileop.h"
+
+#include "vi_encoder.h"
+#include "gettext.h"
 
 #define ABOUT_Y 20
 
@@ -66,7 +74,7 @@ BOOL wii_mote_menu_vertical = TRUE;
 // Whether to return to the top menu after exiting a game
 BOOL wii_top_menu_exit = TRUE;
 // The stack containing the menus the user has navigated
-TREENODEPTR wii_menu_stack[4];
+TREENODEPTR wii_menu_stack[64];
 // The head of the menu stack
 s8 wii_menu_stack_head = -1;
 // Two framebuffers (double buffer our menu display)
@@ -87,6 +95,8 @@ RGBA wii_menu_sel_color = { 0, 0, 0xC0, 0 };
 BOOL is_widescreen = FALSE;
 // Full widescreen
 int wii_full_widescreen = WS_AUTO;
+// USB keep alive 
+BOOL wii_usb_keepalive = FALSE;
 // 16:9 correction
 BOOL wii_16_9_correction = FALSE;
 
@@ -166,6 +176,32 @@ TREENODE* wii_create_tree_node( enum NODETYPE type, const char *name )
   nodep->x = nodep->value_x = -1;
 
   return nodep;
+}
+
+/*
+* Attempts to find the tree node with the specified type
+*
+* root     Where to start the search
+* type     The type of the node
+* return   The found tree node or NULL
+*/
+TREENODE* wii_find_tree_node( TREENODE* root, enum NODETYPE type )
+{
+  TREENODE* ret = NULL;
+  for( int i = 0; i < root->child_count && !ret; i++ )
+  {
+    TREENODE* currChild = root->children[i];
+    if( currChild->node_type == type )
+    {
+      ret = currChild;
+    }
+    else
+    {
+      ret = wii_find_tree_node( currChild, type );
+    }
+  }
+
+  return ret;
 }
 
 /*
@@ -325,8 +361,12 @@ static void wii_menu_get_footer( TREENODE* menu, char *buffer )
         if( start_idx <= 0 ) start_idx = 1;
         
         snprintf( buffer, WII_MENU_BUFF_SIZE, 
-          "%d items found, displaying %d to %d.",
-          visible, start_idx, end_idx );                
+          "%d %s %d %s %d.",
+          visible, 
+          gettextmsg( "items found, displaying" ),
+          start_idx,
+          gettextmsg( "to" ),
+          end_idx );                
       }
     }          
   }
@@ -740,9 +780,10 @@ void wii_menu_show()
         }
       }
 
-      if( ( down & ( WII_BUTTON_A | 
+      if( ( ( down & ( WII_BUTTON_A | 
             ( isClassic ? WII_CLASSIC_BUTTON_A : WII_NUNCHUK_BUTTON_A ) ) ) ||
-          ( gcDown & GC_BUTTON_A ) )
+            ( gcDown & GC_BUTTON_A ) ) &&
+            menu_cur_idx != -1 )
       {	
         wii_menu_handle_select_node( menu->children[menu_cur_idx] );
         wii_menu_force_redraw = 1;            
@@ -759,6 +800,9 @@ void wii_menu_show()
     VIDEO_WaitVSync();
   }
   
+#ifdef TRACK_UNIQUE_MSGIDS
+  dump_unique_msgids();
+#endif
   // Invoke post loop handler
   wii_menu_handle_post_loop();
 }
@@ -783,27 +827,41 @@ int wii_menu_name_compare( const void *a, const void *b )
  *
  * menu     The current menu
  * listname The name of the list (snapshot/game, etc.)
+ * listname The name of the list in plural form (snapshot/game, etc.)
  * buffer   The buffer to write the footer to
  */
 void wii_get_list_footer( 
-  TREENODE* menu, const char *listname, char *buffer )
+  TREENODE* menu, 
+  const char *listname, 
+  const char *listnameplural, 
+  char *buffer )
 {
+  char buffer2[WII_MENU_BUFF_SIZE] = "";
   if( menu->child_count == 0 )
   {
-    snprintf( buffer, WII_MENU_BUFF_SIZE, "No %ss found.", listname );              
+    snprintf( 
+      buffer2, WII_MENU_BUFF_SIZE, "No %s found.", listnameplural );
+ 
+    snprintf( 
+      buffer, WII_MENU_BUFF_SIZE, "%s", gettextmsg( buffer2 ) );                  
   }
   else if( menu->child_count == 1 )
   {
-    snprintf( buffer, WII_MENU_BUFF_SIZE, "1 %s found.", listname );                
+    snprintf( 
+      buffer2, WII_MENU_BUFF_SIZE, "1 %s found.", listname );
+
+    snprintf( 
+      buffer, WII_MENU_BUFF_SIZE, "%s", gettextmsg( buffer2 ) );                
   }
   else
   {
+    snprintf( 
+      buffer2, WII_MENU_BUFF_SIZE, "%s found, displaying", listnameplural );
+
     s16 end_idx = menu_start_idx + MENU_PAGESIZE;
     snprintf( buffer, WII_MENU_BUFF_SIZE, 
-      "%d %ss found, displaying %d to %d.",
-      menu->child_count,
-      listname,
-      menu_start_idx + 1,
+      "%d %s %d %s %d.", menu->child_count, gettextmsg( buffer2 ),
+      menu_start_idx + 1, gettextmsg( "to" ),
       ( end_idx < menu->child_count ? end_idx : menu->child_count )                            
       );                
   }
@@ -898,6 +956,43 @@ void wii_sync_video()
   }
 }
 
+#ifdef WII_NETTRACE
+static int __out_write(struct _reent *r, int fd, const char *ptr, size_t len) 
+{         
+  if (!ptr || len <= 0)
+  {
+    return -1;
+  }
+  char message[512];
+  Util_strlcpy( message, ptr, sizeof(message) < len ? sizeof(message) : len ); 
+  net_print_string( NULL, 0, "%s\n", message );      
+  return len;
+}
+
+const devoptab_t dot_out = {
+  "stdout", // device name
+  0, // size of file structure
+  NULL, // device open
+  NULL, // device close
+  __out_write,// device write
+  NULL, // device read
+  NULL, // device seek
+  NULL, // device fstat
+  NULL, // device stat
+  NULL, // device link
+  NULL, // device unlink
+  NULL, // device chdir
+  NULL, // device rename
+  NULL, // device mkdir
+  0, // dirStateSize
+  NULL, // device diropen_r
+  NULL, // device dirreset_r
+  NULL, // device dirnext_r
+  NULL, // device dirclose_r
+  NULL // device statvfs_r
+};
+#endif
+
 /*
  * Main 
  */
@@ -916,12 +1011,15 @@ int main(int argc,char *argv[])
   for( i = 0; i < argc; i++ )
   {
     char val[256];
-    sprintf( val, "arg[%d]: %s\n", i, argv[i] );
+    snprintf( val, sizeof( val ), "arg[%d]: %s\n", i, argv[i] );
     net_print_string(__FILE__,__LINE__, val );
   }
+
+  devoptab_list[STD_OUT] = &dot_out;
+  devoptab_list[STD_ERR] = &dot_out;
 #endif
 
-  printf( "\x1b[5;0H" );
+  //printf( "\x1b[5;0H" );
 
   main_argc = argc;
   main_argv = argv;
@@ -930,25 +1028,16 @@ int main(int argc,char *argv[])
   wii_set_app_path( argc, argv );  
 
   // Try to mount the file system
-  int retry = 20;
-  BOOL mounted = FALSE;
-  while( retry > 0 )
+  if( !ChangeInterface( wii_get_app_path(), FS_RETRY_COUNT ) ) 
   {
-    mounted = wii_mount();
-    if( mounted )
-    {
-      break;
-    }
-
-    usleep( 1000 * 1000 ); // 1 second
-    retry--;
-  }
-
-  if( !mounted ) 
-  {
+    //CON_Init(xfb[0],20,20,vmode->fbWidth,vmode->xfbHeight,vmode->fbWidth*VI_DISPLAY_PIX_SZ);
+    printf( "\x1b[5;0H" );
     printf( "Unable to mount %s\n\n", wii_get_fs_prefix() );
     printf( "Press A to exit..." );
     wii_pause();
+#ifdef WII_NETTRACE
+    net_print_close();
+#endif
     exit( 0 ); // unable to mount file system
   }
 

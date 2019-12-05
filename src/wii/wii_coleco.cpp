@@ -41,13 +41,15 @@
 
 #include "font_ttf.h"
 
-extern void WII_SetWidescreen(int wide);
-extern void WII_VideoStop();
-extern void WII_VideoStart();
-extern void WII_ChangeSquare(int xscale, int yscale, int xshift, int yshift);
-extern void WII_SetFilter( BOOL filter );
-extern void WII_SetDefaultVideoMode();
-extern void WII_SetStandardVideoMode( int xscale, int yscale, int width );
+extern "C" {
+  void WII_SetWidescreen(int wide);
+  void WII_VideoStop();
+  void WII_VideoStart();
+  void WII_ChangeSquare(int xscale, int yscale, int xshift, int yshift);
+  void WII_SetFilter( BOOL filter );
+  void WII_SetDefaultVideoMode();
+  void WII_SetStandardVideoMode( int xscale, int yscale, int width );
+}
 
 // The last ColecoVision cartridge hash
 char wii_cartridge_hash[33];
@@ -83,6 +85,8 @@ int wii_screen_y = DEFAULT_SCREEN_Y;
 BOOL wii_filter = FALSE; 
 // Whether to use the GX/VI scaler
 BOOL wii_gx_vi_scaler = TRUE;
+// The roms dir
+static char roms_dir[WII_MAX_PATH] = "";
 
 /*
  * Initializes the application
@@ -126,7 +130,7 @@ void wii_update_widescreen()
  * x    Out x
  * y    Out y 
  */
-void wii_get_screen_size( int inX, int inY, int *x, int *y )
+extern "C" void wii_get_screen_size( int inX, int inY, int *x, int *y )
 {
     int xs = inX;
     int ys = inY;      
@@ -206,9 +210,7 @@ void wii_handle_run()
   wii_write_config();
 }
 
-// The roms dir
-static char roms_dir[WII_MAX_PATH] = "";
-
+#if 0
 /*
  * Returns the roms directory
  *
@@ -222,6 +224,30 @@ char* wii_get_roms_dir()
   }
 
   return roms_dir;
+}
+#endif
+
+/*
+ * Returns the roms directory
+ *
+ * return   The roms directory
+ */
+char* wii_get_roms_dir()
+{
+  return roms_dir;
+}
+
+/*
+ * Sets the current rom directory
+ *
+ * newDir   The new roms directory
+ */
+void wii_set_roms_dir( const char* newDir )
+{
+  Util_strlcpy( roms_dir, newDir, sizeof(roms_dir) );
+#ifdef WII_NETTRACE
+  net_print_string( NULL, 0, "RomsDir: \"%s\"\n", roms_dir );
+#endif
 }
 
 // The saves dir
@@ -511,4 +537,3 @@ void wii_coleco_unpatch_rom()
   ROM_CARTRIDGE[1] = coleco_header[1];
 }
 #endif
-

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2010
+Copyright (C) 2011
 raz0red (www.twitchasylum.com)
 
 This software is provided 'as-is', without any express or implied
@@ -77,7 +77,7 @@ extern BOOL wii_top_menu_exit;
 // The vsync mode
 extern int wii_vsync;
 // The stack containing the menus the user has navigated
-extern TREENODEPTR wii_menu_stack[4];
+extern TREENODEPTR wii_menu_stack[64];
 // The head of the menu stack
 extern s8 wii_menu_stack_head;
 // Two framebuffers (double buffered)
@@ -98,6 +98,8 @@ extern BOOL wii_is_pal;
 extern BOOL is_widescreen;
 // Full widescreen
 extern int wii_full_widescreen;
+// USB keep alive
+extern BOOL wii_usb_keepalive;
 // 16:9 correction
 extern BOOL wii_16_9_correction;
 
@@ -112,6 +114,15 @@ extern GXRModeObj *vmode;
  * return   The newly created node
  */
 extern TREENODE* wii_create_tree_node( enum NODETYPE type, const char *name );
+
+/*
+* Attempts to find the tree node with the specified type
+*
+* root     Where to start the search
+* type     The type of the node
+* return   The found tree node or NULL
+*/
+extern TREENODE* wii_find_tree_node( TREENODE* root, enum NODETYPE type );
 
 /*
  * Clears the children for the specified node
@@ -171,10 +182,14 @@ extern int wii_menu_name_compare( const void *a, const void *b );
  *
  * menu     The current menu
  * listname The name of the list (snapshot/game, etc.)
+ * listname The name of the list in plural form (snapshot/game, etc.)
  * buffer   The buffer to write the footer to
  */
 extern void wii_get_list_footer( 
-  TREENODE* menu, const char *listname, char *buffer );
+  TREENODE* menu, 
+  const char *listname, 
+  const char *listnameplural, 
+  char *buffer );
 
 /*
  * Sets whether to enable VSYNC or not 
