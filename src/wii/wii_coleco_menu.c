@@ -98,15 +98,12 @@ void wii_coleco_menu_init()
   child = wii_create_tree_node( NODETYPE_LOAD_ROM, "Load cartridge" );
   wii_add_child( wii_menu_root, child );
 
-  child = wii_create_tree_node( NODETYPE_CARTRIDGE_SETTINGS_CURRENT_SPACER, "" );
+  child = wii_create_tree_node( NODETYPE_SPACER, "" );
   wii_add_child( wii_menu_root, child );
 
   TREENODE *cart_settings = wii_create_tree_node( 
-    NODETYPE_CARTRIDGE_SETTINGS_CURRENT, "Cartridge settings (current cartridge)" );
+    NODETYPE_CARTRIDGE_SETTINGS_CURRENT, "Cartridge-specific settings" );
   wii_add_child( wii_menu_root, cart_settings );    
-
-  child = wii_create_tree_node( NODETYPE_SPACER, "" );
-  wii_add_child( wii_menu_root, child );
 
   //
   // Save state management
@@ -256,17 +253,26 @@ void wii_coleco_menu_init()
   child = wii_create_tree_node( 
     NODETYPE_DELETE_CARTRIDGE_SETTINGS, "Delete settings" );
   wii_add_child( cart_settings, child );  
+  
+  //
+  // The advanced menu
+  //
+
+  TREENODE *advanced = wii_create_tree_node( NODETYPE_ADVANCED, 
+    "Advanced" );
+  wii_add_child( wii_menu_root, advanced );    
+  
 
   //
   // The display settings menu
   //
 
   TREENODE *display = wii_create_tree_node( NODETYPE_DISPLAY_SETTINGS, 
-    "Display settings" );
-  wii_add_child( wii_menu_root, display );
+    "Video settings" );
+  wii_add_child( advanced, display );
 
   child = wii_create_tree_node( NODETYPE_SPACER, "" );
-  wii_add_child( wii_menu_root, child );
+  wii_add_child( advanced, child );
 
   child = wii_create_tree_node( NODETYPE_RESIZE_SCREEN, 
     "Screen size " );      
@@ -282,16 +288,6 @@ void wii_coleco_menu_init()
     "Maximum frame rate " );
   child->x = -2; child->value_x = -3;
   wii_add_child( display, child );
-
-  child = wii_create_tree_node( NODETYPE_PALETTE, 
-    "Palette " );                        
-  child->x = -2; child->value_x = -3;
-  wii_add_child( display, child );     
-
-  child = wii_create_tree_node( NODETYPE_SHOW_ALL_SPRITES, 
-    "Show all sprites " );                        
-  child->x = -2; child->value_x = -3;
-  wii_add_child( display, child );     
 
   child = wii_create_tree_node( NODETYPE_FULL_WIDESCREEN, 
     "Full widescreen " );
@@ -311,14 +307,19 @@ void wii_coleco_menu_init()
     "Bilinear filter " );
   child->x = -2; child->value_x = -3;    
   wii_add_child( display, child );    
+  
+  child = wii_create_tree_node( NODETYPE_SPACER, "" );
+  wii_add_child( display, child );  
+  
+  child = wii_create_tree_node( NODETYPE_PALETTE, 
+    "Palette " );                        
+  child->x = -2; child->value_x = -3;
+  wii_add_child( display, child );     
 
-  //
-  // The advanced menu
-  //
-
-  TREENODE *advanced = wii_create_tree_node( NODETYPE_ADVANCED, 
-    "Advanced" );
-  wii_add_child( wii_menu_root, advanced );    
+  child = wii_create_tree_node( NODETYPE_SHOW_ALL_SPRITES, 
+    "Show all sprites " );                        
+  child->x = -2; child->value_x = -3;
+  wii_add_child( display, child );       
 
   child = wii_create_tree_node( 
     NODETYPE_KEYPAD_PAUSE, "Keypad pause " );
@@ -348,14 +349,6 @@ void wii_coleco_menu_init()
   child->x = -2; child->value_x = -3;
   wii_add_child( advanced, child );  
 
-  child = wii_create_tree_node( NODETYPE_SPACER, "" );
-  wii_add_child( advanced, child );
-
-  child = wii_create_tree_node( NODETYPE_DEBUG_MODE, 
-    "Debug mode " );
-  child->x = -2; child->value_x = -3;
-  wii_add_child( advanced, child );
-
   child = wii_create_tree_node( NODETYPE_TOP_MENU_EXIT, 
     "Top menu exit " );
   child->x = -2; child->value_x = -3;
@@ -365,6 +358,14 @@ void wii_coleco_menu_init()
     "Wiimote (menu) " );
   child->x = -2; child->value_x = -3;
   wii_add_child( advanced, child );
+  
+  child = wii_create_tree_node( NODETYPE_SPACER, "" );
+  wii_add_child( advanced, child );
+
+  child = wii_create_tree_node( NODETYPE_DEBUG_MODE, 
+    "Debug mode " );
+  child->x = -2; child->value_x = -3;
+  wii_add_child( advanced, child );  
 
   wii_menu_push( wii_menu_root );	
 }
