@@ -1,3 +1,5 @@
+[![Actions Status](https://github.com/raz0red/wiicolem/workflows/Build/badge.svg)](https://github.com/raz0red/wiicolem/actions)
+
 # WiiColEm
 
 Ported by raz0red
