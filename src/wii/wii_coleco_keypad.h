@@ -1,28 +1,30 @@
-/*
-WiiColem : Port of the Colem ColecoVision Emulator for the Wii
-
-Copyright (C) 2010
-raz0red (www.twitchasylum.com)
-
-This software is provided 'as-is', without any express or implied
-warranty.  In no event will the authors be held liable for any
-damages arising from the use of this software.
-
-Permission is granted to anyone to use this software for any
-purpose, including commercial applications, and to alter it and
-redistribute it freely, subject to the following restrictions:
-
-1.	The origin of this software must not be misrepresented; you
-must not claim that you wrote the original software. If you use
-this software in a product, an acknowledgment in the product
-documentation would be appreciated but is not required.
-
-2.	Altered source versions must be plainly marked as such, and
-must not be misrepresented as being the original software.
-
-3.	This notice may not be removed or altered from any source
-distribution.
-*/
+//---------------------------------------------------------------------------//
+//   __      __.__.___________        .__                                    //
+//  /  \    /  \__|__\_   ___ \  ____ |  |   ____   _____                    //
+//  \   \/\/   /  |  /    \  \/ /  _ \|  | _/ __ \ /     \                   //
+//   \        /|  |  \     \___(  <_> )  |_\  ___/|  Y Y  \                  //
+//    \__/\  / |__|__|\______  /\____/|____/\___  >__|_|  /                  //
+//         \/                \/                 \/      \/                   //
+//     WiiColem by raz0red                                                   //
+//     Port of the ColEm emulator by Marat Fayzullin                         //
+//                                                                           //
+//     [github.com/raz0red/wiicolem]                                         //
+//                                                                           //
+//---------------------------------------------------------------------------//
+//                                                                           //
+//  Copyright (C) 2019 raz0red                                               //
+//                                                                           //
+//  The license for Colem as indicated by Marat Fayzullin, the author of     //
+//  ColEm is detailed below:                                                 //
+//                                                                           //
+//  ColEm sources are available under three conditions:                      //
+//                                                                           //
+//  1) You are not using them for a commercial project.                      //
+//  2) You provide a proper reference to Marat Fayzullin as the author of    //
+//     the original source code.                                             //
+//  3) You provide a link to http://fms.komkon.org/ColEm/                    //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
 
 #ifndef WII_COLECO_KEYPAD_H
 #define WII_COLECO_KEYPAD_H
