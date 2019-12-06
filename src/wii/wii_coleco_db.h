@@ -123,7 +123,7 @@ typedef struct ColecoDBEntry
 typedef struct ColecoButtonName
 { 
   u32 button;   // The button value
-  char *name;   // The button name
+  const char *name;   // The button name
 } ColecoButtonName;
 
 /*
@@ -138,12 +138,12 @@ typedef struct ColecoButtonName
  * The assignments of Wii controller buttons to their assigned "button" 
  * index (1-8) cannot be changed.
  */
-extern char* WiiButtonDescriptions[MAPPED_BUTTON_COUNT][CONTROLLER_NAME_COUNT];
+extern const char* WiiButtonDescriptions[MAPPED_BUTTON_COUNT][CONTROLLER_NAME_COUNT];
 
 /*
  * The names of the Wii controllers 
  */
-extern char* WiiControllerNames[CONTROLLER_NAME_COUNT];
+extern const char* WiiControllerNames[CONTROLLER_NAME_COUNT];
 
 /*
  * The Coleco button values and their associated names

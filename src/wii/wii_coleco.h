@@ -84,106 +84,108 @@
 #define WII_CLASSIC_CV_7  ( WPAD_CLASSIC_BUTTON_ZR )
 #define WII_CLASSIC_CV_8  ( WPAD_CLASSIC_BUTTON_ZL )
 
-// The last ColecoVision cartridge hash
+/** The last ColecoVision cartridge hash */
 extern char wii_cartridge_hash[33];
-// The ColecoVision Mode
+/** The current ColecoVision Mode */
 extern int wii_coleco_mode;
-// The ColecoVision database entry for current game
+/** The ColecoVision database entry for current game */
 extern ColecoDBEntry wii_coleco_db_entry;
-// The coleco controller view mode
+/** The coleco controller view mode */
 extern int wii_coleco_controller_view_mode;
-// Whether to display debug info (FPS, etc.)
+/** Whether to display debug info (FPS, etc.) */
 extern short wii_debug;
-// Hardware buttons (reset, power, etc.)
-extern u8 wii_hw_button;
-// Auto load state?
-extern BOOL wii_auto_load_state;
-// Auto save state?
-extern BOOL wii_auto_save_state;
-// Keypad pause
+/** Keypad pause */
 extern BOOL wii_keypad_pause;
-// Keypad size
+/** Keypad size */
 extern u8 wii_keypad_size;
-// Overlay mode
+/** Overlay mode */
 extern BOOL wii_use_overlay;
-// Super Game Module enabled
+/** Super Game Module enabled */
 extern BOOL wii_super_game_module;
-// Volume 
+/** Volume */
 extern u8 wii_volume;
-// Maximum frame rate
+/** Maximum frame rate */
 extern u8 wii_max_frames;
-// The screen X size
+/** The screen X size */
 extern int wii_screen_x;
-// The screen Y size
+/** The screen Y size */
 extern int wii_screen_y;
-// Whether to filter the display
+/** Whether to filter the display */
 extern BOOL wii_filter; 
-// Whether to use the GX/VI scaler
+/** Whether to use the GX/VI scaler */
 extern BOOL wii_gx_vi_scaler;
-// Whether the WII is in widescreen mode
-extern BOOL is_widescreen;
 
-/*
- * Returns the roms directory
+/**
+ * Returns the current roms directory
  *
- * return   The roms directory
+ * @return  The current roms directory
  */
-extern char* wii_get_roms_dir();
+char* wii_get_roms_dir();
 
-/*
+/**
+ * Sets the current roms directory
+ *
+ * @param   newDir The new roms directory
+ */
+void wii_set_roms_dir(const char* newDir);
+
+/**
  * Returns the saves directory
  *
- * return   The saves directory
+ * @return  The saves directory
  */
-extern char* wii_get_saves_dir();
+char* wii_get_saves_dir();
 
-/*
+/**
  * Returns the states directory
  *
- * return   The states directory
+ * @return  The states directory
  */
-extern char* wii_get_states_dir();
+char* wii_get_states_dir();
 
-/*
+/**
  * Returns the overlays directory
  *
- * return   The overlays directory
+ * @return  The overlays directory
  */
-extern char* wii_get_overlays_dir();
+char* wii_get_overlays_dir();
 
-/*
+/**
  * Checks and returns the state of the specified joystick
  *
- * joyIndex   The index of the joystick to check
- * return     The current state of the specified joystick
+ * @param   joyIndex The index of the joystick to check
+ * @return  The current state of the specified joystick
  */
-extern u32 wii_coleco_poll_joystick( int joyIndex );
+u32 wii_coleco_poll_joystick(int joyIndex);
 
-/*
- * Updates the widescreen mode
+/**
+ * Updates whether the Wii is in widescreen mode
  */
-extern void wii_update_widescreen();
+void wii_update_widescreen();
 
-/*
- * Returns the screen size
+/**
+ * Sets the video mode for the Wii
  *
- * inX  Input x
- * inY  Input y
- * x    Out x
- * y    Out y 
+ * @param   allowVi Whether to allow the GX+VI mode
  */
-extern void wii_get_screen_size( int inX, int inY, int *x, int *y );
+void wii_set_video_mode(BOOL allowVi);
 
-/*
- * Sets the video mode
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * Returns the current size to use for the screen
  *
- * allowVi  Whether to allow the GX+VI mode
+ * @param   inX Input x value
+ * @param   inY Input y value
+ * @param   x (out) Output x value
+ * @param   y (out) Output y value
  */
-extern void wii_set_video_mode(BOOL allowVi);
+void wii_get_screen_size(int inX, int inY, int *x, int *y);
 
-#if 0
-extern void wii_coleco_patch_rom();
-extern void wii_coleco_unpatch_rom();
+#ifdef __cplusplus
+}
 #endif
 
 #endif
