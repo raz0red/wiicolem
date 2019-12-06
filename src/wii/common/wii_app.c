@@ -225,8 +225,12 @@ void wii_console_init( void *fb )
  */ 
 void wii_set_status_message( const char *message )
 {
+  wii_status_message_count = 3;
+  snprintf( wii_status_message, sizeof(wii_status_message), "%s", message );
+#if 0
   //LOCK_RENDER_MUTEX();
   wii_status_message_count = ( wii_is_pal ? 50 : 60 ) * 5; // 5 seconds
   snprintf( wii_status_message, sizeof(wii_status_message), "%s", gettextmsg(message) );
   //UNLOCK_RENDER_MUTEX();
+#endif  
 }

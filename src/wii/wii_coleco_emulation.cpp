@@ -88,167 +88,152 @@ BOOL wii_start_emulation( char *romfile, const char *savefile, BOOL reset, BOOL 
   // Write out the current config
   wii_write_config();
   
-  BOOL succeeded = true;
-  char autosavename[WII_MAX_PATH] = "";
+  BOOL succeeded = true;  
 
-  // Determine the name of the save file
-  if( wii_auto_load_state )
-  {
-    wii_snapshot_handle_get_name( romfile, autosavename );
-  }
-
-  // If a specific save file was not specified, and we are auto-loading 
-  // see if a save file exists
-  if( savefile == NULL &&
-      ( wii_auto_load_state && 
-        wii_check_snapshot( autosavename ) == 0 ) )
-  {
-    savefile = autosavename;
-  }
-
-  if( succeeded )
-  {
-    // Start emulation
-    if( !reset && !resume )
-    {
-      // Determine the state file name
-      char state_file[WII_MAX_PATH];
-      char filename[WII_MAX_PATH];            
-      Util_splitpath( romfile, NULL, filename );
-      snprintf( state_file, WII_MAX_PATH, "%s%s.%s",  
-        wii_get_states_dir(), filename, WII_STATE_GAME_EXT );
+  // Start emulation
+  if( !reset && !resume )
+  {          
+    BOOL loadsave = ( savefile != NULL && strlen( savefile ) > 0 );                  
     
-      // Clear the Coleco DB entry
-      memset( &wii_coleco_db_entry, 0x0, sizeof( ColecoDBEntry ) );
+    // Determine the state file name
+    char state_file[WII_MAX_PATH];
+    char filename[WII_MAX_PATH];            
+    Util_splitpath( romfile, NULL, filename );
+    snprintf( state_file, WII_MAX_PATH, "%s%s.%s",  
+      wii_get_states_dir(), filename, WII_STATE_GAME_EXT );
+  
+    // Clear the Coleco DB entry
+    memset( &wii_coleco_db_entry, 0x0, sizeof( ColecoDBEntry ) );
+    
+    if (!loadsave) {
+      wii_snapshot_reset(); // Reset snapshot related state
+    }      
+    
+    succeeded = LoadROM( romfile, state_file);
+    if( succeeded )
+    {
+      // Calculate the hash
+      wii_hash_compute( ROM_CARTRIDGE, succeeded, wii_cartridge_hash );
 
-      BOOL loadsave = ( savefile != NULL && strlen( savefile ) > 0 );                  
-      succeeded = LoadROM( romfile, state_file );
-      if( succeeded )
+      // Look up the cartridge in the database
+      wii_coleco_db_get_entry( wii_cartridge_hash, &wii_coleco_db_entry );
+
+      // Reset coleco. Allows for memory adjustments based on cartridge 
+      // settings, etc.
+      ResetColeco( get_coleco_mode() );
+    }
+    else
+    {
+      wii_set_status_message(
+        "An error occurred loading the specified cartridge." );                
+    }
+
+    if( loadsave )
+    {
+      // Ensure the save is valid
+      int sscheck = wii_check_snapshot( savefile );
+      if( sscheck < 0 )
       {
-        // Calculate the hash
-        wii_hash_compute( ROM_CARTRIDGE, succeeded, wii_cartridge_hash );
+          wii_set_status_message(
+            "Unable to find the specified save state file." );                
 
-        // Look up the cartridge in the database
-        wii_coleco_db_get_entry( wii_cartridge_hash, &wii_coleco_db_entry );
-
-        // Reset coleco. Allows for memory adjustments based on cartridge 
-        // settings, etc.
-        ResetColeco( get_coleco_mode() );
+        succeeded = false;
       }
       else
       {
-        wii_set_status_message(
-          "An error occurred loading the specified cartridge." );                
-      }
-
-      if( loadsave )
-      {
-        // Ensure the save is valid
-        int sscheck = wii_check_snapshot( savefile );
-        if( sscheck < 0 )
+        succeeded = LoadSTA( savefile );                    
+        if( !succeeded )
         {
-            wii_set_status_message(
-              "Unable to find the specified save state file." );                
-
-          succeeded = false;
-        }
-        else
-        {
-          succeeded = LoadSTA( savefile );                    
-          if( !succeeded )
-          {
-            wii_set_status_message(
-              "An error occurred attempting to load the save state file." 
-            );                
-          }
+          wii_set_status_message(
+            "An error occurred attempting to load the save state file." 
+          );                
         }
       }
-    }
-    else if( reset )
-    {
-      ResetColeco( get_coleco_mode() );
-    }
-    else if( resume )
-    {
-      // Restore mode
-      Mode = get_coleco_mode();
-    }
-    
-    if( succeeded )
-    {
-      // Store the name of the last rom (for resuming later)        
-      // Do it in this order in case they passed in the pointer
-      // to the last rom variable
-      char *last = strdup( romfile );
-      if( wii_last_rom != NULL )
-      {
-        free( wii_last_rom );    
-      }
-
-      wii_last_rom = last;
-#if 1
-      for(int i = 0; i <2; i++) {  
-        cur_xfb ^= 1;
-        u32 *fb = wii_xfb[cur_xfb];  
-        VIDEO_SetNextFramebuffer( fb );
-        VIDEO_ClearFrameBuffer( vmode, fb, COLOR_BLACK );
-        VIDEO_SetBlack(FALSE);
-        VIDEO_Flush();	
-        VIDEO_WaitVSync();
-      }  
-#endif        
-      
-      if( !resume )
-      {
-        // Reset the keypad
-        wii_keypad_reset();      
-        // Clear the screen
-        wii_sdl_black_screen();
-#if 1
-        wii_sdl_black_screen();
-#endif        
-      }
-
-      // Wait until no buttons are pressed
-      wii_wait_until_no_buttons( 2 );
-      // Update cycle period
-      CPU.IPeriod = (Mode&CV_PAL? TMS9929_LINE:TMS9918_LINE)+(wii_coleco_db_entry.cycleAdjust)/*-23*/;
-      // Reset cycle timing information
-      ResetCycleTiming();
-      // Set volume
-      // 255/SN76489_CHANNELS = 63
-      SetChannels((wii_volume==0?0:(3+(wii_volume*4))),MasterSwitch);
-
-      // Set render callback
-      WII_SetRenderCallback( &wii_render_callback );
-      
-      // Set the video mode
-      wii_set_video_mode(TRUE);
-
-      // Set spinner controls
-      Mode&=~CV_SPINNERS;
-      if( ( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_DRIVING ) ||
-          ( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_DRIVING_TILT ) ||
-          ( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_ROLLER ) ||
-          ( ( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_SUPERACTION ) &&
-            !( wii_coleco_db_entry.flags&DISABLE_SPINNER ) ) )
-      {
-        Mode|=CV_SPINNER1X;        
-        if( ( wii_coleco_db_entry.controlsMode != CONTROLS_MODE_DRIVING ) && 
-            ( wii_coleco_db_entry.controlsMode != CONTROLS_MODE_DRIVING_TILT ) )
-        {
-          Mode|=CV_SPINNER2Y;
-        }
-      }
-#if 0
-      wii_coleco_patch_rom();
-#endif
     }
   }
-
-  if( !succeeded )
+  else if( reset )
   {
-    // Reset the last rom that was loaded
+    ResetColeco( get_coleco_mode() );
+  }
+  else if( resume )
+  {
+    // Restore mode
+    Mode = get_coleco_mode();
+  }
+  
+  if( succeeded )
+  {
+    // Store the name of the last rom (for resuming later)        
+    // Do it in this order in case they passed in the pointer
+    // to the last rom variable
+    char *last = strdup( romfile );
+    if( wii_last_rom != NULL )
+    {
+      free( wii_last_rom );    
+    }
+
+    wii_last_rom = last;
+#if 1
+    for(int i = 0; i <2; i++) {  
+      cur_xfb ^= 1;
+      u32 *fb = wii_xfb[cur_xfb];  
+      VIDEO_SetNextFramebuffer( fb );
+      VIDEO_ClearFrameBuffer( vmode, fb, COLOR_BLACK );
+      VIDEO_SetBlack(FALSE);
+      VIDEO_Flush();	
+      VIDEO_WaitVSync();
+    }  
+#endif        
+    
+    if( !resume )
+    {
+      // Reset the keypad
+      wii_keypad_reset();      
+      // Clear the screen
+      wii_sdl_black_screen();
+#if 1
+      wii_sdl_black_screen();
+#endif        
+    }
+
+    // Wait until no buttons are pressed
+    wii_wait_until_no_buttons( 2 );
+    // Update cycle period
+    CPU.IPeriod = (Mode&CV_PAL? TMS9929_LINE:TMS9918_LINE)+(wii_coleco_db_entry.cycleAdjust)/*-23*/;
+    // Reset cycle timing information
+    ResetCycleTiming();
+    // Set volume
+    // 255/SN76489_CHANNELS = 63
+    SetChannels((wii_volume==0?0:(3+(wii_volume*4))),MasterSwitch);
+
+    // Set render callback
+    WII_SetRenderCallback( &wii_render_callback );
+    
+    // Set the video mode
+    wii_set_video_mode(TRUE);
+
+    // Set spinner controls
+    Mode&=~CV_SPINNERS;
+    if( ( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_DRIVING ) ||
+        ( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_DRIVING_TILT ) ||
+        ( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_ROLLER ) ||
+        ( ( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_SUPERACTION ) &&
+          !( wii_coleco_db_entry.flags&DISABLE_SPINNER ) ) )
+    {
+      Mode|=CV_SPINNER1X;        
+      if( ( wii_coleco_db_entry.controlsMode != CONTROLS_MODE_DRIVING ) && 
+          ( wii_coleco_db_entry.controlsMode != CONTROLS_MODE_DRIVING_TILT ) )
+      {
+        Mode|=CV_SPINNER2Y;
+      }
+    }
+#if 0
+    wii_coleco_patch_rom();
+#endif
+  }
+  else
+  {
+    // Reset the last rom that was loaded 
     if( wii_last_rom != NULL )
     {
       free( wii_last_rom );

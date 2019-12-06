@@ -30,41 +30,39 @@
 
 #include "wii_coleco.h"
 
-/*
- * Initializes the SDL
+/**
+ * Initializes the SDL library
  */
-int wii_sdl_handle_init()
-{
-  if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO ) < 0) {
-    return 0;
-  }
+int wii_sdl_handle_init() {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+        return 0;
+    }
 
-  if( SDL_InitSubSystem( SDL_INIT_VIDEO ) < 0 ) {
-    return 0;
-  }
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0) {
+        return 0;
+    }
 
-  back_surface = 
-    SDL_SetVideoMode(
-    WII_WIDTH,
-    WII_HEIGHT, 
-    8, 
-    SDL_DOUBLEBUF|SDL_HWSURFACE
-    );
+    back_surface = 
+        SDL_SetVideoMode(
+            WII_WIDTH,
+            WII_HEIGHT, 
+            8, 
+            SDL_DOUBLEBUF|SDL_HWSURFACE
+        );
 
-  if( !back_surface) 
-  {
-    return 0;
-  }
+    if (!back_surface) {
+        return 0;
+    }
 
-  blit_surface = 
-    SDL_CreateRGBSurface(
-    SDL_SWSURFACE, 
-    COLECO_WIDTH, 
-    COLECO_HEIGHT,
-    back_surface->format->BitsPerPixel,
-    back_surface->format->Rmask,
-    back_surface->format->Gmask,
-    back_surface->format->Bmask, 0);
+    blit_surface = 
+        SDL_CreateRGBSurface(
+        SDL_SWSURFACE, 
+        COLECO_WIDTH, 
+        COLECO_HEIGHT,
+        back_surface->format->BitsPerPixel,
+        back_surface->format->Rmask,
+        back_surface->format->Gmask,
+        back_surface->format->Bmask, 0);
 
-  return 1;
+    return 1;
 }

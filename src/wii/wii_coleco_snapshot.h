@@ -29,12 +29,40 @@
 #ifndef WII_COLECO_SNAPSHOT_H
 #define WII_COLECO_SNAPSHOT_H
 
-/*
- * Starts the emulator for the specified snapshot file.
+/**
+ * Starts emulation with the current snapshot
  *
- * savefile The name of the save file to load. 
- * return   Whether we were able to start the snapshot successfully
+ * @return  Whether emulation was successfully started
+ */ 
+BOOL wii_start_snapshot();
+
+/**
+ * Resets snapshot related informatino. This method is typically invoked when
+ * a new rom file is loaded.
  */
-extern BOOL wii_start_snapshot( char *savefile );
+void wii_snapshot_reset();
+
+/**
+ * Returns the index of the current snapshot. 
+ *
+ * @param   isLatest (out) Whether the current snapshot index is the latest
+ *              snapshot (most recent)
+ * @return  The index of the current snapshot
+ */
+int wii_snapshot_current_index(BOOL* isLatest);
+
+/**
+ * Returns whether the current snapshot exists
+ *
+ * @return  Whether the current snapshot exists
+ */
+BOOL wii_snapshot_current_exists();
+
+/** 
+ * Moves to the next snapshot (next index)
+ *
+ * @return  The index that was moved to
+ */
+int wii_snapshot_next();
 
 #endif
