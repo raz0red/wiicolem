@@ -282,6 +282,12 @@ void wii_coleco_menu_init() {
     child->value_x = -3;
     wii_add_child(display, child);
 
+    child =
+        wii_create_tree_node(NODETYPE_DOUBLE_STRIKE, "Double strike (240p)");
+    child->x = -2;
+    child->value_x = -3;
+    wii_add_child(display, child);
+
     child = wii_create_tree_node(NODETYPE_GX_VI_SCALER, "Scaler ");
     child->x = -2;
     child->value_x = -3;
@@ -493,6 +499,7 @@ void wii_menu_handle_get_node_name(TREENODE* node, char* buffer, char* value) {
         case NODETYPE_USE_OVERLAY:
         case NODETYPE_SUPER_GAME_MODULE:
         case NODETYPE_16_9_CORRECTION:
+        case NODETYPE_DOUBLE_STRIKE:
         case NODETYPE_FILTER: {
             BOOL enabled = FALSE;
             switch (node->node_type) {
@@ -501,6 +508,9 @@ void wii_menu_handle_get_node_name(TREENODE* node, char* buffer, char* value) {
                     break;
                 case NODETYPE_16_9_CORRECTION:
                     enabled = wii_16_9_correction;
+                    break;
+                case NODETYPE_DOUBLE_STRIKE:
+                    enabled = wii_double_strike_mode;
                     break;
                 case NODETYPE_SUPER_GAME_MODULE:
                     enabled = wii_super_game_module;
@@ -811,6 +821,9 @@ void wii_menu_handle_select_node(TREENODE* node) {
         case NODETYPE_16_9_CORRECTION:
             wii_16_9_correction ^= 1;
             break;
+        case NODETYPE_DOUBLE_STRIKE:
+            wii_double_strike_mode ^= 1;
+            break;
         case NODETYPE_FILTER:
             wii_filter ^= 1;
             break;
@@ -1027,8 +1040,10 @@ BOOL wii_menu_handle_is_node_visible(TREENODE* node) {
         case NODETYPE_SPINNER:
             return wii_coleco_db_entry.controlsMode ==
                    CONTROLS_MODE_SUPERACTION;
+        case NODETYPE_GX_VI_SCALER:
+            return !wii_double_strike_mode;
         case NODETYPE_FILTER:
-            return !wii_gx_vi_scaler;
+            return !wii_gx_vi_scaler && !wii_double_strike_mode;
         case NODETYPE_KEYPAD_PAUSE:
         case NODETYPE_KEYPAD_PAUSE_CART:
             return !wii_gx_vi_scaler;

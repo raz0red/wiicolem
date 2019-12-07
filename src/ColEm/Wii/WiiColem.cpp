@@ -26,7 +26,6 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-
 /** ColEm: portable Coleco emulator **************************/
 /**                                                         **/
 /**                          ColEm.c                        **/
@@ -72,71 +71,71 @@ static u64 CurrentTick;
 static u64 TimerCount;
 static u64 StartTick;
 
-// Whether to reset the timing information
+/** Whether to reset the timing information */
 static BOOL ResetTiming = TRUE;
 
-// The current FPS
+/** The current FPS */
 static float FpsCounter = 0.0;
 
-// Whether we should display the initial menu
+/** Whether we should display the initial menu */
 static BOOL InitialMenuDisplay = TRUE;
 
+/** Forward reference to render the emulator screen */
 static void render_screen();
 
+/** View external reference (SDL) */
 extern Mtx gx_view;
 
+/** For logging debug info */
 char debug_str[255] = "";
 
 extern "C" {
-  int PauseAudio(int Switch);
-
-  void WII_VideoStop();
-  void WII_VideoStart();
+/** SDL Sound external reference */
+int PauseAudio(int Switch);
+/** SDL Video external references */
+void WII_VideoStop();
+void WII_VideoStart();
 }
 
 /** TrashMachine() *******************************************/
 /** Deallocate all resources taken by InitMachine().        **/
 /*************************************************************/
-void TrashMachine(void)
-{
-  TrashSound();
+void TrashMachine(void) {
+    TrashSound();
 }
 
 /** ResetTiming() ********************************************/
 /** Resets cycle timing information                         **/
 /*************************************************************/
-void ResetCycleTiming(void)
-{
-  TicksPerSecond = 1000 * 100;
-  //int UpdateFreq = wii_max_frames/*(Mode & CV_PAL) == CV_NTSC ? 60 : 50*/;
-  int UpdateFreq = 
-    ( wii_coleco_db_entry.maxFrames == MAX_FRAMES_DEFAULT ?
-      wii_max_frames : 
-      wii_coleco_db_entry.maxFrames );
+void ResetCycleTiming(void) {
+    TicksPerSecond = 1000 * 100;
+    // int UpdateFreq = wii_max_frames/*(Mode & CV_PAL) == CV_NTSC ? 60 : 50*/;
+    int UpdateFreq = (wii_coleco_db_entry.maxFrames == MAX_FRAMES_DEFAULT
+                          ? wii_max_frames
+                          : wii_coleco_db_entry.maxFrames);
 
-  TicksPerUpdate = TicksPerSecond / UpdateFreq;  
-  ResetTiming = TRUE;  
+    TicksPerUpdate = TicksPerSecond / UpdateFreq;
+    ResetTiming = TRUE;
 }
 
 /** InitMachine() ********************************************/
 /** Allocate resources needed by machine-dependent code.    **/
 /*************************************************************/
-int InitMachine(void)
-{
-  /* Initialize video */
-  ScrWidth  = COLECO_WIDTH;
-  ScrHeight = COLECO_HEIGHT;
-  ScrBuffer = blit_surface->pixels;
+int InitMachine(void) {
+    /* Initialize video */
+    ScrWidth = COLECO_WIDTH;
+    ScrHeight = COLECO_HEIGHT;
+    ScrBuffer = blit_surface->pixels;
 
-  // Reset timing information
-  ResetCycleTiming();
+    // Reset timing information
+    ResetCycleTiming();
 
-  InitSound(UseSound,150);
-  SndSwitch=(1<<(SN76489_CHANNELS+AY8910_CHANNELS))-1;
-  SndVolume=255/SN76489_CHANNELS;
-  SetChannels(SndVolume,SndSwitch);
+    InitSound(UseSound, 150);
+    SndSwitch = (1 << (SN76489_CHANNELS + AY8910_CHANNELS)) - 1;
+    SndVolume = 255 / SN76489_CHANNELS;
+    SetChannels(SndVolume, SndSwitch);
 
-  return(1);
+    return (1);
 }
 
 int MouseX = 0;
@@ -150,98 +149,93 @@ float Tilt = 0.0;
 /** mouse buttons in the upper 2 bits. All values should be **/
 /** counted from the screen center!                         **/
 /*************************************************************/
-unsigned int Mouse(void)
-{
-  int y = 0;
-  int x = 0;
+unsigned int Mouse(void) {
+    int y = 0;
+    int x = 0;
 
-  MouseX = MouseY = 0;
+    MouseX = MouseY = 0;
 
-  if( wii_coleco_db_entry.controlsMode != CONTROLS_MODE_STANDARD )
-  {    
-    if( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_SUPERACTION )         
-    {
-      if( !( wii_coleco_db_entry.flags&DISABLE_SPINNER ) )
-      {
-        WPADData *wd0 = WPAD_Data( 0 );	
-        WPADData *wd1 = WPAD_Data( 1 );	
+    if (wii_coleco_db_entry.controlsMode != CONTROLS_MODE_STANDARD) {
+        if (wii_coleco_db_entry.controlsMode == CONTROLS_MODE_SUPERACTION) {
+            if (!(wii_coleco_db_entry.flags & DISABLE_SPINNER)) {
+                WPADData* wd0 = WPAD_Data(0);
+                WPADData* wd1 = WPAD_Data(1);
 
-        if( !wii_keypad_is_visible( 0 ) )
-        {
-          x = 
-            ( ( wd0->exp.type == WPAD_EXP_CLASSIC || 
-                wd0->exp.type == WPAD_EXP_NUNCHUK ) ?
-                ((int)wii_exp_analog_val_range( &(wd0->exp), 1, 1, 512.0f)) :
-                ( PAD_SubStickX( 0 ) << 2 ) );                             
-          x*=-1;                  
+                if (!wii_keypad_is_visible(0)) {
+                    x = ((wd0->exp.type == WPAD_EXP_CLASSIC ||
+                          wd0->exp.type == WPAD_EXP_NUNCHUK)
+                             ? ((int)wii_exp_analog_val_range(&(wd0->exp), 1, 1,
+                                                              512.0f))
+                             : (PAD_SubStickX(0) << 2));
+                    x *= -1;
+                }
+
+                if (!wii_keypad_is_visible(1)) {
+                    y = ((wd1->exp.type == WPAD_EXP_CLASSIC ||
+                          wd1->exp.type == WPAD_EXP_NUNCHUK)
+                             ? ((int)wii_exp_analog_val_range(&(wd1->exp), 1, 1,
+                                                              128.0f))
+                             : (PAD_SubStickX(1)));
+                }
+            }
+        } else if (!wii_keypad_is_visible(0)) {
+            WPADData* wd = WPAD_Data(0);
+            if (wii_coleco_db_entry.controlsMode ==
+                CONTROLS_MODE_DRIVING_TILT) {
+                orient_t orient;
+                WPAD_Orientation(0, &orient);
+                Tilt = orient.pitch;
+
+                // Calculate sensitivity (10-50)
+                int max = (10 + (wii_coleco_db_entry.sensitivity - 1) * 5);
+                float ratio = ((float)512 / (float)max);
+
+                if (Tilt > max)
+                    Tilt = max;
+                else if (Tilt < -max)
+                    Tilt = -max;
+
+                x = -(Tilt * ratio);
+            } else {
+                // Calculate sensitivity (48-128)
+                int sensitivity =
+                    (128 - (wii_coleco_db_entry.sensitivity - 1) * 10);
+                if (wd->exp.type == WPAD_EXP_CLASSIC ||
+                    wd->exp.type == WPAD_EXP_NUNCHUK) {
+                    if (wii_coleco_db_entry.controlsMode ==
+                        CONTROLS_MODE_ROLLER) {
+                        y = ((int)wii_exp_analog_val_range(&(wd->exp), 0, 0,
+                                                           sensitivity) *
+                             -1);
+                    }
+                    x = ((int)wii_exp_analog_val_range(&(wd->exp), 1, 0,
+                                                       sensitivity << 2));
+                } else {
+                    if (wii_coleco_db_entry.controlsMode ==
+                        CONTROLS_MODE_ROLLER) {
+                        float yf = (float)PAD_StickY(0) / 100.0;
+                        if (yf > 1.0)
+                            yf = 1.0;
+                        y = (yf * (-sensitivity));
+                    }
+                    float xf = (float)PAD_StickX(0) / 100.0;
+                    if (xf > 1.0)
+                        xf = 1.0;
+                    x = (((int)(xf * sensitivity)) << 2);
+                }
+            }
         }
 
-        if( !wii_keypad_is_visible( 1 ) )
-        {
-          y = 
-            ( ( wd1->exp.type == WPAD_EXP_CLASSIC || 
-                wd1->exp.type == WPAD_EXP_NUNCHUK ) ?
-                ((int)wii_exp_analog_val_range( &(wd1->exp), 1, 1, 128.0f)) :
-                ( PAD_SubStickX( 1 ) ) );                                      
-        }
-      }
+        MouseX = x;
+        MouseY = y;
+
+        x &= 0xFFFF;
+        y &= 0x3FFF;
+
+        return ((y << 16) | x);
     }
-    else if( !wii_keypad_is_visible( 0 ) )
-    {
-      WPADData *wd = WPAD_Data( 0 );	
-      if( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_DRIVING_TILT )
-      {
-        orient_t orient;
-        WPAD_Orientation( 0, &orient );
-        Tilt = orient.pitch;        
-        
-        // Calculate sensitivity (10-50)
-        int max = (10 + (wii_coleco_db_entry.sensitivity - 1) * 5 );
-        float ratio = ((float)512/(float)max);
 
-        if( Tilt > max ) Tilt = max;
-        else if( Tilt < -max ) Tilt = -max;
-
-        x = -(Tilt*ratio);
-      }
-      else
-      { 
-        // Calculate sensitivity (48-128)
-        int sensitivity = ( 128 - ( wii_coleco_db_entry.sensitivity - 1 ) * 10 );        
-        if( wd->exp.type == WPAD_EXP_CLASSIC || 
-            wd->exp.type == WPAD_EXP_NUNCHUK )
-        {
-          if( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_ROLLER )
-          {
-            y = ((int)wii_exp_analog_val_range(&(wd->exp), 0, 0, sensitivity)*-1);
-          }
-          x = ((int)wii_exp_analog_val_range(&(wd->exp), 1, 0, sensitivity<<2));      
-        }
-        else
-        {
-          if( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_ROLLER )
-          {
-            float yf = (float)PAD_StickY( 0 )/100.0;
-            if( yf > 1.0 ) yf = 1.0;
-            y = (yf*(-sensitivity));
-          }
-          float xf = (float)PAD_StickX( 0 )/100.0;
-          if( xf > 1.0 ) xf = 1.0;
-          x = (((int)(xf*sensitivity))<<2);
-        }
-      }
-    }
-
-    MouseX = x;
-    MouseY = y;
-
-    x&=0xFFFF;
-    y&=0x3FFF;
-
-    return ((y<<16)|x);
-  }
-
-  return 0;
+    return 0;
 }
 
 /** Joystick() ***********************************************/
@@ -257,269 +251,234 @@ unsigned int Mouse(void)
 // when keypad is displayed mode".
 u32 lastkeypad = 0;
 
-unsigned int Joystick(void)
-{
-  /* Render audio here */
-  RenderAndPlayAudio(GetFreeAudio());
+unsigned int Joystick(void) {
+    /* Render audio here */
+    RenderAndPlayAudio(GetFreeAudio());
 
-  if( InitialMenuDisplay )
-  {
-    wii_menu_show();
-    InitialMenuDisplay = FALSE;
-  }
-
-  u32 keypad = 0;
-  BOOL loop = FALSE;
-  BOOL padvisible = FALSE;
-  do
-  {
-    loop = FALSE;
-
-    WPAD_ScanPads();
-    PAD_ScanPads();       
-
-    //
-    // A key was pressed when we were in the "pause emulation when keypad 
-    // is displayed mode". We keep returning the key that was pressed
-    // until the button is no longer held.
-    //
-    if( lastkeypad )
-    {
-      if( wii_is_any_button_held( 2 ) )
-      {
-        return lastkeypad;
-      }
-      else
-      {
-        lastkeypad = 0;
-      }
+    if (InitialMenuDisplay) {
+        wii_menu_show();
+        InitialMenuDisplay = FALSE;
     }
 
-    u32 down = WPAD_ButtonsDown( 0 );
-    u32 gcDown = PAD_ButtonsDown( 0 );
+    u32 keypad = 0;
+    BOOL loop = FALSE;
+    BOOL padvisible = FALSE;
+    do {
+        loop = FALSE;
 
-    //
-    // Check to see if the menu should be displayed
-    //
-    if( ( down & WII_BUTTON_HOME ) || ( gcDown & GC_BUTTON_HOME ) || wii_hw_button )
-    {
-      wii_menu_show();      
-      if (wii_gx_vi_scaler) {
-        padvisible = FALSE;
-      }
-    }
+        WPAD_ScanPads();
+        PAD_ScanPads();
 
-    //
-    // Check keypad input
-    //
-    keypad = wii_keypad_poll_joysticks();
-    
-    if( wii_keypad_is_pause_enabled( &wii_coleco_db_entry ) || wii_gx_vi_scaler )
-    {    
-      if( wii_keypad_is_visible( 0 ) || wii_keypad_is_visible( 1 ) )
-      {        
-        if( keypad )
-        {
-          // Hide the keypads
-          if( wii_keypad_is_pressed( 0, keypad ) ) wii_keypad_hide( 0 );
-          if( wii_keypad_is_pressed( 1, keypad ) ) wii_keypad_hide( 1 );
-
-          // Repeat the last keypad press until the button is released
-          lastkeypad = keypad;
-        }
-        else
-        {          
-          // A keypad is displayed, render the screen and pads
-          // and loop again, waiting for the keypads to close
-          // or a button to be pressed.
-          if( !padvisible )
-          {            
-            padvisible = TRUE;
-
-            // Dim the screen
-            wii_keypad_set_dim_screen( TRUE );
-
-            // Force GX without VI             
-            if (wii_gx_vi_scaler) {
-              WII_VideoStop();
-              wii_set_video_mode(FALSE);
-              WII_VideoStart();
+        //
+        // A key was pressed when we were in the "pause emulation when keypad
+        // is displayed mode". We keep returning the key that was pressed
+        // until the button is no longer held.
+        //
+        if (lastkeypad) {
+            if (wii_is_any_button_held(2)) {
+                return lastkeypad;
+            } else {
+                lastkeypad = 0;
             }
-          }
-
-          // Make sure audio is paused
-          PauseAudio(1);
-          // Render the screen
-          render_screen();
-
-          if( !ExitNow )
-          {
-            loop = TRUE;
-          }
         }
-      }
 
-      if( !loop && padvisible )
-      {
-        // Restart selected video mode
-        if (wii_gx_vi_scaler) {
-          WII_VideoStop();
-          wii_set_video_mode(TRUE);
-          WII_VideoStart();
+        u32 down = WPAD_ButtonsDown(0);
+        u32 gcDown = PAD_ButtonsDown(0);
+
+        //
+        // Check to see if the menu should be displayed
+        //
+        if ((down & WII_BUTTON_HOME) || (gcDown & GC_BUTTON_HOME) ||
+            wii_hw_button) {
+            wii_menu_show();
+            if (wii_gx_vi_scaler || wii_double_strike_mode) {
+                padvisible = FALSE;
+            }
         }
-      
-        // Un-dim the screen
-        wii_keypad_set_dim_screen( FALSE );
 
-        // The pad was visible so we looped one or more times. 
-        // Reset the timing info.
-        PauseAudio(0);
-        ResetCycleTiming();
-      }
-    }
-  } 
-  while( loop );
+        //
+        // Check keypad input
+        //
+        keypad = wii_keypad_poll_joysticks();
 
-  if( keypad )
-  {
-    return keypad;
-  }
-  else
-  {
-    if( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_ROLLER ||
-        wii_coleco_db_entry.controlsMode == CONTROLS_MODE_DRIVING ||
-        wii_coleco_db_entry.controlsMode == CONTROLS_MODE_DRIVING_TILT )
-    {
-      if( wii_keypad_is_visible( 0 ) )
-      {
-        return 0;
-      }
-      else
-      {        
-        // 8   4    2 1 8 4 2 1 8   4    2 1 8  4  2  1
-        // x.FIRE-B.x.x.L.D.R.U.x.FIRE-A.x.x.N3.N2.N1.N0
-        int state = wii_coleco_poll_joystick( 0 );        
-        return (((state&0x0F0F)<<16)|(state&0x4040)|(state&0x40400000));
-      }
+        if (wii_keypad_is_pause_enabled(&wii_coleco_db_entry) ||
+            (wii_gx_vi_scaler || wii_double_strike_mode)) {
+            if (wii_keypad_is_visible(0) || wii_keypad_is_visible(1)) {
+                if (keypad) {
+                    // Hide the keypads
+                    if (wii_keypad_is_pressed(0, keypad))
+                        wii_keypad_hide(0);
+                    if (wii_keypad_is_pressed(1, keypad))
+                        wii_keypad_hide(1);
+
+                    // Repeat the last keypad press until the button is released
+                    lastkeypad = keypad;
+                } else {
+                    // A keypad is displayed, render the screen and pads
+                    // and loop again, waiting for the keypads to close
+                    // or a button to be pressed.
+                    if (!padvisible) {
+                        padvisible = TRUE;
+
+                        // Dim the screen
+                        wii_keypad_set_dim_screen(TRUE);
+
+                        // Force GX without VI
+                        if (wii_gx_vi_scaler || wii_double_strike_mode) {
+                            WII_VideoStop();
+                            wii_set_video_mode(FALSE);
+                            WII_VideoStart();
+                        }
+                    }
+
+                    // Make sure audio is paused
+                    PauseAudio(1);
+                    // Render the screen
+                    render_screen();
+
+                    if (!ExitNow) {
+                        loop = TRUE;
+                    }
+                }
+            }
+
+            if (!loop && padvisible) {
+                // Restart selected video mode
+                if (wii_gx_vi_scaler || wii_double_strike_mode) {
+                    WII_VideoStop();
+                    wii_sdl_black_screen();
+                    wii_sdl_black_screen();
+                    wii_set_video_mode(TRUE);
+                    WII_VideoStart();
+                }
+
+                // Un-dim the screen
+                wii_keypad_set_dim_screen(FALSE);
+
+                // The pad was visible so we looped one or more times.
+                // Reset the timing info.
+                PauseAudio(0);
+                ResetCycleTiming();
+            }
+        }
+    } while (loop);
+
+    if (keypad) {
+        return keypad;
+    } else {
+        if (wii_coleco_db_entry.controlsMode == CONTROLS_MODE_ROLLER ||
+            wii_coleco_db_entry.controlsMode == CONTROLS_MODE_DRIVING ||
+            wii_coleco_db_entry.controlsMode == CONTROLS_MODE_DRIVING_TILT) {
+            if (wii_keypad_is_visible(0)) {
+                return 0;
+            } else {
+                // 8   4    2 1 8 4 2 1 8   4    2 1 8  4  2  1
+                // x.FIRE-B.x.x.L.D.R.U.x.FIRE-A.x.x.N3.N2.N1.N0
+                int state = wii_coleco_poll_joystick(0);
+                return (((state & 0x0F0F) << 16) | (state & 0x4040) |
+                        (state & 0x40400000));
+            }
+        } else {
+            return (wii_keypad_is_visible(0)
+                        ? 0
+                        : (wii_coleco_poll_joystick(0) & 0xFFFF)) |
+                   (wii_keypad_is_visible(1)
+                        ? 0
+                        : ((wii_coleco_poll_joystick(1) & 0xFFFF) << 16));
+        }
     }
-    else
-    {
-      return
-        ( wii_keypad_is_visible( 0 ) ? 
-          0 : ( wii_coleco_poll_joystick( 0 )&0xFFFF ) ) | 
-        ( wii_keypad_is_visible( 1 ) ? 
-          0 : ( ( wii_coleco_poll_joystick( 1 )&0xFFFF)<<16 ) );
-    }
-  }            
 }
 
 /** SetColor() ***********************************************/
 /** Set color N to (R,G,B).                                 **/
 /*************************************************************/
-int SetColor(byte N,byte R,byte G,byte B)
-{
-  return wii_sdl_rgb( R, G, B );
+int SetColor(byte N, byte R, byte G, byte B) {
+    return wii_sdl_rgb(R, G, B);
 }
 
-/*
+/**
  * GX render callback
  */
-void wii_render_callback()
-{
-  GX_SetVtxDesc( GX_VA_POS, GX_DIRECT );
-  GX_SetVtxDesc( GX_VA_CLR0, GX_DIRECT );
-  GX_SetVtxDesc( GX_VA_TEX0, GX_NONE );
+void wii_render_callback() {
+    GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+    GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+    GX_SetVtxDesc(GX_VA_TEX0, GX_NONE);
 
-  Mtx m;    // model matrix.
-  Mtx mv;   // modelview matrix.
+    Mtx m;   // model matrix.
+    Mtx mv;  // modelview matrix.
 
-  guMtxIdentity( m ); 
-  guMtxTransApply( m, m, 0, 0, -100 );
-  guMtxConcat( gx_view, m, mv );
-  GX_LoadPosMtxImm( mv, GX_PNMTX0 ); 
+    guMtxIdentity(m);
+    guMtxTransApply(m, m, 0, 0, -100);
+    guMtxConcat(gx_view, m, mv);
+    GX_LoadPosMtxImm(mv, GX_PNMTX0);
 
-  //
-  // Keypad
-  //
+    //
+    // Keypad
+    //
 
-  wii_keypad_render();
+    wii_keypad_render();
 
+    //
+    // Debug
+    //
 
-  //
-  // Debug
-  //
+    static int dbg_count = 0;
 
-  static int dbg_count = 0;
+    if (wii_debug && !wii_double_strike_mode && !wii_gx_vi_scaler) {
+        static char text[256] = "";
+        static char text2[256] = "";
+        dbg_count++;
 
-  if( wii_debug )
-  {    
-    static char text[256] = "";
-    static char text2[256] = "";
-    dbg_count++;
+        int pixelSize = 14;
+        int h = pixelSize;
+        int padding = 2;
 
-    int pixelSize = 14;
-    int h = pixelSize;
-    int padding = 2;
+        if (dbg_count % 60 == 0) {
+            sprintf(text, "FPS: %0.2f, VSync: %s, CycleAdj: %d %s", FpsCounter,
+                    (wii_vsync == VSYNC_ENABLED ? "On" : "Off"),
+                    wii_coleco_db_entry.cycleAdjust, debug_str);
+        }
 
-    if( dbg_count % 60 == 0 )
-    {
-      sprintf( text, 
-        "FPS: %0.2f, VSync: %s, CycleAdj: %d %s",
-        FpsCounter,
-        ( wii_vsync == VSYNC_ENABLED ? "On" : "Off" ),
-        wii_coleco_db_entry.cycleAdjust,
-        debug_str
-      );
+        GXColor color = (GXColor){0x0, 0x0, 0x0, 0x80};
+        int w = wii_gx_gettextwidth(pixelSize, text);
+        int x = -310;
+        int y = 196;
+
+        wii_gx_drawrectangle(x + -padding, y + h + padding, w + (padding << 1),
+                             h + (padding << 1), color, TRUE);
+
+        wii_gx_drawtext(x, y, pixelSize, text, ftgxWhite, FTGX_ALIGN_BOTTOM);
+
+        if (wii_coleco_db_entry.controlsMode == CONTROLS_MODE_DRIVING_TILT) {
+            sprintf(text2, "Tilt: %0.2f", Tilt);
+
+            int w = wii_gx_gettextwidth(pixelSize, text2);
+            int x = -310;
+            int y = -210;
+
+            wii_gx_drawrectangle(x + -padding, y + h + padding,
+                                 w + (padding << 1), h + (padding << 1), color,
+                                 TRUE);
+
+            wii_gx_drawtext(x, y, pixelSize, text2, ftgxWhite,
+                            FTGX_ALIGN_BOTTOM);
+        }
     }
-
-    GXColor color = (GXColor){0x0, 0x0, 0x0, 0x80};
-    int w = wii_gx_gettextwidth( pixelSize, text );    
-    int x = -310;
-    int y = 196;
-
-    wii_gx_drawrectangle( 
-      x + -padding, 
-      y + h + padding, 
-      w + (padding<<1), 
-      h + (padding<<1), 
-      color, TRUE );
-
-    wii_gx_drawtext( x, y, pixelSize, text, ftgxWhite, FTGX_ALIGN_BOTTOM ); 
-
-    if( wii_coleco_db_entry.controlsMode == CONTROLS_MODE_DRIVING_TILT )
-    {      
-      sprintf( text2, "Tilt: %0.2f", Tilt );
-
-      int w = wii_gx_gettextwidth( pixelSize, text2 );
-      int x = -310;
-      int y = -210;
-
-      wii_gx_drawrectangle( 
-        x + -padding, 
-        y + h + padding, 
-        w + (padding<<1), 
-        h + (padding<<1), 
-        color, TRUE );
-
-      wii_gx_drawtext( x, y, pixelSize, text2, ftgxWhite, FTGX_ALIGN_BOTTOM );
-    }
-  }
 }
 
-
-/*
+/**
  * Renders the screen
  */
-static void render_screen()
-{
+static void render_screen() {
     // Normal rendering
-  wii_sdl_put_image_normal( 1 );  
+    wii_sdl_put_image_normal(1);
 
-  // Send to display
-  wii_sdl_flip();
+    // Send to display
+    wii_sdl_flip();
 
-  // Wait for VSync signal 
-  if( wii_vsync == VSYNC_ENABLED ) VIDEO_WaitVSync();
+    // Wait for VSync signal
+    if (wii_vsync == VSYNC_ENABLED)
+        VIDEO_WaitVSync();
 }
 
 /**
@@ -528,41 +487,37 @@ static void render_screen()
  * @return  The ticks since SDL initialization
  */
 static u64 getTicks() {
-  u64 ticks = SDL_GetTicks();
-  return ticks * 100;
+    u64 ticks = SDL_GetTicks();
+    return ticks * 100;
 }
 
 /** RefreshScreen() ******************************************/
 /** Refresh screen. This function is called in the end of   **/
 /** refresh cycle to show the entire screen.                **/
 /*************************************************************/
-void RefreshScreen(void *Buffer,int Width,int Height)
-{
-  // Render the screen
-  render_screen();
+void RefreshScreen(void* Buffer, int Width, int Height) {
+    // Render the screen
+    render_screen();
 
-  // Wait if needed
-  if( ResetTiming )
-  {
-    NextTick = getTicks() + TicksPerUpdate;
+    // Wait if needed
+    if (ResetTiming) {
+        NextTick = getTicks() + TicksPerUpdate;
 
-    if( wii_debug )
-    {
-      TimerCount = 0;
-      StartTick = getTicks();
+        if (wii_debug) {
+            TimerCount = 0;
+            StartTick = getTicks();
+        }
+
+        ResetTiming = FALSE;
+    } else {
+        do {
+            CurrentTick = getTicks();
+        } while (CurrentTick < NextTick);
+        NextTick += TicksPerUpdate;
+
+        if (wii_debug) {
+            FpsCounter =
+                (((float)TimerCount++ / (CurrentTick - StartTick)) * 100000.0);
+        }
     }
-
-    ResetTiming = FALSE;
-  }
-  else
-  {
-    do { CurrentTick = getTicks(); }
-    while (CurrentTick < NextTick);
-    NextTick += TicksPerUpdate;  
-
-    if( wii_debug )
-    {
-      FpsCounter = (((float)TimerCount++/(CurrentTick-StartTick))*100000.0);
-    }
-  }
 }

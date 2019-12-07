@@ -91,6 +91,8 @@ s16 menu_cur_idx = -1;
 int wii_menu_sel_offset = 0;
 // The menu selection color
 RGBA wii_menu_sel_color = { 0, 0, 0xC0, 0 };
+// Double strike mode
+BOOL wii_double_strike_mode = FALSE;
 // Whether the WII is in widescreen mode
 BOOL is_widescreen = FALSE;
 // Full widescreen

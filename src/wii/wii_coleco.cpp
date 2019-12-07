@@ -48,6 +48,8 @@ void WII_ChangeSquare(int xscale, int yscale, int xshift, int yshift);
 void WII_SetFilter(BOOL filter);
 void WII_SetDefaultVideoMode();
 void WII_SetStandardVideoMode(int xscale, int yscale, int width);
+void WII_SetDoubleStrikeVideoMode(int xscale, int yscale, int width);
+void WII_SetInterlaceVideoMode(int xscale, int yscale, int width);
 }
 
 /** The last ColecoVision cartridge hash */
@@ -151,14 +153,16 @@ extern "C" void wii_get_screen_size(int inX, int inY, int* x, int* y) {
 /**
  * Sets the video mode for the Wii
  *
- * @param   allowVi Whether to allow the GX+VI mode
+ * @param   allowVi Whether to allow VI-based modes (GX+VI and Double-strike)
  */
 void wii_set_video_mode(BOOL allowVi) {
     // Get the screen size
     int x, y;
     wii_get_screen_size(wii_screen_x, wii_screen_y, &x, &y);
 
-    if (allowVi && wii_gx_vi_scaler) {
+    if (allowVi && wii_double_strike_mode) {
+        WII_SetDoubleStrikeVideoMode(x, y >> 1, TMS9918_WIDTH);
+    } else if (allowVi && wii_gx_vi_scaler) {
         // VI+GX
         WII_SetStandardVideoMode(x, y, TMS9918_WIDTH);
     } else {
@@ -192,7 +196,8 @@ void wii_handle_run() {
 
         // Clear the screen prior to exiting
         wii_sdl_black_screen();
-        if (wii_gx_vi_scaler) {
+        wii_sdl_black_screen();
+        if (wii_gx_vi_scaler || wii_double_strike_mode) {
             WII_VideoStart();
             wii_set_video_mode(TRUE);
             WII_VideoStop();
