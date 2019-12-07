@@ -64,7 +64,7 @@
 #define EEPROM_24C256   2
 
 // Max frames default
-#define MAX_FRAMES_DEFAULT      0
+#define MAX_FRAMES_DEFAULT  0
 
 // Overlay
 #define OVERLAY_DEFAULT    0
@@ -80,151 +80,147 @@
 /** The count of Coleco button names */
 #define COLECO_BUTTON_NAME_COUNT 19
 
-/*
- * Coleco overlay 
+/**
+ * Coleco overlay
  */
-typedef struct ColecoOverlay
-{
-  char keypOverlay[WII_MAX_PATH];   // The keypad overlay
-  RGBA keypSelKeyRgba;  // The keypad selected key color
-  u16 keypSelKeyW;      // The keypad selected key width
-  u16 keypSelKeyH;      // The keypad selected key height
-  u16 keypOffX;         // The keypad x offset
-  u16 keypOffY;         // The keypad y offset
-  u16 keypGapX;         // The keypad x gap
-  u16 keypGapY;         // The keypad y gap
+typedef struct ColecoOverlay {
+    char keypOverlay[WII_MAX_PATH];  // The keypad overlay
+    RGBA keypSelKeyRgba;             // The keypad selected key color
+    u16 keypSelKeyW;                 // The keypad selected key width
+    u16 keypSelKeyH;                 // The keypad selected key height
+    u16 keypOffX;                    // The keypad x offset
+    u16 keypOffY;                    // The keypad y offset
+    u16 keypGapX;                    // The keypad x gap
+    u16 keypGapY;                    // The keypad y gap
 } ColecoOverlay;
 
-/*
- * Coleco database entry 
+/**
+ * Coleco database entry
  */
-typedef struct ColecoDBEntry
-{
-  char name[255];       // The name of the game
-  u8 controlsMode;      // The controller mode
-  u8 wiiMoteHorizontal; // Whether the WiiMote is horizontal  
-  u32 flags;            // Special flags
-  u8 loaded;            // Whether the settings were loaded 
-  u8 sensitivity;       // How sensitive the controller is
-  u8 keypadPause;       // Whether keypad display should pause emulator
-  u8 keypadSize;        // The size of the keypad
-  u8 overlayMode;       // Whether the overlay is enabled/disabled/default
-  s32 cycleAdjust;      // Adjust the cycles per scanline (hack)
-  s32 maxFrames;        // Maximum frames
-  u8 eeprom;            // EEPROM
-  u32 button[MAPPED_BUTTON_COUNT];  // Button mappings  
-  char buttonDesc[COLECO_BUTTON_NAME_COUNT][255]; // Button description
-  ColecoOverlay overlay;
+typedef struct ColecoDBEntry {
+    char name[255];        // The name of the game
+    u8 controlsMode;       // The controller mode
+    u8 wiiMoteHorizontal;  // Whether the WiiMote is horizontal
+    u32 flags;             // Special flags
+    u8 loaded;             // Whether the settings were loaded
+    u8 sensitivity;        // How sensitive the controller is
+    u8 keypadPause;        // Whether keypad display should pause emulator
+    u8 keypadSize;         // The size of the keypad
+    u8 overlayMode;        // Whether the overlay is enabled/disabled/default
+    s32 cycleAdjust;       // Adjust the cycles per scanline (hack)
+    s32 maxFrames;         // Maximum frames
+    u8 eeprom;             // EEPROM
+    u32 button[MAPPED_BUTTON_COUNT];                 // Button mappings
+    char buttonDesc[COLECO_BUTTON_NAME_COUNT][255];  // Button description
+    ColecoOverlay overlay;
 } ColecoDBEntry;
 
-/*
- * Structure for mapping button values to button names 
+/**
+ * Structure for mapping button values to button names
  */
-typedef struct ColecoButtonName
-{ 
-  u32 button;   // The button value
-  const char *name;   // The button name
+typedef struct ColecoButtonName {
+    u32 button;        // The button value
+    const char* name;  // The button name
 } ColecoButtonName;
 
-/*
- * Descriptions of the different Wii mappable buttons. 
+/**
+ * Descriptions of the different Wii mappable buttons.
  *
- * It is important to note that a particular "button" index is mapped to a 
- * ColecoVision button. For example, if "Button 1" were mapped to the 
- * Coleco's right fire button. This means that the WiiMote's 1 
- * button, the NunChuck's Z button, the GameCube's B button and the 
+ * It is important to note that a particular "button" index is mapped to a
+ * ColecoVision button. For example, if "Button 1" were mapped to the
+ * Coleco's right fire button. This means that the WiiMote's 1
+ * button, the NunChuck's Z button, the GameCube's B button and the
  * Classic Controller's B button will be mapped to the right fire button.
  *
- * The assignments of Wii controller buttons to their assigned "button" 
+ * The assignments of Wii controller buttons to their assigned "button"
  * index (1-8) cannot be changed.
  */
 extern const char* WiiButtonDescriptions[MAPPED_BUTTON_COUNT][CONTROLLER_NAME_COUNT];
 
-/*
- * The names of the Wii controllers 
+/**
+ * The names of the Wii controllers
  */
 extern const char* WiiControllerNames[CONTROLLER_NAME_COUNT];
 
-/*
+/**
  * The Coleco button values and their associated names
  */
 extern ColecoButtonName ButtonNames[COLECO_BUTTON_NAME_COUNT];
 
-/*
+/**
  * Copies the name of the button with the specified value into the
  * buffer
  *
- * buff       The buffer to copy the name into
- * buffsize   The size of the buffer
- * value      The value of the button
- * entry      The database entry
+ * @param   buff The buffer to copy the name into
+ * @param   buffsize The size of the buffer
+ * @param   value The value of the button
+ * @param   entry The database entry
  */
-extern void wii_coleco_db_get_button_name( 
-    char* buff, int buffsize, u32 value, ColecoDBEntry* entry );
+void wii_coleco_db_get_button_name(char* buff,
+                                   int buffsize,
+                                   u32 value,
+                                   ColecoDBEntry* entry);
 
-/*
+/**
  * Returns the index of the button in the list of mappable buttons
  *
- * value    The button value;
- * return   The index of the button in the list of mappable buttons
+ * @param   value The button value;
+ * @return  The index of the button in the list of mappable buttons
  */
-extern int wii_coleco_db_get_button_index( u32 value );
+int wii_coleco_db_get_button_index(u32 value);
 
-/*
+/**
  * Returns the database entry for the game with the specified hash
  *
- * hash	  The hash of the game
- * entry  The entry to populate for the specified game
+ * @param   hash The hash of the game
+ * @param   entry The entry to populate for the specified game
  */
-extern void wii_coleco_db_get_entry( char* hash, ColecoDBEntry* entry );
+void wii_coleco_db_get_entry(char* hash, ColecoDBEntry* entry);
 
-/*
+/**
  * Writes the specified entry to the database for the game with the specified
  * hash.
  *
- * hash		The hash of the game
- * entry	The entry to write to the database
- * return	Whether the write was successful
+ * @param   hash The hash of the game
+ * @param   entryThe entry to write to the database (null to delete the entry)
+ * @return  Whether the write was successful
  */
-extern int wii_coleco_db_write_entry( char* hash, ColecoDBEntry *entry );
+int wii_coleco_db_write_entry(char* hash, ColecoDBEntry* entry);
 
-/*
+/**
  * Deletes the entry from the database with the specified hash
  *
- * hash		The hash of the game
- * return	Whether the delete was successful
+ * @param   hash The hash of the game
+ * @return  Whether the delete was successful
  */
-extern int wii_coleco_db_delete_entry( char* hash );
+int wii_coleco_db_delete_entry(char* hash);
 
-/*
+/**
  * Populates the specified entry with default values. The default values
  * are based on the "controlsMode" in the specified entry.
  *
- * entry      The entry to populate with default values
- * fullClear  Whether to fully clear the entry
+ * @param   entry The entry to populate with default values
+ * @param   fullClear Whether to fully clear the entry
  */
-extern void wii_coleco_db_get_defaults( 
-  ColecoDBEntry* entry, BOOL fullClear );
+void wii_coleco_db_get_defaults(ColecoDBEntry* entry, BOOL fullClear);
 
-/*
+/**
  * Returns whether the button at the specified index is available for
  * the specified mode.
  *
- * index    The button index
- * mode     The controller mode
- * return   Whether the button is available for the specified mode
+ * @param   index The button index
+ * @param   mode The controller mode
+ * @return  Whether the button is available for the specified mode
  */
-extern int wii_coleco_db_is_button_available( u16 index, u8 mode );
+int wii_coleco_db_is_button_available(u16 index, u8 mode);
 
-
-/* 
+/**
  * Returns the description for the button with the specified value
  *
- * value    The button value
- * entry    The entry containing the button descriptions
- * return   The description for the button with the specified value
+ * @param   value The button value
+ * @param   entry The entry containing the button descriptions
+ * @return  The description for the button with the specified value
  */
-extern char* wii_coleco_db_get_button_description( 
-  u32 value, ColecoDBEntry *entry );
+char* wii_coleco_db_get_button_description(u32 value, ColecoDBEntry* entry);
 
 #endif

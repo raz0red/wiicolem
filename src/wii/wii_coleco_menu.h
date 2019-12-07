@@ -29,9 +29,9 @@
 #ifndef WII_COLECO_MENU_H
 #define WII_COLECO_MENU_H
 
-/*
+/**
  * Initializes the ColecoVision menu
  */
-extern void wii_coleco_menu_init();
+void wii_coleco_menu_init();
 
 #endif

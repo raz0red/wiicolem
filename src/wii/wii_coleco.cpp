@@ -32,24 +32,22 @@
 #include "wii_config.h"
 #include "wii_input.h"
 #include "wii_sdl.h"
-
 #include "wii_coleco.h"
 #include "wii_coleco_keypad.h"
 #include "wii_coleco_menu.h"
 
 #include "FreeTypeGX.h"
-
 #include "font_ttf.h"
 
 /** SDL Video external references */
 extern "C" {
-  void WII_SetWidescreen(int wide);
-  void WII_VideoStop();
-  void WII_VideoStart();
-  void WII_ChangeSquare(int xscale, int yscale, int xshift, int yshift);
-  void WII_SetFilter( BOOL filter );
-  void WII_SetDefaultVideoMode();
-  void WII_SetStandardVideoMode( int xscale, int yscale, int width );
+void WII_SetWidescreen(int wide);
+void WII_VideoStop();
+void WII_VideoStart();
+void WII_ChangeSquare(int xscale, int yscale, int xshift, int yshift);
+void WII_SetFilter(BOOL filter);
+void WII_SetDefaultVideoMode();
+void WII_SetStandardVideoMode(int xscale, int yscale, int width);
 }
 
 /** The last ColecoVision cartridge hash */
@@ -79,7 +77,7 @@ int wii_screen_x = DEFAULT_SCREEN_X;
 /** The screen Y size */
 int wii_screen_y = DEFAULT_SCREEN_Y;
 /** Whether to filter the display */
-BOOL wii_filter = FALSE; 
+BOOL wii_filter = FALSE;
 /** Whether to use the GX/VI scaler */
 BOOL wii_gx_vi_scaler = TRUE;
 /** The current roms directory */
@@ -94,7 +92,7 @@ static char overlays_dir[WII_MAX_PATH] = "";
 /**
  * Initializes the application
  */
-void wii_handle_init() {  
+void wii_handle_init() {
     wii_read_config();
 
     // Startup the SDL
@@ -117,10 +115,9 @@ void wii_handle_init() {
  * Updates whether the Wii is in widescreen mode
  */
 void wii_update_widescreen() {
-    int ws = 
-        (wii_full_widescreen == WS_AUTO ? 
-            is_widescreen : wii_full_widescreen);
-            
+    int ws =
+        (wii_full_widescreen == WS_AUTO ? is_widescreen : wii_full_widescreen);
+
     // Set video to appropriate widescreen adjust
     WII_SetWidescreen(ws);
 }
@@ -133,19 +130,19 @@ void wii_update_widescreen() {
  * @param   x (out) Output x value
  * @param   y (out) Output y value
  */
-extern "C" void wii_get_screen_size(int inX, int inY, int *x, int *y) {
+extern "C" void wii_get_screen_size(int inX, int inY, int* x, int* y) {
     int xs = inX;
-    int ys = inY;      
-    
+    int ys = inY;
+
     // 4:3 correct is applicable and enabled
     if (is_widescreen && wii_16_9_correction) {
-      xs = (xs*3)/4; // Widescreen correct
-    }                
-    
+        xs = (xs * 3) / 4;  // Widescreen correct
+    }
+
     // Round up
-    xs = ((xs+1)&~1);
-    ys = ((ys+1)&~1);      
-    
+    xs = ((xs + 1) & ~1);
+    ys = ((ys + 1) & ~1);
+
     // Set output values
     *x = xs;
     *y = ys;
@@ -163,11 +160,11 @@ void wii_set_video_mode(BOOL allowVi) {
 
     if (allowVi && wii_gx_vi_scaler) {
         // VI+GX
-        WII_SetStandardVideoMode(x, y, TMS9918_WIDTH);      
+        WII_SetStandardVideoMode(x, y, TMS9918_WIDTH);
     } else {
         // Scale the screen (GX)
         WII_SetDefaultVideoMode();
-        WII_SetFilter(wii_filter);      
+        WII_SetFilter(wii_filter);
         WII_ChangeSquare(x, y, 0, 0);
     }
 }
@@ -186,8 +183,8 @@ void wii_handle_free_resources() {
  */
 void wii_handle_run() {
     /* ColEm settings */
-    Verbose=0;
-    UPeriod=100;
+    Verbose = 0;
+    UPeriod = 100;
 
     // Initialize and run ColEm
     if (InitMachine()) {
@@ -199,7 +196,7 @@ void wii_handle_run() {
             WII_VideoStart();
             wii_set_video_mode(TRUE);
             WII_VideoStop();
-        }        
+        }
 
         TrashColeco();
         TrashMachine();
@@ -237,8 +234,8 @@ void wii_set_roms_dir(const char* newDir) {
  */
 char* wii_get_saves_dir() {
     if (saves_dir[0] == '\0') {
-        snprintf(saves_dir, WII_MAX_PATH, "%s%s", 
-            wii_get_fs_prefix(), WII_SAVES_DIR);
+        snprintf(saves_dir, WII_MAX_PATH, "%s%s", wii_get_fs_prefix(),
+                 WII_SAVES_DIR);
     }
     return saves_dir;
 }
@@ -250,8 +247,8 @@ char* wii_get_saves_dir() {
  */
 char* wii_get_states_dir() {
     if (states_dir[0] == '\0') {
-        snprintf(states_dir, WII_MAX_PATH, "%s%s", 
-            wii_get_fs_prefix(), WII_STATES_DIR);
+        snprintf(states_dir, WII_MAX_PATH, "%s%s", wii_get_fs_prefix(),
+                 WII_STATES_DIR);
     }
     return states_dir;
 }
@@ -263,8 +260,8 @@ char* wii_get_states_dir() {
  */
 char* wii_get_overlays_dir() {
     if (overlays_dir[0] == '\0') {
-        snprintf(overlays_dir, WII_MAX_PATH, "%s%s", 
-            wii_get_fs_prefix(), WII_OVERLAYS_DIR);
+        snprintf(overlays_dir, WII_MAX_PATH, "%s%s", wii_get_fs_prefix(),
+                 WII_OVERLAYS_DIR);
     }
     return overlays_dir;
 }
@@ -282,9 +279,7 @@ static u32 get_button_value(u32 current, u8 buttonIndex) {
     // If the value isn't related to the keypad, return it.
     // If it is related to the keypad, ensure no other keypad
     // button is currently pressed.
-    return 
-        (!(val & JST_KEYPAD) ? 
-            val : ((current & JST_KEYPAD) ? 0 : val));
+    return (!(val & JST_KEYPAD) ? val : ((current & JST_KEYPAD) ? 0 : val));
 }
 
 /**
@@ -305,21 +300,21 @@ u32 wii_coleco_poll_joystick(int joyIndex) {
     u8 isClassic = (exp.type == WPAD_EXP_CLASSIC);
 
     // Whether we allow input from the left analog joystick
-    s8 allowAnalogLjs = (
-        wii_coleco_db_entry.controlsMode == CONTROLS_MODE_STANDARD ||
-        wii_coleco_db_entry.controlsMode == CONTROLS_MODE_SUPERACTION);
+    s8 allowAnalogLjs =
+        (wii_coleco_db_entry.controlsMode == CONTROLS_MODE_STANDARD ||
+         wii_coleco_db_entry.controlsMode == CONTROLS_MODE_SUPERACTION);
 
     // Whether we allow input from the right analog joystick
     s8 allowAnalogRjs =
         (wii_coleco_db_entry.controlsMode == CONTROLS_MODE_STANDARD) ||
-            ((wii_coleco_db_entry.controlsMode == CONTROLS_MODE_SUPERACTION) &&
-             (wii_coleco_db_entry.flags&DISABLE_SPINNER));    
+        ((wii_coleco_db_entry.controlsMode == CONTROLS_MODE_SUPERACTION) &&
+         (wii_coleco_db_entry.flags & DISABLE_SPINNER));
 
     // Whether the Wiimote is horizontal
     u8 wmHorizontal = wii_coleco_db_entry.wiiMoteHorizontal;
 
     // Whether Keypad as D-Pad is enabled
-    u8 kPadAsDpad = wii_coleco_db_entry.flags&KPAD_AS_DPAD;
+    u8 kPadAsDpad = wii_coleco_db_entry.flags & KPAD_AS_DPAD;
 
     float expX = 0, expY = 0, expRjsX = 0, expRjsY = 0;
     s8 gcX = 0, gcY = 0, gcRjsX = 0, gcRjsY = 0;
@@ -341,91 +336,85 @@ u32 wii_coleco_poll_joystick(int joyIndex) {
     }
 
     // Right
-    if (wii_digital_right(wmHorizontal, 1, held) || 
-        (gcHeld & GC_BUTTON_CV_RIGHT) ||
-        (wii_analog_right(expX, gcX)) || 
+    if (wii_digital_right(wmHorizontal, 1, held) ||
+        (gcHeld & GC_BUTTON_CV_RIGHT) || (wii_analog_right(expX, gcX)) ||
         (!kPadAsDpad && wii_analog_right(expRjsX, gcRjsX))) {
-        I|=JST_RIGHT;
+        I |= JST_RIGHT;
     }
     // Left
     if (wii_digital_left(wmHorizontal, 0, held) ||
-        (isClassic ? (held & WII_CLASSIC_CV_LEFT) : 0) || 
-        (gcHeld & GC_BUTTON_CV_LEFT) || 
-        (wii_analog_left(expX, gcX)) ||
+        (isClassic ? (held & WII_CLASSIC_CV_LEFT) : 0) ||
+        (gcHeld & GC_BUTTON_CV_LEFT) || (wii_analog_left(expX, gcX)) ||
         (!kPadAsDpad && wii_analog_left(expRjsX, gcRjsX))) {
-        I|=JST_LEFT;
+        I |= JST_LEFT;
     }
     // Down
-    if (wii_digital_down( wmHorizontal, 1, held) || 
-        (gcHeld & GC_BUTTON_CV_DOWN) || 
-        (wii_analog_down(expY, gcY)) || 
+    if (wii_digital_down(wmHorizontal, 1, held) ||
+        (gcHeld & GC_BUTTON_CV_DOWN) || (wii_analog_down(expY, gcY)) ||
         (!kPadAsDpad && wii_analog_down(expRjsY, gcRjsY))) {
-        I|=JST_DOWN;
+        I |= JST_DOWN;
     }
     // Up
     if (wii_digital_up(wmHorizontal, 0, held) ||
-        (isClassic ? (held & WII_CLASSIC_CV_UP) : 0) || 
-        (gcHeld & GC_BUTTON_CV_UP) || 
-        (wii_analog_up(expY, gcY)) ||
+        (isClassic ? (held & WII_CLASSIC_CV_UP) : 0) ||
+        (gcHeld & GC_BUTTON_CV_UP) || (wii_analog_up(expY, gcY)) ||
         (!kPadAsDpad && wii_analog_up(expRjsY, gcRjsY))) {
-        I|=JST_UP;
+        I |= JST_UP;
     }
     // Button 1
-    if (held & (WII_BUTTON_CV_1 | 
-        (isClassic ? WII_CLASSIC_CV_1 : WII_NUNCHECK_CV_1)) || 
-            gcHeld & GC_BUTTON_CV_1) {
-        I|=get_button_value(I, 0);
+    if (held & (WII_BUTTON_CV_1 |
+                (isClassic ? WII_CLASSIC_CV_1 : WII_NUNCHECK_CV_1)) ||
+        gcHeld & GC_BUTTON_CV_1) {
+        I |= get_button_value(I, 0);
     }
     // Button 2
-    if (held & (WII_BUTTON_CV_2 | 
-        (isClassic ? WII_CLASSIC_CV_2 : WII_NUNCHECK_CV_2)) || 
-            gcHeld & GC_BUTTON_CV_2) {
-        I|=get_button_value(I, 1);
+    if (held & (WII_BUTTON_CV_2 |
+                (isClassic ? WII_CLASSIC_CV_2 : WII_NUNCHECK_CV_2)) ||
+        gcHeld & GC_BUTTON_CV_2) {
+        I |= get_button_value(I, 1);
     }
     // Button 3
-    if (held & (WII_BUTTON_CV_3 | WII_CLASSIC_CV_3) || 
+    if (held & (WII_BUTTON_CV_3 | WII_CLASSIC_CV_3) ||
         gcHeld & GC_BUTTON_CV_3) {
-        I|=get_button_value(I, 2);
+        I |= get_button_value(I, 2);
     }
     // Button 4
-    if (held & (WII_BUTTON_CV_4 | WII_CLASSIC_CV_4) || 
+    if (held & (WII_BUTTON_CV_4 | WII_CLASSIC_CV_4) ||
         gcHeld & GC_BUTTON_CV_4) {
-        I|=get_button_value(I, 3);
+        I |= get_button_value(I, 3);
     }
     // Button 5
     if (held & WII_CLASSIC_CV_5 || gcHeld & GC_BUTTON_CV_5) {
-        I|=get_button_value(I, 4);
+        I |= get_button_value(I, 4);
     }
     // Button 6
     if (held & WII_CLASSIC_CV_6 || gcHeld & GC_BUTTON_CV_6) {
-        I|=get_button_value(I, 5);
+        I |= get_button_value(I, 5);
     }
     // Button 7
     if (held & WII_CLASSIC_CV_7) {
-        I|=get_button_value( I, 6 );
+        I |= get_button_value(I, 6);
     }
     // Button 8
     if (held & WII_CLASSIC_CV_8) {
-        I|=get_button_value( I, 7 );
+        I |= get_button_value(I, 7);
     }
 
     // Only if in Keypad as D-PAD via Analog mode and
     // a keypad button has not been pressed
-    if (kPadAsDpad && !(I & JST_KEYPAD)) { 
+    if (kPadAsDpad && !(I & JST_KEYPAD)) {
         if (wii_analog_left(expRjsX, gcRjsX)) {
-            I|=wii_analog_up(expRjsY, gcRjsY) ?
-                JST_1 :
-                    wii_analog_down(expRjsY, gcRjsY) ?
-                        JST_7 : JST_4;
+            I |= wii_analog_up(expRjsY, gcRjsY)
+                     ? JST_1
+                     : wii_analog_down(expRjsY, gcRjsY) ? JST_7 : JST_4;
         } else if (wii_analog_right(expRjsX, gcRjsX)) {
-            I|=wii_analog_up(expRjsY, gcRjsY) ?
-                JST_3 :
-                    wii_analog_down(expRjsY, gcRjsY) ?
-                        JST_9 : JST_6;
+            I |= wii_analog_up(expRjsY, gcRjsY)
+                     ? JST_3
+                     : wii_analog_down(expRjsY, gcRjsY) ? JST_9 : JST_6;
         } else if (wii_analog_up(expRjsY, gcRjsY)) {
-            I|=JST_2;
+            I |= JST_2;
         } else if (wii_analog_down(expRjsY, gcRjsY)) {
-            I|= JST_8;
+            I |= JST_8;
         }
     }
 

@@ -31,32 +31,33 @@
 
 #include <gctypes.h>
 
-/*
+/**
  * Starts the emulator for the specified rom file.
  *
- * romfile  The rom file to run in the emulator
- * savefile The name of the save file to load. If this value is NULL, no save
- *          is explicitly loaded (auto-load may occur). If the value is "", 
- *          no save is loaded and auto-load is ignored (used for reset).
- * reset    Whether we are resetting the current game
- * resume   Whether we are resuming the current game 
- * return   Whether we were able to start emulation successfully
+ * @param   romfile The rom file to run in the emulator
+ * @param   savefile The name of the save file to load.
+ *          If this value is NULL, no save is explicitly loaded.
+ * @param   reset Whether we are resetting the current game
+ * @param   resume Whether we are resuming the current game
+ * @return  Whether the emulation started successfully
  */
-BOOL wii_start_emulation( 
-  char *romfile, const char *savefile, BOOL reset, BOOL resume ); 
+BOOL wii_start_emulation(char* romfile,
+                         const char* savefile,
+                         BOOL reset,
+                         BOOL resume);
 
-/*
+/**
  * Resumes emulation of the current game
  *
- * return   Whether we were able to resume emulation
+ * @return  Whether we were able to resume emulation
  */
-extern BOOL wii_resume_emulation();
+BOOL wii_resume_emulation();
 
-/*
+/**
  * Resets the current game
  *
- * return   Whether we were able to reset emulation
+ * @return  Whether we were able to reset emulation
  */
-extern BOOL wii_reset_emulation();
+BOOL wii_reset_emulation();
 
 #endif

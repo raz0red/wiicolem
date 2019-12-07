@@ -50,39 +50,39 @@
 #define WII_HEIGHT_DIV2 240
 
 // ColecoVision button mappings
-#define WII_BUTTON_CV_SHOW_KEYPAD ( WPAD_BUTTON_PLUS | WPAD_CLASSIC_BUTTON_PLUS )
-#define GC_BUTTON_CV_SHOW_KEYPAD ( PAD_BUTTON_START )
-#define WII_BUTTON_CV_RIGHT ( WPAD_BUTTON_DOWN | WPAD_CLASSIC_BUTTON_RIGHT )
-#define GC_BUTTON_CV_RIGHT ( PAD_BUTTON_RIGHT )
-#define WII_BUTTON_CV_UP ( WPAD_BUTTON_RIGHT )
-#define GC_BUTTON_CV_UP ( PAD_BUTTON_UP )
-#define WII_CLASSIC_CV_UP ( WPAD_CLASSIC_BUTTON_UP )
-#define WII_BUTTON_CV_DOWN ( WPAD_BUTTON_LEFT | WPAD_CLASSIC_BUTTON_DOWN )
-#define GC_BUTTON_CV_DOWN ( PAD_BUTTON_DOWN )
-#define WII_BUTTON_CV_LEFT ( WPAD_BUTTON_UP )
-#define WII_CLASSIC_CV_LEFT ( WPAD_CLASSIC_BUTTON_LEFT )
-#define GC_BUTTON_CV_LEFT ( PAD_BUTTON_LEFT )
+#define WII_BUTTON_CV_SHOW_KEYPAD   (WPAD_BUTTON_PLUS | WPAD_CLASSIC_BUTTON_PLUS)
+#define GC_BUTTON_CV_SHOW_KEYPAD    (PAD_BUTTON_START)
+#define WII_BUTTON_CV_RIGHT (WPAD_BUTTON_DOWN | WPAD_CLASSIC_BUTTON_RIGHT)
+#define GC_BUTTON_CV_RIGHT  (PAD_BUTTON_RIGHT)
+#define WII_BUTTON_CV_UP    (WPAD_BUTTON_RIGHT)
+#define GC_BUTTON_CV_UP     (PAD_BUTTON_UP)
+#define WII_CLASSIC_CV_UP   (WPAD_CLASSIC_BUTTON_UP)
+#define WII_BUTTON_CV_DOWN  (WPAD_BUTTON_LEFT | WPAD_CLASSIC_BUTTON_DOWN)
+#define GC_BUTTON_CV_DOWN   (PAD_BUTTON_DOWN)
+#define WII_BUTTON_CV_LEFT  (WPAD_BUTTON_UP)
+#define WII_CLASSIC_CV_LEFT (WPAD_CLASSIC_BUTTON_LEFT)
+#define GC_BUTTON_CV_LEFT   (PAD_BUTTON_LEFT)
 
-#define WII_NUNCHECK_CV_1 ( WPAD_NUNCHUK_BUTTON_C )
-#define WII_BUTTON_CV_1   ( WPAD_BUTTON_2 )
-#define GC_BUTTON_CV_1    ( PAD_BUTTON_A )
-#define WII_CLASSIC_CV_1  ( WPAD_CLASSIC_BUTTON_A )
-#define WII_NUNCHECK_CV_2 ( WPAD_NUNCHUK_BUTTON_Z )
-#define WII_BUTTON_CV_2   ( WPAD_BUTTON_1 )
-#define GC_BUTTON_CV_2    ( PAD_BUTTON_B )
-#define WII_CLASSIC_CV_2  ( WPAD_CLASSIC_BUTTON_B )
-#define WII_BUTTON_CV_3   ( WPAD_BUTTON_A )
-#define GC_BUTTON_CV_3    ( PAD_BUTTON_X )
-#define WII_CLASSIC_CV_3  ( WPAD_CLASSIC_BUTTON_X )
-#define WII_BUTTON_CV_4   ( WPAD_BUTTON_B )
-#define GC_BUTTON_CV_4    ( PAD_BUTTON_Y )
-#define WII_CLASSIC_CV_4  ( WPAD_CLASSIC_BUTTON_Y )
-#define GC_BUTTON_CV_5    ( PAD_TRIGGER_R )
-#define WII_CLASSIC_CV_5  ( WPAD_CLASSIC_BUTTON_FULL_R )
-#define GC_BUTTON_CV_6    ( PAD_TRIGGER_L )
-#define WII_CLASSIC_CV_6  ( WPAD_CLASSIC_BUTTON_FULL_L )
-#define WII_CLASSIC_CV_7  ( WPAD_CLASSIC_BUTTON_ZR )
-#define WII_CLASSIC_CV_8  ( WPAD_CLASSIC_BUTTON_ZL )
+#define WII_NUNCHECK_CV_1   (WPAD_NUNCHUK_BUTTON_C)
+#define WII_BUTTON_CV_1     (WPAD_BUTTON_2)
+#define GC_BUTTON_CV_1      (PAD_BUTTON_A)
+#define WII_CLASSIC_CV_1    (WPAD_CLASSIC_BUTTON_A)
+#define WII_NUNCHECK_CV_2   (WPAD_NUNCHUK_BUTTON_Z)
+#define WII_BUTTON_CV_2     (WPAD_BUTTON_1)
+#define GC_BUTTON_CV_2      (PAD_BUTTON_B)
+#define WII_CLASSIC_CV_2    (WPAD_CLASSIC_BUTTON_B)
+#define WII_BUTTON_CV_3     (WPAD_BUTTON_A)
+#define GC_BUTTON_CV_3      (PAD_BUTTON_X)
+#define WII_CLASSIC_CV_3    (WPAD_CLASSIC_BUTTON_X)
+#define WII_BUTTON_CV_4     (WPAD_BUTTON_B)
+#define GC_BUTTON_CV_4      (PAD_BUTTON_Y)
+#define WII_CLASSIC_CV_4    (WPAD_CLASSIC_BUTTON_Y)
+#define GC_BUTTON_CV_5      (PAD_TRIGGER_R)
+#define WII_CLASSIC_CV_5    (WPAD_CLASSIC_BUTTON_FULL_R)
+#define GC_BUTTON_CV_6      (PAD_TRIGGER_L)
+#define WII_CLASSIC_CV_6    (WPAD_CLASSIC_BUTTON_FULL_L)
+#define WII_CLASSIC_CV_7    (WPAD_CLASSIC_BUTTON_ZR)
+#define WII_CLASSIC_CV_8    (WPAD_CLASSIC_BUTTON_ZL)
 
 /** The last ColecoVision cartridge hash */
 extern char wii_cartridge_hash[33];
@@ -111,7 +111,7 @@ extern int wii_screen_x;
 /** The screen Y size */
 extern int wii_screen_y;
 /** Whether to filter the display */
-extern BOOL wii_filter; 
+extern BOOL wii_filter;
 /** Whether to use the GX/VI scaler */
 extern BOOL wii_gx_vi_scaler;
 
@@ -182,7 +182,7 @@ extern "C" {
  * @param   x (out) Output x value
  * @param   y (out) Output y value
  */
-void wii_get_screen_size(int inX, int inY, int *x, int *y);
+void wii_get_screen_size(int inX, int inY, int* x, int* y);
 
 #ifdef __cplusplus
 }
