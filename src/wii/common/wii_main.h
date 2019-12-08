@@ -52,8 +52,6 @@ typedef struct treenode {
   TREENODEPTR *children;
   u16 child_count;
   u16 max_children;
-  s16 x;
-  s16 value_x;
 } TREENODE;
 
 #define WII_MAX_PATH MAXPATHLEN + 1
@@ -80,8 +78,6 @@ extern int wii_vsync;
 extern TREENODEPTR wii_menu_stack[64];
 // The head of the menu stack
 extern s8 wii_menu_stack_head;
-// Two framebuffers (double buffered)
-extern u32 *wii_xfb[2];
 // Whether to quite the menu loop
 extern BOOL wii_menu_quit_loop;
 // Forces the menu to be redrawn
@@ -102,11 +98,15 @@ extern BOOL is_widescreen;
 extern int wii_full_widescreen;
 // USB keep alive
 extern BOOL wii_usb_keepalive;
+// Trap filter
+extern BOOL wii_trap_filter;
 // 16:9 correction
 extern BOOL wii_16_9_correction;
 
 // The display mode (from SDL)
 extern GXRModeObj *vmode;
+// Frame buffers (from SDL)
+extern unsigned int *xfb[2];
 
 /*
  * Creates and returns a new menu tree node

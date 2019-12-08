@@ -35,6 +35,7 @@
 #include "wii_coleco.h"
 #include "wii_coleco_keypad.h"
 #include "wii_coleco_menu.h"
+#include "wii_gx.h"
 
 #include "FreeTypeGX.h"
 #include "font_ttf.h"
@@ -196,11 +197,14 @@ void wii_handle_run() {
 
         // Clear the screen prior to exiting
         wii_sdl_black_screen();
-        wii_sdl_black_screen();
+
         if (wii_gx_vi_scaler || wii_double_strike_mode) {
-            WII_VideoStart();
-            wii_set_video_mode(TRUE);
             WII_VideoStop();
+            wii_gx_push_callback( NULL, FALSE, NULL );    
+            WII_SetDefaultVideoMode();
+            VIDEO_WaitVSync();
+            WII_VideoStart(); 
+            VIDEO_WaitVSync();
         }
 
         TrashColeco();

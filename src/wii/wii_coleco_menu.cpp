@@ -36,6 +36,7 @@
 #include "wii_sdl.h"
 #include "wii_snapshot.h"
 #include "wii_util.h"
+#include "wii_gx.h"
 #include "fileop.h"
 #include "networkop.h"
 
@@ -103,8 +104,6 @@ void wii_coleco_menu_init() {
     wii_add_child(wii_menu_root, states);
 
     child = wii_create_tree_node(NODETYPE_CARTRIDGE_SAVE_STATES_SLOT, "Slot");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(states, child);
 
     child = wii_create_tree_node(NODETYPE_SPACER, "");
@@ -134,35 +133,23 @@ void wii_coleco_menu_init() {
     wii_add_child(cart_settings, child);
 
     child = wii_create_tree_node(NODETYPE_CONTROLS_MODE, "Controller ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(controls, child);
 
     child = wii_create_tree_node(NODETYPE_SENSITIVITY, "Sensitivity ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(controls, child);
 
     child = wii_create_tree_node(NODETYPE_SPINNER, "Spinner ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(controls, child);
 
     child = wii_create_tree_node(NODETYPE_WIIMOTE_HORIZONTAL, "Wiimote ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(controls, child);
 
     child = wii_create_tree_node(NODETYPE_VIEW_AS_CONTROLLER, "(View as) ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(controls, child);
 
     int button;
     for (button = NODETYPE_BUTTON1; button <= NODETYPE_BUTTON8; button++) {
         child = wii_create_tree_node((NODETYPE)button, "Button ");
-        child->x = -2;
-        child->value_x = -3;
         wii_add_child(controls, child);
     }
 
@@ -173,36 +160,24 @@ void wii_coleco_menu_init() {
     wii_add_child(cart_settings, cartadvanced);
 
     child = wii_create_tree_node(NODETYPE_KEYPAD_PAUSE_CART, "Keypad pause ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(cartadvanced, child);
 
     child = wii_create_tree_node(NODETYPE_KEYPAD_SIZE_CART, "Keypad size ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(cartadvanced, child);
 
     child = wii_create_tree_node(NODETYPE_USE_OVERLAY_CART, "Keypad overlay ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(cartadvanced, child);
 
     child = wii_create_tree_node(NODETYPE_SPACER, "");
     wii_add_child(cartadvanced, child);
 
     child = wii_create_tree_node(NODETYPE_CART_SRAM, "Battery-backed SRAM ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(cartadvanced, child);
 
     child = wii_create_tree_node(NODETYPE_OPCODE_MEMORY, "Opcode memory ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(cartadvanced, child);
 
     child = wii_create_tree_node(NODETYPE_EEPROM, "EEPROM ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(cartadvanced, child);
 
     child = wii_create_tree_node(NODETYPE_SPACER, "");
@@ -210,13 +185,9 @@ void wii_coleco_menu_init() {
 
     child =
         wii_create_tree_node(NODETYPE_MAX_FRAMES_CART, "Maximum frame rate ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(cartadvanced, child);
 
     child = wii_create_tree_node(NODETYPE_CYCLE_ADJUST, "Cycle adjust ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(cartadvanced, child);
 
     // Save/Revert/Delete
@@ -258,106 +229,70 @@ void wii_coleco_menu_init() {
     wii_add_child(advanced, child);
 
     child = wii_create_tree_node(NODETYPE_RESIZE_SCREEN, "Screen size ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(display, child);
 
     child = wii_create_tree_node(NODETYPE_VSYNC, "Vertical sync ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(display, child);
 
     child = wii_create_tree_node(NODETYPE_MAX_FRAMES, "Maximum frame rate ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(display, child);
 
     child = wii_create_tree_node(NODETYPE_FULL_WIDESCREEN, "Full widescreen ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(display, child);
 
     child = wii_create_tree_node(NODETYPE_16_9_CORRECTION, "16:9 correction ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(display, child);
 
     child =
         wii_create_tree_node(NODETYPE_DOUBLE_STRIKE, "Double strike (240p)");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(display, child);
 
     child = wii_create_tree_node(NODETYPE_GX_VI_SCALER, "Scaler ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(display, child);
 
     child = wii_create_tree_node(NODETYPE_FILTER, "Bilinear filter ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(display, child);
 
     child = wii_create_tree_node(NODETYPE_SPACER, "");
     wii_add_child(display, child);
 
     child = wii_create_tree_node(NODETYPE_PALETTE, "Palette ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(display, child);
 
     child =
         wii_create_tree_node(NODETYPE_SHOW_ALL_SPRITES, "Show all sprites ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(display, child);
 
     child = wii_create_tree_node(NODETYPE_KEYPAD_PAUSE, "Keypad pause ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(advanced, child);
 
     child = wii_create_tree_node(NODETYPE_KEYPAD_SIZE, "Keypad size ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(advanced, child);
 
     child = wii_create_tree_node(NODETYPE_USE_OVERLAY, "Keypad overlays ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(advanced, child);
 
     child =
         wii_create_tree_node(NODETYPE_SUPER_GAME_MODULE, "Super Game Module ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(advanced, child);
 
     child = wii_create_tree_node(NODETYPE_SPACER, "");
     wii_add_child(advanced, child);
 
     child = wii_create_tree_node(NODETYPE_VOLUME, "Volume ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(advanced, child);
 
     child = wii_create_tree_node(NODETYPE_TOP_MENU_EXIT, "Top menu exit ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(advanced, child);
 
     child =
         wii_create_tree_node(NODETYPE_WIIMOTE_MENU_ORIENT, "Wiimote (menu) ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(advanced, child);
 
     child = wii_create_tree_node(NODETYPE_SPACER, "");
     wii_add_child(advanced, child);
 
     child = wii_create_tree_node(NODETYPE_DEBUG_MODE, "Debug mode ");
-    child->x = -2;
-    child->value_x = -3;
     wii_add_child(advanced, child);
 
     wii_menu_push(wii_menu_root);
@@ -399,7 +334,7 @@ void wii_menu_handle_get_header(TREENODE* menu, char* buffer) {
  */
 void wii_menu_handle_get_footer(TREENODE* menu, char* buffer) {
     if (loading_game) {
-        snprintf(buffer, WII_MENU_BUFF_SIZE, gettextmsg("Loading game..."));
+        snprintf(buffer, WII_MENU_BUFF_SIZE, " ");
     } else {
         switch (menu->node_type) {
             case NODETYPE_LOAD_ROM:
@@ -706,315 +641,338 @@ void wii_menu_handle_get_node_name(TREENODE* node, char* buffer, char* value) {
 void wii_menu_handle_select_node(TREENODE* node) {
     char buff[WII_MAX_PATH];
 
-    switch (node->node_type) {
-        case NODETYPE_RESIZE_SCREEN: {
-            wii_resize_screen_draw_border(blit_surface, 0, COLECO_HEIGHT);
-            wii_sdl_put_image_normal(1);
-            wii_sdl_flip();
-            resize_info rinfo = {(float)DEFAULT_SCREEN_X,
-                                 (float)DEFAULT_SCREEN_Y, (float)wii_screen_x,
-                                 (float)wii_screen_y};
-            wii_resize_screen_gui(&rinfo);
-            wii_screen_x = rinfo.currentX;
-            wii_screen_y = rinfo.currentY;
-        } break;
-        case NODETYPE_FULL_WIDESCREEN:
-            wii_full_widescreen++;
-            if (wii_full_widescreen > WS_AUTO) {
-                wii_full_widescreen = 0;
-            }
-            wii_update_widescreen();
-            break;
-        case NODETYPE_VOLUME:
-            wii_volume++;
-            if (wii_volume > 15) {
-                wii_volume = 0;
-            }
-            break;
-        case NODETYPE_SAVE_STATE:
-            wii_save_snapshot(NULL, TRUE);
-            break;
-        case NODETYPE_CARTRIDGE_SAVE_STATES_SLOT:
-            wii_snapshot_next();
-            break;
-        case NODETYPE_MAX_FRAMES:
-            ++wii_max_frames;
-            if (wii_max_frames > 80) {
-                wii_max_frames = 30;
-            }
-            break;
-        case NODETYPE_MAX_FRAMES_CART:
-            ++wii_coleco_db_entry.maxFrames;
-            if (wii_coleco_db_entry.maxFrames > 80) {
-                wii_coleco_db_entry.maxFrames = MAX_FRAMES_DEFAULT;
-            } else if (wii_coleco_db_entry.maxFrames < 30) {
-                wii_coleco_db_entry.maxFrames = 30;
-            }
-            break;
-        case NODETYPE_EEPROM:
-            wii_coleco_db_entry.eeprom++;
-            if (wii_coleco_db_entry.eeprom > EEPROM_24C256) {
-                wii_coleco_db_entry.eeprom = 0;
-            }
-            break;
-        case NODETYPE_CYCLE_ADJUST:
-            wii_coleco_db_entry.cycleAdjust++;
-            if (wii_coleco_db_entry.cycleAdjust == 51) {
-                wii_coleco_db_entry.cycleAdjust = -50;
-            }
-            break;
-        case NODETYPE_KEYPAD_PAUSE_CART:
-            wii_coleco_db_entry.keypadPause++;
-            if (wii_coleco_db_entry.keypadPause > KEYPAD_PAUSE_DISABLED) {
-                wii_coleco_db_entry.keypadPause = 0;
-            }
-            break;
-        case NODETYPE_KEYPAD_SIZE_CART:
-            wii_coleco_db_entry.keypadSize++;
-            if (wii_coleco_db_entry.keypadSize > KEYPAD_SIZE_LARGE) {
-                wii_coleco_db_entry.keypadSize = KEYPAD_SIZE_DEFAULT;
-            }
-            break;
-        case NODETYPE_USE_OVERLAY_CART:
-            wii_coleco_db_entry.overlayMode++;
-            if (wii_coleco_db_entry.overlayMode > OVERLAY_DISABLED) {
-                wii_coleco_db_entry.overlayMode = 0;
-            }
-            break;
-        case NODETYPE_VSYNC:
-            wii_set_vsync(wii_vsync ^ 1);
-            break;
-        case NODETYPE_ROM:
-            snprintf(buff, sizeof(buff), "%s%s", wii_get_roms_dir(),
-                     node->name);
-            loading_game = TRUE;
-            if (wii_start_emulation(buff, NULL, FALSE, FALSE)) {
-                last_rom_index = wii_menu_get_current_index();
-                ResetAudio();
-                wii_menu_quit_loop = 1;
-            }
-            loading_game = FALSE;
-            break;
-        case NODETYPE_RESUME:
-            if (wii_resume_emulation()) {
-                wii_menu_quit_loop = 1;
-            }
-            break;
-        case NODETYPE_RESET:
-            if (wii_reset_emulation()) {
-                ResetAudio();
-                wii_menu_quit_loop = 1;
-            }
-            break;
-        case NODETYPE_TOP_MENU_EXIT:
-            wii_top_menu_exit ^= 1;
-            break;
-        case NODETYPE_WIIMOTE_MENU_ORIENT:
-            wii_mote_menu_vertical ^= 1;
-            break;
-        case NODETYPE_DEBUG_MODE:
-            wii_debug ^= 1;
-            break;
-        case NODETYPE_SUPER_GAME_MODULE:
-            wii_super_game_module ^= 1;
-            break;
-        case NODETYPE_16_9_CORRECTION:
-            wii_16_9_correction ^= 1;
-            break;
-        case NODETYPE_DOUBLE_STRIKE:
-            wii_double_strike_mode ^= 1;
-            break;
-        case NODETYPE_FILTER:
-            wii_filter ^= 1;
-            break;
-        case NODETYPE_GX_VI_SCALER:
-            wii_gx_vi_scaler ^= 1;
-            break;
-        case NODETYPE_KEYPAD_PAUSE:
-            wii_keypad_pause ^= 1;
-            break;
-        case NODETYPE_KEYPAD_SIZE:
-            wii_keypad_size++;
-            if (wii_keypad_size > KEYPAD_SIZE_LARGE) {
-                wii_keypad_size = KEYPAD_SIZE_SMALL;
-            }
-            break;
-        case NODETYPE_USE_OVERLAY:
-            wii_use_overlay ^= 1;
-            break;
-        case NODETYPE_ROOT_DRIVE:
-        case NODETYPE_UPDIR:
-        case NODETYPE_DIR:
-            if (node->node_type == NODETYPE_ROOT_DRIVE) {
-                char path[WII_MAX_PATH];
-                snprintf(path, sizeof(path), "%s/", node->name);
-                wii_set_roms_dir(path);
-                mount_pending = TRUE;
-            } else if (node->node_type == NODETYPE_UPDIR) {
-                const char* romsDir = wii_get_roms_dir();
-                int len = strlen(romsDir);
-                if (len > 1 && romsDir[len - 1] == '/') {
-                    char dirpart[WII_MAX_PATH] = "";
-                    char filepart[WII_MAX_PATH] = "";
-                    Util_splitpath(romsDir, dirpart, filepart);
-                    len = strlen(dirpart);
-                    if (len > 0) {
-                        dirpart[len] = '/';
-                        dirpart[len + 1] = '\0';
-                    }
-                    wii_set_roms_dir(dirpart);
+    if (node->node_type == NODETYPE_ROM || 
+        node->node_type == NODETYPE_RESUME ||
+        node->node_type == NODETYPE_LOAD_STATE ||
+        node->node_type == NODETYPE_RESET) {
+        switch (node->node_type) {
+            case NODETYPE_LOAD_STATE:
+                if (wii_start_snapshot()) {
+                    ResetAudio();
+                    wii_menu_quit_loop = 1;
+                } else {
+                    // Exit the save states (rom is no longer valid)
+                    wii_menu_pop();
                 }
-            } else {
-                char newDir[WII_MAX_PATH];
-                snprintf(newDir, sizeof(newDir), "%s%s/", wii_get_roms_dir(),
+                break;
+            case NODETYPE_ROM:
+                snprintf(buff, sizeof(buff), "%s%s", wii_get_roms_dir(),
                          node->name);
-                wii_set_roms_dir(newDir);
-            }
-            games_read = FALSE;
-            last_rom_index = 1;
-            break;
-        case NODETYPE_ADVANCED:
-        case NODETYPE_LOAD_ROM:
-        case NODETYPE_DISPLAY_SETTINGS:
-        case NODETYPE_CARTRIDGE_SETTINGS_CURRENT:
-        case NODETYPE_CARTRIDGE_SETTINGS_CONTROLS:
-        case NODETYPE_CARTRIDGE_SETTINGS_ADVANCED:
-        case NODETYPE_CARTRIDGE_SAVE_STATES:
-            wii_menu_push(node);
-            if (node->node_type == NODETYPE_LOAD_ROM) {
-                if (games_read) {
-                    wii_menu_move(node, last_rom_index);
+                loading_game = TRUE;
+                if (wii_start_emulation(buff, NULL, FALSE, FALSE)) {
+                    last_rom_index = wii_menu_get_current_index();
+                    ResetAudio();
+                    wii_menu_quit_loop = 1;
                 }
-            }
-            break;
-        case NODETYPE_LOAD_STATE:
-            if (wii_start_snapshot()) {
-                ResetAudio();
-                wii_menu_quit_loop = 1;
-            } else {
-                // Exit the save states (rom is no longer valid)
-                wii_menu_pop();
-            }
-            break;
-        case NODETYPE_PALETTE:
-            switch (wii_coleco_mode & CV_PALETTE) {
-                case CV_PALETTE0:
-                    wii_coleco_mode =
-                        ((wii_coleco_mode & ~CV_PALETTE) | CV_PALETTE1);
-                    break;
-                case CV_PALETTE1:
-                    wii_coleco_mode =
-                        ((wii_coleco_mode & ~CV_PALETTE) | CV_PALETTE2);
-                    break;
-                default:
-                    wii_coleco_mode =
-                        ((wii_coleco_mode & ~CV_PALETTE) | CV_PALETTE0);
-                    break;
-            }
-            break;
-        case NODETYPE_SHOW_ALL_SPRITES:
-            if (wii_coleco_mode & CV_ALLSPRITE) {
-                wii_coleco_mode &= ~CV_ALLSPRITE;
-            } else {
-                wii_coleco_mode |= CV_ALLSPRITE;
-            }
-            break;
-        case NODETYPE_VIEW_AS_CONTROLLER:
-            ++wii_coleco_controller_view_mode;
-            if (wii_coleco_controller_view_mode == CONTROLLER_NAME_COUNT) {
-                wii_coleco_controller_view_mode = 0;
-            }
-            break;
-        case NODETYPE_BUTTON1:
-        case NODETYPE_BUTTON2:
-        case NODETYPE_BUTTON3:
-        case NODETYPE_BUTTON4:
-        case NODETYPE_BUTTON5:
-        case NODETYPE_BUTTON6:
-        case NODETYPE_BUTTON7:
-        case NODETYPE_BUTTON8: {
-            int index = (node->node_type - NODETYPE_BUTTON1);
-            int btnindex = wii_coleco_db_get_button_index(
-                wii_coleco_db_entry.button[index]);
+                loading_game = FALSE;
+                break;
+            case NODETYPE_RESUME:
+                if (wii_resume_emulation()) {
+                    wii_menu_quit_loop = 1;
+                }
+                break;
+            case NODETYPE_RESET:
+                if (wii_reset_emulation()) {
+                    ResetAudio();
+                    wii_menu_quit_loop = 1;
+                }
+                break;
+            default:
+                /* do nothing */
+                break;
+        }
 
-            while (1) {
-                btnindex++;
-                if (btnindex == COLECO_BUTTON_NAME_COUNT) {
-                    btnindex = 0;
-                }
+        if (wii_menu_quit_loop) {
+            wii_gx_push_callback(NULL, FALSE, NULL);    
+            VIDEO_WaitVSync();
+        }
+    } else {
+        LOCK_RENDER_MUTEX();
 
-                if (wii_coleco_db_is_button_available(
-                        btnindex, wii_coleco_db_entry.controlsMode)) {
-                    break;
+        switch (node->node_type) {            
+            case NODETYPE_RESIZE_SCREEN: {
+                wii_resize_screen_draw_border(blit_surface, 0, COLECO_HEIGHT);
+                wii_sdl_put_image_normal(1);
+                wii_sdl_flip();
+                resize_info rinfo = {(float)DEFAULT_SCREEN_X,
+                                     (float)DEFAULT_SCREEN_Y,
+                                     (float)wii_screen_x, (float)wii_screen_y};
+                wii_resize_screen_gui(&rinfo);
+                wii_screen_x = rinfo.currentX;
+                wii_screen_y = rinfo.currentY;
+            } break;
+            case NODETYPE_FULL_WIDESCREEN:
+                wii_full_widescreen++;
+                if (wii_full_widescreen > WS_AUTO) {
+                    wii_full_widescreen = 0;
                 }
-            }
-            wii_coleco_db_entry.button[index] = ButtonNames[btnindex].button;
-        } break;
-        case NODETYPE_SAVE_CARTRIDGE_SETTINGS:
-            if (wii_coleco_db_entry.name[0] == '\0') {
-                char cartname[WII_MAX_PATH];
-                Util_splitpath(wii_last_rom, NULL, cartname);
-                char* ptr = strrchr(cartname, '.');
-                if (ptr)
-                    *ptr = '\0';
-                Util_strlcpy(wii_coleco_db_entry.name, cartname,
-                             sizeof(wii_coleco_db_entry.name));
-            }
-            if (wii_coleco_db_write_entry(wii_cartridge_hash,
-                                          &wii_coleco_db_entry)) {
-                wii_coleco_db_entry.loaded = 1;
+                break;
+            case NODETYPE_VOLUME:
+                wii_volume++;
+                if (wii_volume > 15) {
+                    wii_volume = 0;
+                }
+                break;
+            case NODETYPE_SAVE_STATE:
+                wii_save_snapshot(NULL, TRUE);
+                break;
+            case NODETYPE_CARTRIDGE_SAVE_STATES_SLOT:
+                wii_snapshot_next();
+                break;
+            case NODETYPE_MAX_FRAMES:
+                ++wii_max_frames;
+                if (wii_max_frames > 80) {
+                    wii_max_frames = 30;
+                }
+                break;
+            case NODETYPE_MAX_FRAMES_CART:
+                ++wii_coleco_db_entry.maxFrames;
+                if (wii_coleco_db_entry.maxFrames > 80) {
+                    wii_coleco_db_entry.maxFrames = MAX_FRAMES_DEFAULT;
+                } else if (wii_coleco_db_entry.maxFrames < 30) {
+                    wii_coleco_db_entry.maxFrames = 30;
+                }
+                break;
+            case NODETYPE_EEPROM:
+                wii_coleco_db_entry.eeprom++;
+                if (wii_coleco_db_entry.eeprom > EEPROM_24C256) {
+                    wii_coleco_db_entry.eeprom = 0;
+                }
+                break;
+            case NODETYPE_CYCLE_ADJUST:
+                wii_coleco_db_entry.cycleAdjust++;
+                if (wii_coleco_db_entry.cycleAdjust == 51) {
+                    wii_coleco_db_entry.cycleAdjust = -50;
+                }
+                break;
+            case NODETYPE_KEYPAD_PAUSE_CART:
+                wii_coleco_db_entry.keypadPause++;
+                if (wii_coleco_db_entry.keypadPause > KEYPAD_PAUSE_DISABLED) {
+                    wii_coleco_db_entry.keypadPause = 0;
+                }
+                break;
+            case NODETYPE_KEYPAD_SIZE_CART:
+                wii_coleco_db_entry.keypadSize++;
+                if (wii_coleco_db_entry.keypadSize > KEYPAD_SIZE_LARGE) {
+                    wii_coleco_db_entry.keypadSize = KEYPAD_SIZE_DEFAULT;
+                }
+                break;
+            case NODETYPE_USE_OVERLAY_CART:
+                wii_coleco_db_entry.overlayMode++;
+                if (wii_coleco_db_entry.overlayMode > OVERLAY_DISABLED) {
+                    wii_coleco_db_entry.overlayMode = 0;
+                }
+                break;
+            case NODETYPE_VSYNC:
+                wii_set_vsync(wii_vsync ^ 1);
+                break;
+            case NODETYPE_TOP_MENU_EXIT:
+                wii_top_menu_exit ^= 1;
+                break;
+            case NODETYPE_WIIMOTE_MENU_ORIENT:
+                wii_mote_menu_vertical ^= 1;
+                break;
+            case NODETYPE_DEBUG_MODE:
+                wii_debug ^= 1;
+                break;
+            case NODETYPE_SUPER_GAME_MODULE:
+                wii_super_game_module ^= 1;
+                break;
+            case NODETYPE_16_9_CORRECTION:
+                wii_16_9_correction ^= 1;
+                break;
+            case NODETYPE_DOUBLE_STRIKE:
+                wii_double_strike_mode ^= 1;
+                break;
+            case NODETYPE_FILTER:
+                wii_filter ^= 1;
+                break;
+            case NODETYPE_GX_VI_SCALER:
+                wii_gx_vi_scaler ^= 1;
+                break;
+            case NODETYPE_KEYPAD_PAUSE:
+                wii_keypad_pause ^= 1;
+                break;
+            case NODETYPE_KEYPAD_SIZE:
+                wii_keypad_size++;
+                if (wii_keypad_size > KEYPAD_SIZE_LARGE) {
+                    wii_keypad_size = KEYPAD_SIZE_SMALL;
+                }
+                break;
+            case NODETYPE_USE_OVERLAY:
+                wii_use_overlay ^= 1;
+                break;
+            case NODETYPE_ROOT_DRIVE:
+            case NODETYPE_UPDIR:
+            case NODETYPE_DIR:
+                if (node->node_type == NODETYPE_ROOT_DRIVE) {
+                    char path[WII_MAX_PATH];
+                    snprintf(path, sizeof(path), "%s/", node->name);
+                    wii_set_roms_dir(path);
+                    mount_pending = TRUE;
+                } else if (node->node_type == NODETYPE_UPDIR) {
+                    const char* romsDir = wii_get_roms_dir();
+                    int len = strlen(romsDir);
+                    if (len > 1 && romsDir[len - 1] == '/') {
+                        char dirpart[WII_MAX_PATH] = "";
+                        char filepart[WII_MAX_PATH] = "";
+                        Util_splitpath(romsDir, dirpart, filepart);
+                        len = strlen(dirpart);
+                        if (len > 0) {
+                            dirpart[len] = '/';
+                            dirpart[len + 1] = '\0';
+                        }
+                        wii_set_roms_dir(dirpart);
+                    }
+                } else {
+                    char newDir[WII_MAX_PATH];
+                    snprintf(newDir, sizeof(newDir), "%s%s/",
+                             wii_get_roms_dir(), node->name);
+                    wii_set_roms_dir(newDir);
+                }
+                games_read = FALSE;
+                last_rom_index = 1;
+                break;
+            case NODETYPE_ADVANCED:
+            case NODETYPE_LOAD_ROM:
+            case NODETYPE_DISPLAY_SETTINGS:
+            case NODETYPE_CARTRIDGE_SETTINGS_CURRENT:
+            case NODETYPE_CARTRIDGE_SETTINGS_CONTROLS:
+            case NODETYPE_CARTRIDGE_SETTINGS_ADVANCED:
+            case NODETYPE_CARTRIDGE_SAVE_STATES:
+                wii_menu_push(node);
+                if (node->node_type == NODETYPE_LOAD_ROM) {
+                    if (games_read) {
+                        wii_menu_move(node, last_rom_index);
+                    }
+                }
+                break;
+            case NODETYPE_PALETTE:
+                switch (wii_coleco_mode & CV_PALETTE) {
+                    case CV_PALETTE0:
+                        wii_coleco_mode =
+                            ((wii_coleco_mode & ~CV_PALETTE) | CV_PALETTE1);
+                        break;
+                    case CV_PALETTE1:
+                        wii_coleco_mode =
+                            ((wii_coleco_mode & ~CV_PALETTE) | CV_PALETTE2);
+                        break;
+                    default:
+                        wii_coleco_mode =
+                            ((wii_coleco_mode & ~CV_PALETTE) | CV_PALETTE0);
+                        break;
+                }
+                break;
+            case NODETYPE_SHOW_ALL_SPRITES:
+                if (wii_coleco_mode & CV_ALLSPRITE) {
+                    wii_coleco_mode &= ~CV_ALLSPRITE;
+                } else {
+                    wii_coleco_mode |= CV_ALLSPRITE;
+                }
+                break;
+            case NODETYPE_VIEW_AS_CONTROLLER:
+                ++wii_coleco_controller_view_mode;
+                if (wii_coleco_controller_view_mode == CONTROLLER_NAME_COUNT) {
+                    wii_coleco_controller_view_mode = 0;
+                }
+                break;
+            case NODETYPE_BUTTON1:
+            case NODETYPE_BUTTON2:
+            case NODETYPE_BUTTON3:
+            case NODETYPE_BUTTON4:
+            case NODETYPE_BUTTON5:
+            case NODETYPE_BUTTON6:
+            case NODETYPE_BUTTON7:
+            case NODETYPE_BUTTON8: {
+                int index = (node->node_type - NODETYPE_BUTTON1);
+                int btnindex = wii_coleco_db_get_button_index(
+                    wii_coleco_db_entry.button[index]);
+
+                while (1) {
+                    btnindex++;
+                    if (btnindex == COLECO_BUTTON_NAME_COUNT) {
+                        btnindex = 0;
+                    }
+
+                    if (wii_coleco_db_is_button_available(
+                            btnindex, wii_coleco_db_entry.controlsMode)) {
+                        break;
+                    }
+                }
+                wii_coleco_db_entry.button[index] =
+                    ButtonNames[btnindex].button;
+            } break;
+            case NODETYPE_SAVE_CARTRIDGE_SETTINGS:
+                if (wii_coleco_db_entry.name[0] == '\0') {
+                    char cartname[WII_MAX_PATH];
+                    Util_splitpath(wii_last_rom, NULL, cartname);
+                    char* ptr = strrchr(cartname, '.');
+                    if (ptr)
+                        *ptr = '\0';
+                    Util_strlcpy(wii_coleco_db_entry.name, cartname,
+                                 sizeof(wii_coleco_db_entry.name));
+                }
+                if (wii_coleco_db_write_entry(wii_cartridge_hash,
+                                              &wii_coleco_db_entry)) {
+                    wii_coleco_db_entry.loaded = 1;
+                    wii_set_status_message(
+                        "Successfully saved cartridge settings.");
+                } else {
+                    wii_set_status_message(
+                        "An error occurred saving cartridge settings.");
+                }
+                break;
+            case NODETYPE_DELETE_CARTRIDGE_SETTINGS:
+                if (wii_coleco_db_delete_entry(wii_cartridge_hash)) {
+                    wii_menu_reset_indexes();
+                    wii_menu_move(wii_menu_stack[wii_menu_stack_head], 1);
+                    wii_set_status_message(
+                        "Successfully deleted cartridge settings.");
+                } else {
+                    wii_set_status_message(
+                        "An error occurred deleting cartridge settings.");
+                }
+                // Load the values for the entry
+                wii_coleco_db_get_entry(wii_cartridge_hash,
+                                        &wii_coleco_db_entry);
+                break;
+            case NODETYPE_REVERT_CARTRIDGE_SETTINGS:
+                wii_coleco_db_get_entry(wii_cartridge_hash,
+                                        &wii_coleco_db_entry);
                 wii_set_status_message(
-                    "Successfully saved cartridge settings.");
-            } else {
-                wii_set_status_message(
-                    "An error occurred saving cartridge settings.");
-            }
-            break;
-        case NODETYPE_DELETE_CARTRIDGE_SETTINGS:
-            if (wii_coleco_db_delete_entry(wii_cartridge_hash)) {
-                wii_menu_reset_indexes();
-                wii_menu_move(wii_menu_stack[wii_menu_stack_head], 1);
-                wii_set_status_message(
-                    "Successfully deleted cartridge settings.");
-            } else {
-                wii_set_status_message(
-                    "An error occurred deleting cartridge settings.");
-            }
-            // Load the values for the entry
-            wii_coleco_db_get_entry(wii_cartridge_hash, &wii_coleco_db_entry);
-            break;
-        case NODETYPE_REVERT_CARTRIDGE_SETTINGS:
-            wii_coleco_db_get_entry(wii_cartridge_hash, &wii_coleco_db_entry);
-            wii_set_status_message("Successfully reverted to saved settings.");
-            break;
-        case NODETYPE_CONTROLS_MODE:
-            wii_coleco_db_entry.controlsMode++;
-            if (wii_coleco_db_entry.controlsMode > CONTROLS_MODE_ROLLER) {
-                wii_coleco_db_entry.controlsMode = CONTROLS_MODE_STANDARD;
-            }
-            wii_coleco_db_get_defaults(&wii_coleco_db_entry, FALSE);
-            break;
-        case NODETYPE_WIIMOTE_HORIZONTAL:
-            wii_coleco_db_entry.wiiMoteHorizontal ^= 1;
-            break;
-        case NODETYPE_OPCODE_MEMORY:
-            wii_coleco_db_entry.flags ^= OPCODE_MEMORY;
-            break;
-        case NODETYPE_CART_SRAM:
-            wii_coleco_db_entry.flags ^= CART_SRAM;
-            break;
-        case NODETYPE_SPINNER:
-            wii_coleco_db_entry.flags ^= DISABLE_SPINNER;
-            break;
-        case NODETYPE_SENSITIVITY:
-            wii_coleco_db_entry.sensitivity--;
-            if (wii_coleco_db_entry.sensitivity < 1) {
-                wii_coleco_db_entry.sensitivity = 9;
-            }
-            break;
-        default:
-            /* do nothing */
-            break;
+                    "Successfully reverted to saved settings.");
+                break;
+            case NODETYPE_CONTROLS_MODE:
+                wii_coleco_db_entry.controlsMode++;
+                if (wii_coleco_db_entry.controlsMode > CONTROLS_MODE_ROLLER) {
+                    wii_coleco_db_entry.controlsMode = CONTROLS_MODE_STANDARD;
+                }
+                wii_coleco_db_get_defaults(&wii_coleco_db_entry, FALSE);
+                break;
+            case NODETYPE_WIIMOTE_HORIZONTAL:
+                wii_coleco_db_entry.wiiMoteHorizontal ^= 1;
+                break;
+            case NODETYPE_OPCODE_MEMORY:
+                wii_coleco_db_entry.flags ^= OPCODE_MEMORY;
+                break;
+            case NODETYPE_CART_SRAM:
+                wii_coleco_db_entry.flags ^= CART_SRAM;
+                break;
+            case NODETYPE_SPINNER:
+                wii_coleco_db_entry.flags ^= DISABLE_SPINNER;
+                break;
+            case NODETYPE_SENSITIVITY:
+                wii_coleco_db_entry.sensitivity--;
+                if (wii_coleco_db_entry.sensitivity < 1) {
+                    wii_coleco_db_entry.sensitivity = 9;
+                }
+                break;
+            default:
+                /* do nothing */
+                break;
+        }
+
+        UNLOCK_RENDER_MUTEX();
     }
 }
 
@@ -1089,6 +1047,8 @@ void wii_menu_handle_update(TREENODE* menu) {
     switch (menu->node_type) {
         case NODETYPE_LOAD_ROM:
             if (!games_read) {
+                LOCK_RENDER_MUTEX();
+
                 if (mount_pending) {
                     const char* roms = wii_get_roms_dir();
                     if (strlen(roms) > 0) {
@@ -1114,7 +1074,8 @@ void wii_menu_handle_update(TREENODE* menu) {
                 wii_read_game_list(roms_menu);
                 wii_menu_reset_indexes();
                 wii_menu_move(roms_menu, 1);
-                wii_menu_force_redraw = 1;
+
+                UNLOCK_RENDER_MUTEX();
             }
             break;
         default:
@@ -1202,9 +1163,6 @@ static void wii_read_game_list(TREENODE* menu) {
  */
 void wii_menu_handle_post_loop() {
     if (!ExitNow) {
-        // Resume SDL Video
-        WII_VideoStart();
-
         // Start the sound
         PauseAudio(0);
     }
@@ -1221,10 +1179,6 @@ void wii_menu_handle_pre_loop() {
             while (wii_menu_pop() != NULL);
         }
     }
-
-    // Stop SDL video
-    WII_VideoStop();
-    WII_SetDefaultVideoMode();
 
     // Stop the sound
     PauseAudio(1);

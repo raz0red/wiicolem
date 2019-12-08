@@ -49,9 +49,6 @@ extern int MasterSwitch;
 /** Reset cycle timing extern form ColEm */
 extern void ResetCycleTiming(void);
 
-/** The callback used to render the ColEm display */
-extern void wii_render_callback();
-
 /** SDL Video external references */
 extern "C" {
 void WII_VideoStop();
@@ -171,30 +168,13 @@ BOOL wii_start_emulation(char* romfile,
             free(wii_last_rom);
         }
         wii_last_rom = last;
-#if 1
-        // Clear display before entering emulator
-        for (int i = 0; i < 2; i++) {
-            cur_xfb ^= 1;
-            u32* fb = wii_xfb[cur_xfb];
-            VIDEO_SetNextFramebuffer(fb);
-            VIDEO_ClearFrameBuffer(vmode, fb, COLOR_BLACK);
-            VIDEO_SetBlack(FALSE);
-            VIDEO_Flush();
-            VIDEO_WaitVSync();
-        }
-#endif
 
-        // Reset keypad if not resuming
-        if (!resume) {
-            // Reset the keypad
-            wii_keypad_reset();
+        // Clear the screen
+        wii_sdl_black_screen();
+        VIDEO_WaitVSync();
 
-            // Clear the screen
-            wii_sdl_black_screen();
-#if 1
-            wii_sdl_black_screen();
-#endif
-        }
+        // Reset the keypad
+        wii_keypad_reset();
 
         // Wait until no buttons are pressed
         wii_wait_until_no_buttons(2);
@@ -210,12 +190,6 @@ BOOL wii_start_emulation(char* romfile,
         // 255/SN76489_CHANNELS = 63
         SetChannels((wii_volume == 0 ? 0 : (3 + (wii_volume * 4))),
                     MasterSwitch);
-
-        // Set render callback
-        WII_SetRenderCallback(&wii_render_callback);
-
-        // Set the video mode
-        wii_set_video_mode(TRUE);
 
         // Set spinner controls
         Mode &= ~CV_SPINNERS;

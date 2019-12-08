@@ -95,7 +95,11 @@ int PauseAudio(int Switch);
 /** SDL Video external references */
 void WII_VideoStop();
 void WII_VideoStart();
+void WII_SetDefaultVideoMode();
 }
+
+// Forward reference
+static void wii_render_callback();
 
 /** TrashMachine() *******************************************/
 /** Deallocate all resources taken by InitMachine().        **/
@@ -238,6 +242,36 @@ unsigned int Mouse(void) {
     return 0;
 }
 
+/**
+ * Adds emulator render callback. This should be called after the menu has
+ * been displayed.
+ */
+static void AddRenderCallbackPostMenu() {
+    if (!ExitNow) { 
+        WII_VideoStop();     
+        wii_gx_pop_callback(); // Added by menu to blank screen                                                   
+        wii_set_video_mode(TRUE);              
+        wii_gx_push_callback(&wii_render_callback, TRUE, NULL);                        
+        VIDEO_WaitVSync();
+        WII_VideoStart();                                                        
+    }
+}
+
+/**
+ * Removes emulator render callback. This should be called prior to the menu
+ * being displayed.
+ */
+static void RemoveRenderCallbackPreMenu() {
+    WII_VideoStop();                                                        
+    wii_gx_pop_callback(); // Emulator render callback
+    wii_gx_push_callback( NULL, FALSE, NULL ); // Blank screen   
+    WII_SetDefaultVideoMode();
+    VIDEO_WaitVSync();
+    WII_VideoStart(); 
+    VIDEO_WaitVSync();
+    wii_gx_pop_callback(); // Blank screen callback
+}
+
 /** Joystick() ***********************************************/
 /** This function is called to poll joysticks. It should    **/
 /** return 2x16bit values in a following way:               **/
@@ -256,8 +290,11 @@ unsigned int Joystick(void) {
     RenderAndPlayAudio(GetFreeAudio());
 
     if (InitialMenuDisplay) {
+        // Show the menu
         wii_menu_show();
         InitialMenuDisplay = FALSE;
+        // Adds emulator render callback after menu
+        AddRenderCallbackPostMenu();
     }
 
     u32 keypad = 0;
@@ -290,10 +327,12 @@ unsigned int Joystick(void) {
         //
         if ((down & WII_BUTTON_HOME) || (gcDown & GC_BUTTON_HOME) ||
             wii_hw_button) {
+            // Removes the emulator render callback prior to showing the menu
+            RemoveRenderCallbackPreMenu();
+            // Show the menu
             wii_menu_show();
-            if (wii_gx_vi_scaler || wii_double_strike_mode) {
-                padvisible = FALSE;
-            }
+            // Adds emulator render callback after menu
+            AddRenderCallbackPostMenu();
         }
 
         //
@@ -324,10 +363,11 @@ unsigned int Joystick(void) {
                         wii_keypad_set_dim_screen(TRUE);
 
                         // Force GX without VI
-                        if (wii_gx_vi_scaler || wii_double_strike_mode) {
-                            WII_VideoStop();
+                        if (wii_gx_vi_scaler || wii_double_strike_mode) {                                                        
+                            WII_VideoStop();                            
                             wii_set_video_mode(FALSE);
-                            WII_VideoStart();
+                            VIDEO_WaitVSync();
+                            WII_VideoStart();                                                        
                         }
                     }
 
@@ -345,11 +385,10 @@ unsigned int Joystick(void) {
             if (!loop && padvisible) {
                 // Restart selected video mode
                 if (wii_gx_vi_scaler || wii_double_strike_mode) {
-                    WII_VideoStop();
-                    wii_sdl_black_screen();
-                    wii_sdl_black_screen();
+                    WII_VideoStop();                            
                     wii_set_video_mode(TRUE);
-                    WII_VideoStart();
+                    VIDEO_WaitVSync();
+                    WII_VideoStart();                                                        
                 }
 
                 // Un-dim the screen
@@ -399,7 +438,7 @@ int SetColor(byte N, byte R, byte G, byte B) {
 /**
  * GX render callback
  */
-void wii_render_callback() {
+static void wii_render_callback() {
     GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
     GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
     GX_SetVtxDesc(GX_VA_TEX0, GX_NONE);

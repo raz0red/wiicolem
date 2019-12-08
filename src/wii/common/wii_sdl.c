@@ -220,8 +220,8 @@ void wii_sdl_render_text(
  */
 static void* wii_sdl_get_vram_addr( SDL_Surface* surface, uint x, uint y )
 {
-  u8 *vram = (u8*)surface->pixels;
-  return vram + x + ( y * surface->w );
+  return ((u8*)surface->pixels) + surface->offset +
+    ( x * surface->format->BytesPerPixel ) + ( y * surface->pitch );
 }
 
 /*
@@ -244,44 +244,85 @@ void wii_sdl_draw_rectangle(
   if( ( y + h ) > surface->h ) h = surface->h - y;
   if( w <= 0 || h <= 0 ) return;
 
-  u8 *vram = (u8*)wii_sdl_get_vram_addr( surface, x, y );
+  BOOL is8 = surface->format->BytesPerPixel == 1;
+  BOOL is16 = surface->format->BytesPerPixel == 2;
 
   int xo, yo;
   if( exor )
   {
-    for( xo = 1; xo < (w - 1); xo++ ) 
+    for( xo = x + 1; xo < (w - 1); xo++ ) 
     {
-      vram[xo] ^= border;
+      if( is8 )
+        *((u8*)wii_sdl_get_vram_addr( surface, xo, y )) ^= border;
+      else if( is16 )
+        *((u16*)wii_sdl_get_vram_addr( surface, xo, y )) ^= border;
+      else
+        *((u32*)wii_sdl_get_vram_addr( surface, xo, y )) ^= border;
       if( h > 1 )
       {
-        vram[xo + (surface->w * (h - 1 ))] ^= border;
+        if( is8 )
+          *((u8*)wii_sdl_get_vram_addr( surface, xo, h-1 )) ^= border;
+        else if( is16 )
+          *((u16*)wii_sdl_get_vram_addr( surface, xo, h-1 )) ^= border;        
+        else
+          *((u32*)wii_sdl_get_vram_addr( surface, xo, h-1 )) ^= border;        
       }
     }
-    for( yo = 0; yo < h; yo++ ) 
+    for( yo = y; yo < h; yo++ ) 
     {
-      vram[yo * surface->w] ^= border;
+      if( is8 )
+        *((u8*)wii_sdl_get_vram_addr( surface, x, yo )) ^= border;
+      else if( is16 )
+        *((u16*)wii_sdl_get_vram_addr( surface, x, yo )) ^= border;
+      else
+        *((u32*)wii_sdl_get_vram_addr( surface, x, yo )) ^= border;
       if( w > 1 )
       {
-        vram[(yo * surface->w) + (w - 1)] ^= border;
+        if( is8 )
+          *((u8*)wii_sdl_get_vram_addr( surface, w-1, yo )) ^= border;
+        else if( is16 )
+          *((u16*)wii_sdl_get_vram_addr( surface, w-1, yo )) ^= border;
+        else
+          *((u32*)wii_sdl_get_vram_addr( surface, w-1, yo )) ^= border;
       }
     }
   }
   else
   {
-    for( xo = 1; xo < (w - 1); xo++ ) 
+    for( xo = x + 1; xo < (w - 1); xo++ ) 
     {
-      vram[xo] = border;
+      if( is8 )
+        *((u8*)wii_sdl_get_vram_addr( surface, xo, y )) = border;
+      else if( is16 )
+        *((u16*)wii_sdl_get_vram_addr( surface, xo, y )) = border;
+      else
+        *((u32*)wii_sdl_get_vram_addr( surface, xo, y )) = border;
       if( h > 1 )
       {
-        vram[xo + (surface->w * (h - 1 ))] = border;
+        if( is8 )
+          *((u8*)wii_sdl_get_vram_addr( surface, xo, h-1 )) = border;
+        else if( is16 )
+          *((u16*)wii_sdl_get_vram_addr( surface, xo, h-1 )) = border;        
+        else
+          *((u32*)wii_sdl_get_vram_addr( surface, xo, h-1 )) = border;        
       }
     }
-    for( yo = 0; yo < h; yo++ ) 
+    for( yo = y; yo < h; yo++ ) 
     {
-      vram[yo * surface->w] = border;
+      if( is8 )
+        *((u8*)wii_sdl_get_vram_addr( surface, x, yo )) = border;
+      else if( is16 )
+        *((u16*)wii_sdl_get_vram_addr( surface, x, yo )) = border;
+      else
+        *((u32*)wii_sdl_get_vram_addr( surface, x, yo )) = border;
       if( w > 1 )
       {
-        vram[(yo * surface->w) + (w - 1)] = border;
+        if( is8 )
+          *((u8*)wii_sdl_get_vram_addr( surface, w-1, yo )) = border;
+        else if( is16 )
+          *((u16*)wii_sdl_get_vram_addr( surface, w-1, yo )) = border;
+        else
+          *((u32*)wii_sdl_get_vram_addr( surface, w-1, yo )) = border;
       }
     }
   }
@@ -306,14 +347,20 @@ void wii_sdl_fill_rectangle(
   if( ( y + h ) > surface->h ) h = surface->h - y;
   if( w <= 0 || h <= 0 ) return;
 
-  u8 *vram  = (u8*)wii_sdl_get_vram_addr( surface, x, y );
+  BOOL is8 = surface->format->BytesPerPixel == 1;
   int xo, yo;
-
-  for( xo = 0; xo < w; xo++ ) 
+  for( xo = x; xo < w + x; xo++ ) 
   {
-    for( yo = 0; yo < h; yo++ ) 
+    for( yo = y; yo < h + y; yo++ ) 
     {
-      vram[xo + (yo * surface->w)] = color;            
+      if( is8 )
+      {
+        *((u8*)wii_sdl_get_vram_addr( surface, xo, yo )) = color;
+      }
+      else
+    {
+        *((u16*)wii_sdl_get_vram_addr( surface, xo, yo )) = color;
+      }            
     }
   }
 }

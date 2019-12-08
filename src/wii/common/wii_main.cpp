@@ -27,6 +27,7 @@ distribution.
 
 #include <wiiuse/wpad.h>
 #include <gccore.h>
+#include <ogc/conf.h>
 #include <SDL.h>
 
 #include "pngu/pngu.h"
@@ -35,21 +36,19 @@ distribution.
 #include "net_print.h"  
 #endif
 
-#ifdef WII_BIN2O
 #include "about_png.h"
-#endif
 
 #ifdef TRACK_UNIQUE_MSGIDS
   extern void dump_unique_msgids();
 #endif
 
+#include "wii_gx.h"
 #include "wii_main.h"
 #include "wii_app.h"
 #include "wii_hw_buttons.h"
 #include "wii_input.h"
-#include "wii_file_io.h"
-#include "wii_freetype.h"
 #include "wii_video.h"
+#include "wii_sdl.h"
 #include "fileop.h"
 
 #include "vi_encoder.h"
@@ -61,6 +60,14 @@ distribution.
 #define MENU_HEADERX    30
 #define MENU_LINESIZE   20
 #define MENU_PAGESIZE   11
+
+extern "C" 
+{
+Mtx gx_view;
+void WII_VideoStop();
+void WII_SetDefaultVideoMode();
+void WII_SetWidescreen(int wide);
+}
 
 // The vsync mode
 int wii_vsync = -1;
@@ -77,8 +84,6 @@ BOOL wii_top_menu_exit = TRUE;
 TREENODEPTR wii_menu_stack[64];
 // The head of the menu stack
 s8 wii_menu_stack_head = -1;
-// Two framebuffers (double buffer our menu display)
-u32 *wii_xfb[2] = { NULL, NULL };
 // The root of the menu
 TREENODE *wii_menu_root;
 // Whether to quite the menu loop
@@ -102,12 +107,8 @@ BOOL wii_usb_keepalive = FALSE;
 // 16:9 correction
 BOOL wii_16_9_correction = FALSE;
 
-// Buffer containing the about image
-static u32* about_buff = NULL;
-// Properties of the about image
-static PNGUPROP about_props;
-// The current frame buffer
-u32 cur_xfb = 0;
+// The about image data
+static gx_imagedata* about_idata = NULL;
 // The first item to display in the menu (paging, etc.)
 static s16 menu_start_idx = 0;
 
@@ -156,8 +157,12 @@ s16 wii_menu_get_current_index()
  */
 void wii_menu_reset_indexes()
 {
+  LOCK_RENDER_MUTEX();
+
   menu_cur_idx = -1;
   menu_start_idx = 0;
+
+  UNLOCK_RENDER_MUTEX();
 }
 
 /*
@@ -175,7 +180,6 @@ TREENODE* wii_create_tree_node( enum NODETYPE type, const char *name )
   nodep->name = strdup( name );
   nodep->child_count = 0;
   nodep->max_children = 0;
-  nodep->x = nodep->value_x = -1;
 
   return nodep;
 }
@@ -233,6 +237,8 @@ void wii_add_child( TREENODE *parent, TREENODE *childp  )
  */
 void wii_menu_clear_children( TREENODE* node )
 {
+  LOCK_RENDER_MUTEX();
+
   int i;
   for( i = 0; i < node->child_count; i++ )
   {
@@ -240,6 +246,8 @@ void wii_menu_clear_children( TREENODE* node )
     node->children[i] = NULL;
   }
   node->child_count = 0;
+
+  UNLOCK_RENDER_MUTEX();
 }
 
 /*
@@ -264,10 +272,13 @@ static void wii_free_node( TREENODE* node )
  */
 void wii_menu_push( TREENODE *menu )
 {    
-  wii_menu_stack[++wii_menu_stack_head] = menu;
+  LOCK_RENDER_MUTEX();
 
+  wii_menu_stack[++wii_menu_stack_head] = menu;
   wii_menu_reset_indexes();
   wii_menu_move( menu, 1 );
+
+  UNLOCK_RENDER_MUTEX();
 }
 
 /*
@@ -278,15 +289,21 @@ void wii_menu_push( TREENODE *menu )
  */
 TREENODE* wii_menu_pop()
 {    
+  TREENODE* ret = NULL;
+
+  LOCK_RENDER_MUTEX();
+
   if( wii_menu_stack_head > 0 )
   {
     TREENODE *oldmenu = wii_menu_stack[wii_menu_stack_head--];
     wii_menu_reset_indexes();        
     wii_menu_move( wii_menu_stack[wii_menu_stack_head], 1 );
-    return oldmenu;
+    ret = oldmenu;
   }
 
-  return NULL;
+  UNLOCK_RENDER_MUTEX();
+
+  return ret;
 }
 
 /*
@@ -303,9 +320,16 @@ static void wii_menu_get_header( TREENODE* menu, char *buffer )
   if( strlen( buffer ) == 0 )
   {
     snprintf( buffer, WII_MENU_BUFF_SIZE, 
-      "U/D = Scroll%s, A = Select%s, Home = Exit", 
-      ( menu->child_count > MENU_PAGESIZE ? ", L/R = Page" : "" ),
-      ( wii_menu_stack_head > 0 ? ", B = Back" : "" )            
+      "%s = %s%s%s, A = %s%s%s, %s = %s", 
+      gettextmsg( "U/D" ),
+      gettextmsg( "Scroll" ),
+      ( menu->child_count > MENU_PAGESIZE ? ", L/R = " : "" ),
+      ( menu->child_count > MENU_PAGESIZE ? gettextmsg( "Page" ) : "" ),      
+      gettextmsg( "Select" ),
+      ( wii_menu_stack_head > 0 ? ", B = " : "" ),
+      ( wii_menu_stack_head > 0 ? gettextmsg( "Back" ) : "" ),
+      gettextmsg( "Home" ),
+      gettextmsg( "Exit" )
       );
   }
 }
@@ -400,27 +424,16 @@ static BOOL wii_menu_is_node_selectable( TREENODE *node )
  */
 static void wii_menu_render( TREENODE *menu )
 {	
-  // Swap buffers
-  cur_xfb ^= 1;
-  u32 *fb = wii_xfb[cur_xfb];
+  GXColor headerColor = { 96, 96, 96, 0xff };
+  GXColor selColor = { wii_menu_sel_color.R, wii_menu_sel_color.G, wii_menu_sel_color.B, 0xff };
+  int fontSize = 18;
 
-  VIDEO_ClearFrameBuffer( vmode, fb, COLOR_BLACK );
-
-  // Bind the console to the appropriate frame buffer
-#if 0
-  wii_console_init( fb );
-#endif
-
-  // Render the about image (header)
-  if( about_buff != NULL )
-  {
-    wii_video_draw_image( 
-      &about_props, 
-      about_buff, 
-      fb, 
-      ( vmode->fbWidth - about_props.imgWidth ) >> 1,  
-      ABOUT_Y );
-  }
+  // Render the about image
+  wii_gx_drawimage( 
+    -(about_idata->width>>1), GX_Y(ABOUT_Y), 
+    about_idata->width, about_idata->height, 
+    about_idata->data, 
+    0, 1.0, 1.0, 0xff );
 
   // Draw the menu items (text)
   if( menu )
@@ -432,15 +445,9 @@ static void wii_menu_render( TREENODE *menu )
     buffer[0] = '\0';
     wii_menu_get_header( menu, buffer );
 
-#if 0
-    snprintf( buffer2, sizeof(buffer2), "\x1b[%d;%dH %s", 
-      MENU_HEAD_Y, MENU_HEAD_X, buffer );		
-    wii_write_vt( buffer2 );
-#endif
-
-    wii_ft_set_fontcolor( 96, 96, 96 );
-    wii_ft_drawtext( fb, -1, MENU_STARTY, buffer );    
-    wii_ft_set_fontcolor( 255, 255, 255 );
+    wii_gx_drawtext(
+      0, GX_Y( MENU_STARTY ),
+      fontSize, (char*)( buffer ), headerColor, FTGX_ALIGN_BOTTOM | FTGX_JUSTIFY_CENTER ); 
 
     int displayed = 0; 
     int i;
@@ -456,40 +463,35 @@ static void wii_menu_render( TREENODE *menu )
       {
         wii_menu_handle_get_node_name( node, buffer, value );
 
-#if 0
-        snprintf( buffer2, sizeof(buffer2), "\x1b[%d;%dH%s %s %s", 				
-          MENU_START_Y + displayed, 
-          MENU_START_X, 
-          ( menu_cur_idx == i ? "\x1b[41m\x1b[37m" : "" ),
-          buffer,
-          ( menu_cur_idx == i ? "\x1b[40m\x1b[37m" : "" )              
-          );
-
-        wii_write_vt( buffer2 );
-#endif
         if( menu_cur_idx == i )
         {
-          int j;
-          for( j = 0; j < 20; j++ )
-          {
-            wii_video_draw_line( 
-              fb, 30, 610, 
-              MENU_STARTY + ( ( displayed + 1 ) * MENU_LINESIZE ) + j + 5 + wii_menu_sel_offset,
-              wii_menu_sel_color.R, wii_menu_sel_color.G, wii_menu_sel_color.B );
-          }
+          wii_gx_drawrectangle( 
+            GX_X( 0 ),
+            GX_Y( MENU_STARTY + ( ( displayed + 1 ) * MENU_LINESIZE ) + 1 /*+ wii_menu_sel_offset*/ ), 
+            640, 21,
+            selColor, 1);
         }
 
-        wii_ft_drawtext( fb, node->x, 
-          MENU_STARTY + ( ( displayed + 2 ) * MENU_LINESIZE ), 
-          buffer );
+        BOOL hasValue = value[0] != '\0';
 
-        if( value[0] != '\0' )
+        snprintf( buffer2, WII_MENU_BUFF_SIZE, "%s%s", 
+          ( node->node_type != NODETYPE_ROM ?
+              gettextmsg( buffer ) :
+              buffer ), 
+          hasValue ? " " : "" );
+    
+        wii_gx_drawtext(
+          0, GX_Y( MENU_STARTY + ( ( displayed + 2 ) * MENU_LINESIZE ) ),
+          fontSize, buffer2, ftgxWhite, FTGX_ALIGN_BOTTOM | 
+            ( hasValue ? FTGX_JUSTIFY_RIGHT : FTGX_JUSTIFY_CENTER ) ); 
+
+        if( hasValue )
         {
-          sprintf( buffer2, ": %s", value );
+          snprintf( buffer2, WII_MENU_BUFF_SIZE, ": %s", gettextmsg( value ) );
           
-          wii_ft_drawtext( fb, node->value_x, 
-            MENU_STARTY + ( ( displayed + 2 ) * MENU_LINESIZE ), 
-            buffer2 );
+          wii_gx_drawtext(
+            0, GX_Y( MENU_STARTY + ( ( displayed + 2 ) * MENU_LINESIZE ) ),
+            fontSize, buffer2, ftgxWhite, FTGX_ALIGN_BOTTOM | FTGX_JUSTIFY_LEFT ); 
         }
 
         ++displayed;
@@ -499,22 +501,10 @@ static void wii_menu_render( TREENODE *menu )
     buffer[0] = '\0';
     wii_menu_get_footer( menu, buffer );
 
-#if 0
-    snprintf( buffer2, sizeof(buffer2), "\x1b[%d;%dH %s", 
-      MENU_FOOT_Y, MENU_HEAD_X, buffer );		
-    wii_write_vt( buffer2 );
-#endif
-
-    wii_ft_set_fontcolor( 96, 96, 96 );
-    wii_ft_drawtext( fb, 
-      -1,  
-      MENU_STARTY + ( ( MENU_PAGESIZE + 3 ) * MENU_LINESIZE ), 
-      buffer );    
+    wii_gx_drawtext(
+      0, GX_Y( MENU_STARTY + ( ( MENU_PAGESIZE + 3 ) * MENU_LINESIZE ) ),
+      fontSize, buffer, headerColor, FTGX_ALIGN_BOTTOM | FTGX_JUSTIFY_CENTER ); 
   }
-
-  VIDEO_SetNextFramebuffer( fb );
-  VIDEO_SetBlack(FALSE);
-  VIDEO_Flush();	
 }
 
 /*
@@ -551,6 +541,8 @@ static s16 get_page_start_idx( TREENODE *menu )
 void wii_menu_move( TREENODE *menu, s16 steps )
 {	
   if( !menu ) return;
+
+  LOCK_RENDER_MUTEX();
 
   s16 new_idx = menu_cur_idx;
 
@@ -642,17 +634,75 @@ void wii_menu_move( TREENODE *menu, s16 steps )
       }
     }
   }
+
+  UNLOCK_RENDER_MUTEX();
+}
+
+/*
+ * The callback used to render the menu
+ */
+static void menu_render_callback()
+{  
+  GX_SetVtxDesc( GX_VA_POS, GX_DIRECT );
+  GX_SetVtxDesc( GX_VA_CLR0, GX_DIRECT );
+  GX_SetVtxDesc( GX_VA_TEX0, GX_NONE );
+
+  Mtx m;    // model matrix.
+  Mtx mv;   // modelview matrix.
+
+  guMtxIdentity( m ); 
+  guMtxTransApply( m, m, 0, 0, -100 );
+  guMtxConcat( gx_view, m, mv );
+  GX_LoadPosMtxImm( mv, GX_PNMTX0 ); 
+
+  LOCK_RENDER_MUTEX();
+
+  TREENODE *menu = 
+    wii_menu_stack_head >= 0 ?			
+    wii_menu_stack[wii_menu_stack_head] : NULL;
+
+  if( menu != NULL )
+  {    
+    wii_menu_render( menu );    
+  }
+
+  UNLOCK_RENDER_MUTEX();
 }
 
 #define DELAY_FRAMES 6
 #define DELAY_STEP 1
-#define DELAY_MIN 0
+#define DELAY_MIN 2
+
+static void precallback()
+{
+  if( wii_usb_keepalive )
+  {
+    UsbKeepAlive(); // Attempt to keep the USB drive from sleeping...
+  }
+
+  static BOOL lastws = 0;
+  int newws = 
+    ( wii_full_widescreen == WS_AUTO ? 
+        is_widescreen : wii_full_widescreen );
+
+  if( lastws != newws )
+  {
+    lastws = newws;
+    WII_SetWidescreen( lastws );
+  }
+
+  VIDEO_SetTrapFilter( 1 );
+  WII_SetDefaultVideoMode();
+}
 
 /*
  * Displays the menu 
  */
 void wii_menu_show()
 {
+  // Push our callback
+  wii_gx_push_callback( &menu_render_callback, FALSE, &precallback );
+
   // Allows for incremental speed when scrolling the menu 
   // (Scrolls faster the longer the directional pad is held)
   s16 delay_frames = -1;
@@ -700,12 +750,6 @@ void wii_menu_show()
     TREENODE *menu = 
       wii_menu_stack_head >= 0 ?			
       wii_menu_stack[wii_menu_stack_head] : NULL;
-
-    if( wii_menu_force_redraw )
-    {
-      wii_menu_force_redraw = 0;
-      wii_menu_render( menu );
-    }
 
     if( menu )
     {                    
@@ -805,6 +849,10 @@ void wii_menu_show()
 #ifdef TRACK_UNIQUE_MSGIDS
   dump_unique_msgids();
 #endif
+
+  // Pop our callback
+  wii_gx_pop_callback();
+
   // Invoke post loop handler
   wii_menu_handle_post_loop();
 }
@@ -874,43 +922,8 @@ void wii_get_list_footer(
  */
 static void init_app()
 {
-  // Load the about image (header)
-#ifdef WII_BIN2O
-  IMGCTX about_ctx = PNGU_SelectImageFromBuffer( about_png );	
-#else
-  char about_loc[WII_MAX_PATH];
-  wii_get_app_relative( "gfx/about.png", about_loc );
-  IMGCTX about_ctx = PNGU_SelectImageFromDevice( about_loc );	
-#endif
-
-  if( about_ctx != NULL )
-  {
-    if( PNGU_GetImageProperties( about_ctx, &about_props ) != PNGU_OK )
-    {
-      PNGU_ReleaseImageContext( about_ctx );
-      about_ctx = NULL;
-    }
-    else
-    {
-      u32 about_buff_size = 
-        about_props.imgWidth * about_props.imgHeight * 2;
-      about_buff = (u32*)malloc( about_buff_size );
-
-      PNGU_DecodeToYCbYCr(
-        about_ctx, 
-        about_props.imgWidth, 
-        about_props.imgHeight, 
-        about_buff,
-        0
-      );
-
-      PNGU_ReleaseImageContext( about_ctx );
-      about_ctx = NULL;
-    }
-  }
-
-  // Initialize the freetype library
-  wii_ft_init();
+  // Load the about image
+  about_idata = wii_gx_loadimagefrombuff( about_png );
 
   // Initialize the application
   wii_handle_init();
@@ -921,15 +934,19 @@ static void init_app()
  */
 static void free_resources()
 {
+  WII_VideoStop();
+
   //
   // Probably completely unnecessary but seems like a good time
   //
 
+#if 0
   if( about_buff != NULL )
   {
     free( about_buff );
     about_buff = NULL;
   }
+#endif
 
   if( wii_menu_root != NULL )
   {
@@ -1032,7 +1049,7 @@ int main(int argc,char *argv[])
   // Try to mount the file system
   if( !ChangeInterface( wii_get_app_path(), FS_RETRY_COUNT ) ) 
   {
-    //CON_Init(xfb[0],20,20,vmode->fbWidth,vmode->xfbHeight,vmode->fbWidth*VI_DISPLAY_PIX_SZ);
+    CON_Init(xfb[0],20,20,vmode->fbWidth,vmode->xfbHeight,vmode->fbWidth*VI_DISPLAY_PIX_SZ);
     printf( "\x1b[5;0H" );
     printf( "Unable to mount %s\n\n", wii_get_fs_prefix() );
     printf( "Press A to exit..." );
@@ -1058,14 +1075,9 @@ int main(int argc,char *argv[])
   // Initializes the application
   init_app(); 
 
-  // Allocate frame buffers
-  wii_xfb[0] = (u32*)MEM_K0_TO_K1( SYS_AllocateFramebuffer( vmode ) );
-  wii_xfb[1] = (u32*)MEM_K0_TO_K1( SYS_AllocateFramebuffer( vmode ) );	
-
   // Test for PAL/NTSC
   wii_test_pal();
 
-  // Set the vsync based on whether or not we are PAL or NTSC
   if( wii_vsync == -1 )
   {
     // Set the vsync based on whether or not we are PAL or NTSC

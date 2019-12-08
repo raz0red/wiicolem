@@ -23,6 +23,8 @@ distribution.
 */
 
 #include <wiiuse/wpad.h>
+#include <gctypes.h>
+#include <ogc/system.h>
 
 // Hardware buttons (reset, power, etc.)
 u8 wii_hw_button = 0;
@@ -32,7 +34,7 @@ u8 wii_hw_button = 0;
  */
 void wii_reset_pressed()
 {
-  wii_hw_button = SYS_RETURNTOMENU;
+  wii_hw_button = SYS_RETURNTOMENU;  
 }
 
 /*

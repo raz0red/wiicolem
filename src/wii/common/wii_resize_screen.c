@@ -28,6 +28,7 @@ distribution.
 #include "wii_input.h"
 #include "wii_resize_screen.h"
 #include "wii_sdl.h"
+#include "gettext.h"
 
 extern void WII_SetRenderCallback( void (*cb)(void) );
 extern void WII_ChangeSquare(int xscale, int yscale, int xshift, int yshift);
@@ -90,6 +91,90 @@ void wii_resize_render_callback()
   guMtxConcat( gx_view, m, mv );
   GX_LoadPosMtxImm( mv, GX_PNMTX0 ); 
 
+  GXColor white = (GXColor) { 0xff, 0xff, 0xff, 0xff };
+
+#if 0
+  wii_gx_drawrectangle( 
+    -231, 71, 462, 142, white, FALSE );
+#endif
+  wii_gx_drawrectangle( 
+    -230, 80, 460, 160, (GXColor){ 0x0, 0x0, 0x0, 0xcc }, TRUE );    
+
+  int fontsize = 14;
+  int spacing = 16;
+  int largespacing = 28;
+  int y = 60 /*68 - largespacing*/;
+
+  u16 right = ( FTGX_ALIGN_TOP | FTGX_JUSTIFY_RIGHT );
+  u16 left = ( FTGX_ALIGN_TOP | FTGX_JUSTIFY_LEFT );
+
+  char buffer[512] = "";
+  snprintf( buffer, sizeof(buffer), "%s :", gettextmsg( "D-pad/Analog" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, right );
+  snprintf( buffer, sizeof(buffer), " %s", gettextmsg( "Resize screen" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, left );
+  y-=spacing;
+
+  snprintf( buffer, sizeof(buffer), "%s :", gettextmsg( "A/2 button" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, right );
+  snprintf( buffer, sizeof(buffer), " %s", gettextmsg( "Accept changes" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, left );
+  y-=spacing;
+
+  snprintf( buffer, sizeof(buffer), "%s :", gettextmsg( "B/1 button" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, right );
+  snprintf( buffer, sizeof(buffer), " %s", gettextmsg( "Cancel changes" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, left );
+  y-=largespacing;
+
+  snprintf( buffer, sizeof(buffer), "%s :", gettextmsg( "Minus/LTrigger" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, right );
+  snprintf( buffer, sizeof(buffer), " %s", gettextmsg( "Toggle A/R lock" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, left );
+  y-=spacing;
+
+  snprintf( buffer, sizeof(buffer), "%s :", gettextmsg( "Plus/RTrigger" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, right );  
+  wii_gx_drawtext( 0, y, fontsize, " Reset to defaults", white, left );
+  y-=largespacing;
+
+#if 0
+  snprintf( buffer, sizeof(buffer), " %s" , 
+    gettextmsg( "Toggle screen sizes" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, left );
+  y-=largespacing;
+
+  snprintf( buffer, sizeof(buffer), "%s :", gettextmsg( "Screen size" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, right );  
+  snprintf( buffer, sizeof(buffer), " %s", 
+    gettextmsg( 
+      resizeinfo->rotated ?
+        resizeinfo->emulator.getRotatedScreenSizeName( currentX, currentY ) :
+        resizeinfo->emulator.getScreenSizeName( currentX, currentY ) ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, left );
+  y-=spacing;
+#endif  
+
+  snprintf( buffer, sizeof(buffer), "%s :", gettextmsg( "Aspect ratio" ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, right );  
+  snprintf( buffer, sizeof(buffer), " %s",
+    gettextmsg( 
+      arlocked ? gettextmsg( "Locked" ) : gettextmsg( "Unlocked" ) ) );
+  wii_gx_drawtext( 0, y, fontsize, buffer, white, left );
+
+#if 0  
+  GX_SetVtxDesc( GX_VA_POS, GX_DIRECT );
+  GX_SetVtxDesc( GX_VA_CLR0, GX_DIRECT );
+  GX_SetVtxDesc( GX_VA_TEX0, GX_NONE );
+
+  Mtx m;      // model matrix.
+  Mtx mv;     // modelview matrix.
+
+  guMtxIdentity( m ); 
+  guMtxTransApply( m, m, 0, 0, -100 );
+  guMtxConcat( gx_view, m, mv );
+  GX_LoadPosMtxImm( mv, GX_PNMTX0 ); 
+
   GXColor black = (GXColor) { 0x0, 0x0, 0x0, 0xff };
 
   wii_gx_drawrectangle( 
@@ -97,7 +182,7 @@ void wii_resize_render_callback()
   wii_gx_drawrectangle( 
     -140, 80, 280, 160, (GXColor){ 0x99, 0x99, 0x99, 0xff }, TRUE );    
 
-  int fontsize = 18;
+  int fontsize = 16;
   int spacing = 20;
   int largespacing = 30;
   int y = 70;
@@ -129,6 +214,7 @@ void wii_resize_render_callback()
     0, y, fontsize, 
     ( arlocked ? "(Aspect ratio : Locked)" : "(Aspect ratio : Unlocked)" ), 
     black, FTGX_ALIGN_TOP | FTGX_JUSTIFY_CENTER  );
+#endif    
 }
 
 /*
@@ -148,9 +234,12 @@ void wii_resize_screen_gui( resize_info* rinfo )
   int x, y;
   wii_get_screen_size( currentX, currentY, &x, &y );
   WII_ChangeSquare( x, y, 0, 0 );
-  WII_SetRenderCallback( &wii_resize_render_callback );  
 
+  wii_gx_push_callback(&wii_resize_render_callback, TRUE, NULL);
+#if 0
+  WII_SetRenderCallback( &wii_resize_render_callback );  
   WII_VideoStart();   
+#endif  
 
   // Allows for incremental speed when scaling
   // (Scales faster the longer the directional pad is held)
@@ -334,8 +423,11 @@ void wii_resize_screen_gui( resize_info* rinfo )
     VIDEO_WaitVSync();
   } 
 
+  wii_gx_pop_callback();
+#if 0
   WII_VideoStop();
   WII_SetRenderCallback( NULL );  
+#endif
 }
 
 /*
