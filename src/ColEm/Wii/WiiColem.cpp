@@ -48,6 +48,7 @@
 #include "Coleco.h"
 #include "Sound.h"
 
+#include "fileop.h"
 #include "wii_sdl.h"
 #include "wii_app.h"
 #include "wii_hw_buttons.h"
@@ -98,8 +99,9 @@ void WII_VideoStart();
 void WII_SetDefaultVideoMode();
 }
 
-// Forward reference
+// Forward references
 static void wii_render_callback();
+static void wii_prerender_callback();
 
 /** TrashMachine() *******************************************/
 /** Deallocate all resources taken by InitMachine().        **/
@@ -251,7 +253,7 @@ static void AddRenderCallbackPostMenu() {
         WII_VideoStop();     
         wii_gx_pop_callback(); // Added by menu to blank screen                                                   
         wii_set_video_mode(TRUE);              
-        wii_gx_push_callback(&wii_render_callback, TRUE, NULL);                        
+        wii_gx_push_callback(&wii_render_callback, TRUE, &wii_prerender_callback);                        
         VIDEO_WaitVSync();
         WII_VideoStart();                                                        
     }
@@ -433,6 +435,15 @@ unsigned int Joystick(void) {
 /*************************************************************/
 int SetColor(byte N, byte R, byte G, byte B) {
     return wii_sdl_rgb(R, G, B);
+}
+
+/**
+ * GX pre-render callback
+ * */
+static void wii_prerender_callback() {
+    if (wii_usb_keepalive) {
+        UsbKeepAlive();  // Attempt to keep the USB drive from sleeping...
+    }
 }
 
 /**

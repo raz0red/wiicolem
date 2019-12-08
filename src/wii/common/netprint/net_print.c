@@ -77,6 +77,7 @@ void net_print_close()
 
 int net_print_string( const char* file, int line, const char* format, ...)
 {
+
 	va_list	ap;
 	int len;
 	int ret;
@@ -97,6 +98,7 @@ int net_print_string( const char* file, int line, const char* format, ...)
 	va_end(ap);
 
 	ret = net_send( _net_print_socket, buffer, len, 0);
+	
 	return ret;
 }
 

@@ -74,7 +74,6 @@ INCLUDES	:= \
     src/EMULib \
     src/ColEm/Wii \
     src/EMULib/Wii \
-    thirdparty/freetype/include \
     thirdparty/sdl/SDL/include \
     thirdparty/sdl/SDL_ttf/include \
     thirdparty/sdl/SDL_image/include
@@ -96,14 +95,13 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
 LIBS    :=  -ltinysmb -lSDL_ttf -lSDL -lSDL_image -lpng -lfreetype -lfat -lwiiuse \
-            -lbte -logc -lz -lm -lwiikeyboard
+            -lbte -logc -lz -lbz2 -lm -lwiikeyboard
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
 LIBDIRS	:= \
-    thirdparty/freetype/lib \
     thirdparty/sdl/SDL/lib \
     thirdparty/sdl/SDL_ttf/lib \
     thirdparty/sdl/SDL_image/lib
@@ -196,7 +194,8 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 					-I$(CURDIR)/$(BUILD) \
 					-I$(LIBOGC_INC) \
-					-I$(DEVKITPRO)/portlibs/ppc/include
+					-I$(DEVKITPRO)/portlibs/ppc/include \
+					-I$(DEVKITPRO)/portlibs/ppc/include/freetype2
 
 #---------------------------------------------------------------------------------
 # build a list of library paths

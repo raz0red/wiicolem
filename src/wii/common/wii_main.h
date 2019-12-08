@@ -206,6 +206,13 @@ extern void wii_set_vsync( BOOL sync );
 extern void wii_sync_video();
 
 /*
+ * Returns whether VSYNC is enabled
+ *
+ * return Whether VSYNC is enabled
+ */
+extern int wii_vsync_enabled();
+
+/*
  * Displays the menu 
  */
 extern void wii_menu_show();
@@ -235,6 +242,17 @@ extern void wii_handle_free_resources();
  * Runs the application (main loop)
  */
 extern void wii_handle_run();
+
+//
+// Methods to be implemented by application
+//
+
+/*
+ * Returns the (current) max frame rate
+ *
+ * return The (current) max frame rate
+ */
+extern u8 wii_get_max_frames();
 
 /*
  * Updates the buffer with the header message for the current menu

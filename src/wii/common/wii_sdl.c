@@ -123,6 +123,14 @@ void wii_sdl_black_back_surface()
  */
 void wii_sdl_put_image_normal( int scale )
 {
+#if 0
+  SDL_Rect srcRect = { 0, 0, blit_surface->w, blit_surface->h };
+  SDL_Rect destRect = 
+    { ( WII_WIDTH - blit_surface->w ) / 2, 
+      ( WII_HEIGHT - blit_surface->h ) / 2, 0, 0 };
+
+  SDL_BlitSurface( blit_surface, &srcRect, back_surface, &destRect );
+#else
   int offsetx = ( ( WII_WIDTH - ( blit_surface->w * scale ) ) / 2 );
   int offsety =  ( ( WII_HEIGHT - ( blit_surface->h * scale ) ) / 2 );
 
@@ -148,6 +156,7 @@ void wii_sdl_put_image_normal( int scale )
       }
     }            
   }
+#endif
 }
 
 /*

@@ -104,6 +104,8 @@ BOOL is_widescreen = FALSE;
 int wii_full_widescreen = WS_AUTO;
 // USB keep alive 
 BOOL wii_usb_keepalive = FALSE;
+// Trap filter
+BOOL wii_trap_filter = FALSE; 
 // 16:9 correction
 BOOL wii_16_9_correction = FALSE;
 
@@ -969,10 +971,23 @@ static void free_resources()
  */
 void wii_sync_video()
 {     
-  if( wii_vsync == VSYNC_ENABLED )
+  if( wii_vsync_enabled() )
   {
     VIDEO_WaitVSync();
   }
+}
+
+/*
+* Returns whether VSYNC is enabled
+*
+* return Whether VSYNC is enabled
+*/
+int wii_vsync_enabled()
+{
+  return 
+    ( wii_vsync == VSYNC_ENABLED ) && 
+    ( ( !wii_is_pal && wii_get_max_frames() <= 60 ) ||
+    ( wii_is_pal && wii_get_max_frames() <= 50 ) );
 }
 
 #ifdef WII_NETTRACE
