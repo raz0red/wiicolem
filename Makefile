@@ -62,9 +62,9 @@ INCLUDES	:= \
     wii-emucommon/pngu/include \
     wii-emucommon/FreeTypeGX/include \
     wii-emucommon/i18n/include \
-    wii-emucommon/thirdparty/sdl/SDL/include \
-    wii-emucommon/thirdparty/sdl/SDL_ttf/include \
-    wii-emucommon/thirdparty/sdl/SDL_image/include \
+    wii-emucommon/sdl/SDL/include \
+    wii-emucommon/sdl/SDL_ttf/include \
+    wii-emucommon/sdl/SDL_image/include \
     src/ColEm \
     src/Z80 \
     src/EMULib \
@@ -96,9 +96,9 @@ LIBS    :=  -lSDL -lemucommon  -ltinysmb -lSDL_ttf -lSDL_image -lpng -lfreetype 
 #---------------------------------------------------------------------------------
 LIBDIRS	:= \
     wii-emucommon/ \
-    wii-emucommon/thirdparty/sdl/SDL/lib \
-    wii-emucommon/thirdparty/sdl/SDL_ttf/lib \
-    wii-emucommon/thirdparty/sdl/SDL_image/lib
+    wii-emucommon/sdl/SDL/lib \
+    wii-emucommon/sdl/SDL_ttf/lib \
+    wii-emucommon/sdl/SDL_image/lib
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
