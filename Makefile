@@ -46,12 +46,7 @@ include $(DEVKITPPC)/wii_rules
 TARGET		:=  boot
 BUILD		:=	build
 SOURCES		:= \
-    src src/wii \
-    wii-emucommon/src \
-    wii-emucommon/netprint/src \
-    wii-emucommon/pngu/src \
-    wii-emucommon/FreeTypeGX/src \
-    wii-emucommon/i18n/src \
+    src/wii \
     src/ColEm \
     src/Z80 \
     src/EMULib \
@@ -61,7 +56,7 @@ DATA		:= \
     res/fonts \
     res/gfx
 INCLUDES	:= \
-    src src/wii \
+    src/wii \
     wii-emucommon/include \
     wii-emucommon/netprint/include \
     wii-emucommon/pngu/include \
@@ -92,8 +87,8 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS    :=  -lSDL -lemucommon  -ltinysmb -lSDL_ttf -lSDL_image -lpng -lfreetype -lfat -lwiiuse \
-            -lbte -logc -lz -lbz2 -lm -lwiikeyboard
+LIBS    :=  -lSDL -lemucommon  -ltinysmb -lSDL_ttf -lSDL_image -lpng -lfreetype \
+            -lfat -lwiiuse -lbte -logc -lz -lbz2 -lm -lwiikeyboard
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
