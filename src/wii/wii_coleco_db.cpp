@@ -30,6 +30,7 @@
 
 #include "Coleco.h"
 
+#include "wii_app_common.h"
 #include "wii_app.h"
 #include "wii_util.h"
 #include "wii_coleco.h"

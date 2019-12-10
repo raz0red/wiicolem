@@ -32,6 +32,7 @@
 
 #include "Coleco.h"
 
+#include "wii_app_common.h"
 #include "wii_app.h"
 #include "wii_snapshot.h"
 #include "wii_util.h"
@@ -124,8 +125,7 @@ static int get_latest_snapshot() {
  * @param   buffer The output buffer to receive the name of the snapshot file
  *              (length must be WII_MAX_PATH)
  */
-extern "C" void wii_snapshot_handle_get_name(const char* romfile,
-                                             char* buffer) {
+void wii_snapshot_handle_get_name(const char* romfile, char* buffer) {
     get_snapshot_name(romfile, ss_index, buffer);
 }
 
@@ -135,7 +135,7 @@ extern "C" void wii_snapshot_handle_get_name(const char* romfile,
  * @param   The name to save the snapshot to
  * @return  Whether the snapshot was successful
  */
-extern "C" BOOL wii_snapshot_handle_save(char* filename) {
+BOOL wii_snapshot_handle_save(char* filename) {
     clear_current_snapshot_info();  // force recheck
     return SaveSTA(filename);
 }

@@ -30,6 +30,7 @@
 
 #include "wii_util.h"
 #include "wii_coleco.h"
+#include "wii_config.h"
 
 #include "networkop.h"
 
@@ -39,7 +40,7 @@
  * @param   name The name of the config value
  * @param   value The config value
  */
-extern "C" void wii_config_handle_read_value(char* name, char* value) {
+void wii_config_handle_read_value(char* name, char* value) {
     if (strcmp(name, "debug") == 0) {
         wii_debug = Util_sscandec(value);
     } else if (strcmp(name, "top_menu_exit") == 0) {
@@ -102,7 +103,7 @@ extern "C" void wii_config_handle_read_value(char* name, char* value) {
  *
  * @param   fp The pointer to the file to write to
  */
-extern "C" void wii_config_handle_write_config(FILE* fp) {
+void wii_config_handle_write_config(FILE* fp) {
     fprintf(fp, "debug=%d\n", wii_debug);
     fprintf(fp, "top_menu_exit=%d\n", wii_top_menu_exit);
     fprintf(fp, "vsync=%d\n", wii_vsync);

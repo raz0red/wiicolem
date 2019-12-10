@@ -170,10 +170,6 @@ void wii_update_widescreen();
  */
 void wii_set_video_mode(BOOL allowVi);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * Returns the current size to use for the screen
  *
@@ -183,9 +179,5 @@ extern "C" {
  * @param   y (out) Output y value
  */
 void wii_get_screen_size(int inX, int inY, int* x, int* y);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -31,6 +31,7 @@
 
 #include "Coleco.h"
 
+#include "wii_app_common.h"
 #include "wii_app.h"
 #include "wii_resize_screen.h"
 #include "wii_sdl.h"
@@ -68,6 +69,24 @@ static TREENODE* roms_menu;
 
 /** Forward refs */
 static void wii_read_game_list(TREENODE* menu);
+
+/**
+ * Returns the space node type
+ *
+ * @return  The spacer node type
+ */
+int wii_get_nodetype_spacer() {
+    return NODETYPE_SPACER;
+}
+
+/**
+ * Returns the rom node type
+ *
+ * @return  The rom node type
+ */
+int wii_get_nodetype_rom() {
+    return NODETYPE_ROM;
+}
 
 /**
  * Initializes the ColecoVision menu

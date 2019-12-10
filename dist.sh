@@ -31,13 +31,13 @@
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 DATE="$( date '+%Y%m%d%H%S' )"
 DIST_DIR=$SCRIPTPATH/dist
-LAYOUT_DIR=$SCRIPTPATH/src/wii/res/layout/
+LAYOUT_DIR=$SCRIPTPATH/res/layout/
 BOOT_DOL_SRC=$SCRIPTPATH/boot.dol
 BOOT_DOL_DEST=$DIST_DIR/apps/wiicolem
 BOOT_ELF_SRC=$SCRIPTPATH/boot.elf
 BOOT_ELF_DEST=$DIST_DIR
 META_FILE=$DIST_DIR/apps/wiicolem/meta.xml
-SDL_DIR=$SCRIPTPATH/thirdparty/sdl
+EMUCOMMON_DIR=$SCRIPTPATH/wii-emucommon
 
 #
 # Function that is invoked when the script fails.
@@ -51,9 +51,8 @@ function fail() {
 }
 
 # Build SDL
-echo "Building SDL..."
-cd $SDL_DIR || { fail 'Error changing to SDL directory.'; }
-make || { fail 'Error building SDL.'; }
+echo "Building wii-emucommon..."
+$EMUCOMMON_DIR/dist.sh || { fail 'Error building wii-emucommon.'; }
 
 # Change to script directory
 echo "Changing to script directory..."

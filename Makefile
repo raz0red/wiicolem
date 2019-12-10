@@ -43,40 +43,38 @@ include $(DEVKITPPC)/wii_rules
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-#TARGET		:=	$(notdir $(CURDIR))
 TARGET		:=  boot
 BUILD		:=	build
 SOURCES		:= \
     src src/wii \
-    src/wii/common \
-    src/wii/common/netprint \
-    src/wii/common/pngu \
-    src/wii/common/FreeTypeGX \
-    src/wii/common/i18n \
+    wii-emucommon/src \
+    wii-emucommon/netprint/src \
+    wii-emucommon/pngu/src \
+    wii-emucommon/FreeTypeGX/src \
+    wii-emucommon/i18n/src \
     src/ColEm \
     src/Z80 \
     src/EMULib \
     src/ColEm/Wii \
     src/EMULib/Wii 
 DATA		:= \
-    src/wii/res/fonts \
-    src/wii/res/gfx
-#DATA		:=	
+    res/fonts \
+    res/gfx
 INCLUDES	:= \
     src src/wii \
-    src/wii/common \
-    src/wii/common/netprint \
-    src/wii/common/pngu \
-    src/wii/common/FreeTypeGX \
-    src/wii/common/i18n \
+    wii-emucommon/include \
+    wii-emucommon/netprint/include \
+    wii-emucommon/pngu/include \
+    wii-emucommon/FreeTypeGX/include \
+    wii-emucommon/i18n/include \
+    wii-emucommon/thirdparty/sdl/SDL/include \
+    wii-emucommon/thirdparty/sdl/SDL_ttf/include \
+    wii-emucommon/thirdparty/sdl/SDL_image/include \
     src/ColEm \
     src/Z80 \
     src/EMULib \
     src/ColEm/Wii \
-    src/EMULib/Wii \
-    thirdparty/sdl/SDL/include \
-    thirdparty/sdl/SDL_ttf/include \
-    thirdparty/sdl/SDL_image/include
+    src/EMULib/Wii
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -94,7 +92,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS    :=  -ltinysmb -lSDL_ttf -lSDL -lSDL_image -lpng -lfreetype -lfat -lwiiuse \
+LIBS    :=  -lSDL -lemucommon  -ltinysmb -lSDL_ttf -lSDL_image -lpng -lfreetype -lfat -lwiiuse \
             -lbte -logc -lz -lbz2 -lm -lwiikeyboard
 
 #---------------------------------------------------------------------------------
@@ -102,9 +100,10 @@ LIBS    :=  -ltinysmb -lSDL_ttf -lSDL -lSDL_image -lpng -lfreetype -lfat -lwiius
 # include and lib
 #---------------------------------------------------------------------------------
 LIBDIRS	:= \
-    thirdparty/sdl/SDL/lib \
-    thirdparty/sdl/SDL_ttf/lib \
-    thirdparty/sdl/SDL_image/lib
+    wii-emucommon/ \
+    wii-emucommon/thirdparty/sdl/SDL/lib \
+    wii-emucommon/thirdparty/sdl/SDL_ttf/lib \
+    wii-emucommon/thirdparty/sdl/SDL_image/lib
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -135,22 +134,8 @@ CFILES      := \
     DRV9918.c \
     Z80.c \
     Sound.c \
-    SndSDL.c \
-    pngu.c \
-    net_print.c \
-    wii_app.c \
-    wii_config.c \
-    wii_freetype.c \
-    wii_gx.c \
-    wii_hash.c \
-    wii_hw_buttons.c \
-    wii_input.c \
-    wii_resize_screen.c \
-    wii_sdl.c \
-    wii_snapshot.c \
-    wii_util.c \
-    wii_video.c
-        
+    SndSDL.c
+
 CPPFILES    := \
     WiiColem.cpp \
     wii_coleco.cpp \
@@ -160,15 +145,7 @@ CPPFILES    := \
     wii_coleco_keypad.cpp \
     wii_coleco_menu.cpp \
     wii_coleco_sdl.cpp \
-    wii_coleco_snapshot.cpp \
-    wii_main.cpp \
-    FreeTypeGX.cpp \
-    Metaphrasis.cpp \
-    wii_file_io.cpp \
-    vi_encoder.cpp \
-    fileop.cpp \
-    networkop.cpp \
-    gettext.cpp
+    wii_coleco_snapshot.cpp
 
 sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))
@@ -278,3 +255,4 @@ $(OUTPUT).elf: $(OFILES)
 #---------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------
+

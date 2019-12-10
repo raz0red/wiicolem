@@ -28,6 +28,7 @@
 
 #include "Coleco.h"
 
+#include "wii_app_common.h"
 #include "wii_app.h"
 #include "wii_config.h"
 #include "wii_input.h"
@@ -93,6 +94,24 @@ static char saves_dir[WII_MAX_PATH] = "";
 static char overlays_dir[WII_MAX_PATH] = "";
 
 /**
+ * Returns the base directory for the application
+ * 
+ * @return  The base directory for the application
+ */
+const char* wii_get_app_base_dir() {
+    return WII_BASE_APP_DIR;
+}
+
+/**
+ * Returns the location of the config file
+ * 
+ * @return  The location of the config file
+ */
+const char* wii_get_config_file_path() {
+    return WII_CONFIG_FILE;
+}
+
+/**
  * Initializes the application
  */
 void wii_handle_init() {
@@ -133,7 +152,7 @@ void wii_update_widescreen() {
  * @param   x (out) Output x value
  * @param   y (out) Output y value
  */
-extern "C" void wii_get_screen_size(int inX, int inY, int* x, int* y) {
+void wii_get_screen_size(int inX, int inY, int* x, int* y) {
     int xs = inX;
     int ys = inY;
 
