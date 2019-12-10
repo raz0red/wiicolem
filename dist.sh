@@ -50,7 +50,7 @@ function fail() {
     exit 1
 }
 
-# Build SDL
+# Build wii-emucommon
 echo "Building wii-emucommon..."
 $EMUCOMMON_DIR/dist.sh || { fail 'Error building wii-emucommon.'; }
 
