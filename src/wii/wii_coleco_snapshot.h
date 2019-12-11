@@ -37,10 +37,15 @@
 BOOL wii_start_snapshot();
 
 /**
- * Resets snapshot related informatino. This method is typically invoked when
+ * Resets snapshot related information. This method is typically invoked when
  * a new rom file is loaded.
  */
 void wii_snapshot_reset();
+
+/**
+ * Refreshes state of snapshot (does it exist, etc.)
+ */
+void wii_snapshot_refresh();
 
 /**
  * Returns the index of the current snapshot.

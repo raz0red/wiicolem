@@ -66,10 +66,9 @@ static void get_snapshot_name(const char* romfile, int index, char* buffer) {
 }
 
 /**
- * Clears information regarding the current snapshot
- * (whether it exists, etc.)
+ * Refreshes state of snapshot (does it exist, etc.)
  */
-static void clear_current_snapshot_info() {
+void wii_snapshot_refresh() {
     ss_exists = -1;
     ss_latest = -1;
 }
@@ -136,17 +135,17 @@ void wii_snapshot_handle_get_name(const char* romfile, char* buffer) {
  * @return  Whether the snapshot was successful
  */
 BOOL wii_snapshot_handle_save(char* filename) {
-    clear_current_snapshot_info();  // force recheck
+    wii_snapshot_refresh();  // force recheck
     return SaveSTA(filename);
 }
 
 /**
- * Resets snapshot related informatino. This method is typically invoked when
+ * Resets snapshot related information. This method is typically invoked when
  * a new rom file is loaded.
  */
 void wii_snapshot_reset() {
     ss_index = 0;
-    clear_current_snapshot_info();
+    wii_snapshot_refresh();
 }
 
 /**
@@ -170,7 +169,7 @@ int wii_snapshot_next() {
     if (++ss_index == MAX_SNAPSHOTS) {
         ss_index = 0;
     }
-    clear_current_snapshot_info();  // force recheck
+    wii_snapshot_refresh();  // force recheck
 
     return ss_index;
 }
@@ -184,7 +183,7 @@ BOOL wii_start_snapshot() {
     if (!wii_last_rom) {
         return FALSE;
     }
-    clear_current_snapshot_info();  // force recheck
+    wii_snapshot_refresh();  // force recheck
 
     char savename[WII_MAX_PATH];
     wii_snapshot_handle_get_name(wii_last_rom, savename);

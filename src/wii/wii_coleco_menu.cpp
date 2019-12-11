@@ -134,6 +134,9 @@ void wii_coleco_menu_init() {
     child = wii_create_tree_node(NODETYPE_LOAD_STATE, "Load state");
     wii_add_child(states, child);
 
+    child = wii_create_tree_node(NODETYPE_DELETE_STATE, "Delete state");
+    wii_add_child(states, child);    
+
     //
     // The cartridge settings (current) menu
     //
@@ -735,6 +738,10 @@ void wii_menu_handle_select_node(TREENODE* node) {
             case NODETYPE_SAVE_STATE:
                 wii_save_snapshot(NULL, TRUE);
                 break;
+            case NODETYPE_DELETE_STATE:
+                wii_delete_snapshot();
+                wii_snapshot_refresh();
+                break;
             case NODETYPE_CARTRIDGE_SAVE_STATES_SLOT:
                 wii_snapshot_next();
                 break;
@@ -1003,6 +1010,7 @@ void wii_menu_handle_select_node(TREENODE* node) {
  */
 BOOL wii_menu_handle_is_node_visible(TREENODE* node) {
     switch (node->node_type) {
+        case NODETYPE_DELETE_STATE:
         case NODETYPE_LOAD_STATE:
             return wii_snapshot_current_exists();
         case NODETYPE_RESET:
