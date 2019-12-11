@@ -56,7 +56,6 @@ DATA		:= \
     res/fonts \
     res/gfx
 INCLUDES	:= \
-    src/wii \
     wii-emucommon/include \
     wii-emucommon/netprint/include \
     wii-emucommon/pngu/include \
@@ -65,6 +64,7 @@ INCLUDES	:= \
     wii-emucommon/sdl/SDL/include \
     wii-emucommon/sdl/SDL_ttf/include \
     wii-emucommon/sdl/SDL_image/include \
+    src/wii \
     src/ColEm \
     src/Z80 \
     src/EMULib \
@@ -76,7 +76,7 @@ INCLUDES	:= \
 #---------------------------------------------------------------------------------
 
 CFLAGS	=   -g -O1 -Wall $(MACHDEP) $(INCLUDE) -DMSB_FIRST -DCOLEM -DWII -DBPP8 \
-            -DBPS16 -DWII_BIN2O -DMEGACART \
+            -DBPS16 -DWII_BIN2O -DMEGACART -DZLIB \
             -Wno-format-truncation \
             -Wno-format-overflow
 # -DNO_AUDIO_PLAYBACK -DWII_NETTRACE
@@ -87,7 +87,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS    :=  -lSDL -lemucommon  -ltinysmb -lSDL_ttf -lSDL_image -lpng -lfreetype \
+LIBS    :=  -lSDL -lemucommon -ltinysmb -lSDL_ttf -lSDL_image -lpng -lfreetype \
             -lfat -lwiiuse -lbte -logc -lz -lbz2 -lm -lwiikeyboard
 
 #---------------------------------------------------------------------------------
