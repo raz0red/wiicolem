@@ -37,9 +37,15 @@
 #include "wii_coleco_keypad.h"
 #include "wii_coleco_menu.h"
 #include "wii_gx.h"
+#include "wii_main.h"
 
 #include "FreeTypeGX.h"
 #include "font_ttf.h"
+
+#ifdef WII_NETTRACE
+#include <network.h>
+#include "net_print.h"  
+#endif
 
 /** SDL Video external references */
 extern "C" {
@@ -109,6 +115,15 @@ const char* wii_get_app_base_dir() {
  */
 const char* wii_get_config_file_path() {
     return WII_CONFIG_FILE;
+}
+
+/**
+ * Returns the location of the data directory
+ * 
+ * @return  The location of the data directory
+ */
+const char* wii_get_data_path() {
+    return WII_FILES_DIR;
 }
 
 /**

@@ -47,6 +47,11 @@
 
 #include "gettext.h"
 
+#ifdef WII_NETTRACE
+#include <network.h>
+#include "net_print.h"  
+#endif
+
 /** SDL Video external references */
 extern "C" {
 void WII_VideoStart();

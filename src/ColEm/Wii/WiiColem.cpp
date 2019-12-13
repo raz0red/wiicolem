@@ -52,11 +52,11 @@
 #include "wii_sdl.h"
 #include "wii_app.h"
 #include "wii_hw_buttons.h"
-#include "wii_file_io.h"
 #include "wii_gx.h"
 #include "wii_coleco.h"
 #include "wii_input.h"
 #include "wii_coleco_keypad.h"
+#include "wii_coleco_emulation.h"
 #include "wii_main.h"
 
 // Sound information
@@ -78,8 +78,8 @@ static BOOL ResetTiming = TRUE;
 /** The current FPS */
 static float FpsCounter = 0.0;
 
-/** Whether we should display the initial menu */
-static BOOL InitialMenuDisplay = TRUE;
+/** Is this the first time the loop is occurring */
+static BOOL InitialLoop = TRUE;
 
 /** Forward reference to render the emulator screen */
 static void render_screen();
@@ -291,12 +291,19 @@ unsigned int Joystick(void) {
     /* Render audio here */
     RenderAndPlayAudio(GetFreeAudio());
 
-    if (InitialMenuDisplay) {
-        // Show the menu
-        wii_menu_show();
-        InitialMenuDisplay = FALSE;
-        // Adds emulator render callback after menu
-        AddRenderCallbackPostMenu();
+    if (InitialLoop) {
+        InitialLoop = FALSE;
+
+        if (wii_initial_rom[0] != '\0') {
+            // Launch the initial rom (Wiiflow)
+            AddRenderCallbackPostMenu(); // Sets correct video mode
+            wii_start_emulation(wii_initial_rom, NULL, FALSE, FALSE);
+        } else {
+            // Show the menu
+            wii_menu_show();
+            // Adds emulator render callback after menu
+            AddRenderCallbackPostMenu();
+        }
     }
 
     u32 keypad = 0;

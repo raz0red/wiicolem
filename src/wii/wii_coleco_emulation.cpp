@@ -34,7 +34,6 @@
 #include "wii_app_common.h"
 #include "wii_app.h"
 #include "wii_config.h"
-#include "wii_file_io.h"
 #include "wii_hash.h"
 #include "wii_input.h"
 #include "wii_sdl.h"
