@@ -73,7 +73,7 @@ void wii_config_handle_read_value(char* name, char* value) {
         wii_mote_menu_vertical = Util_sscandec(value);
     } else if (strcmp(name, "super_game_module") == 0) {
         wii_super_game_module = Util_sscandec(value);
-    } else if (strcmp(name, "16_9_correction") == 0) {
+    } else if (strcmp(name, "16_9_correct") == 0) {
         wii_16_9_correction = Util_sscandec(value);
     } else if (strcmp(name, "full_widescreen") == 0) {
         wii_full_widescreen = Util_sscandec(value);
@@ -119,7 +119,7 @@ void wii_config_handle_write_config(FILE* fp) {
     fprintf(fp, "sel_offset=%d\n", wii_menu_sel_offset);
     fprintf(fp, "mote_menu_vertical=%d\n", wii_mote_menu_vertical);
     fprintf(fp, "super_game_module=%d\n", wii_super_game_module);
-    fprintf(fp, "16_9_correction=%d\n", wii_16_9_correction);
+    fprintf(fp, "16_9_correct=%d\n", wii_16_9_correction);
     fprintf(fp, "double_strike=%d\n", wii_double_strike_mode);
     fprintf(fp, "full_widescreen=%d\n", wii_full_widescreen);
     fprintf(fp, "video_filter=%d\n", wii_filter);

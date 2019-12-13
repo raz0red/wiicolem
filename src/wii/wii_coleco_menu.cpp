@@ -430,12 +430,15 @@ void wii_menu_handle_get_node_name(TREENODE* node, char* buffer, char* value) {
             snprintf(value, WII_MENU_BUFF_SIZE, "%s",
                      (wii_gx_vi_scaler ? "GX + VI" : "GX"));
             break;
-        case NODETYPE_FULL_WIDESCREEN:
-            snprintf(value, WII_MENU_BUFF_SIZE, "%s",
-                     (wii_full_widescreen == WS_AUTO
-                          ? "(auto)"
-                          : (wii_full_widescreen ? "Enabled" : "Disabled")));
-            break;
+        case NODETYPE_16_9_CORRECTION:
+        case NODETYPE_FULL_WIDESCREEN: {
+            int val = node->node_type == NODETYPE_16_9_CORRECTION
+                          ? wii_16_9_correction
+                          : wii_full_widescreen;
+            snprintf(
+                value, WII_MENU_BUFF_SIZE, "%s",
+                (val == WS_AUTO ? "(auto)" : (val ? "Enabled" : "Disabled")));
+        } break;
         case NODETYPE_VOLUME:
             snprintf(value, WII_MENU_BUFF_SIZE, "%d", wii_volume);
             break;
@@ -460,16 +463,12 @@ void wii_menu_handle_get_node_name(TREENODE* node, char* buffer, char* value) {
         case NODETYPE_KEYPAD_PAUSE:
         case NODETYPE_USE_OVERLAY:
         case NODETYPE_SUPER_GAME_MODULE:
-        case NODETYPE_16_9_CORRECTION:
         case NODETYPE_DOUBLE_STRIKE:
         case NODETYPE_FILTER: {
             BOOL enabled = FALSE;
             switch (node->node_type) {
                 case NODETYPE_FILTER:
                     enabled = wii_filter;
-                    break;
-                case NODETYPE_16_9_CORRECTION:
-                    enabled = wii_16_9_correction;
                     break;
                 case NODETYPE_DOUBLE_STRIKE:
                     enabled = wii_double_strike_mode;
@@ -734,6 +733,12 @@ void wii_menu_handle_select_node(TREENODE* node) {
                     wii_full_widescreen = 0;
                 }
                 break;
+            case NODETYPE_16_9_CORRECTION:
+                wii_16_9_correction++;
+                if (wii_16_9_correction > WS_AUTO) {
+                    wii_16_9_correction = 0;
+                }
+                break;
             case NODETYPE_VOLUME:
                 wii_volume++;
                 if (wii_volume > 15) {
@@ -808,9 +813,6 @@ void wii_menu_handle_select_node(TREENODE* node) {
                 break;
             case NODETYPE_SUPER_GAME_MODULE:
                 wii_super_game_module ^= 1;
-                break;
-            case NODETYPE_16_9_CORRECTION:
-                wii_16_9_correction ^= 1;
                 break;
             case NODETYPE_DOUBLE_STRIKE:
                 wii_double_strike_mode ^= 1;
@@ -1037,8 +1039,6 @@ BOOL wii_menu_handle_is_node_visible(TREENODE* node) {
         case NODETYPE_KEYPAD_PAUSE:
         case NODETYPE_KEYPAD_PAUSE_CART:
             return !wii_gx_vi_scaler;
-        case NODETYPE_16_9_CORRECTION:
-            return is_widescreen;
         case NODETYPE_SENSITIVITY:
             return (wii_coleco_db_entry.controlsMode == CONTROLS_MODE_ROLLER) ||
                    (wii_coleco_db_entry.controlsMode ==

@@ -172,7 +172,7 @@ void wii_get_screen_size(int inX, int inY, int* x, int* y) {
     int ys = inY;
 
     // 4:3 correct is applicable and enabled
-    if (is_widescreen && wii_16_9_correction) {
+    if (wii_16_9_correction == WS_AUTO ? is_widescreen : wii_16_9_correction) {
         xs = (xs * 3) / 4;  // Widescreen correct
     }
 
