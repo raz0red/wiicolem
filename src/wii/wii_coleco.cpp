@@ -196,9 +196,11 @@ void wii_set_video_mode(BOOL allowVi) {
     wii_get_screen_size(wii_screen_x, wii_screen_y, &x, &y);
 
     if (allowVi && wii_double_strike_mode) {
-        WII_SetDoubleStrikeVideoMode(x, y >> 1, TMS9918_WIDTH);
+        WII_SetFilter(FALSE);
+        WII_SetDoubleStrikeVideoMode(x, y >> 1, TMS9918_WIDTH);        
     } else if (allowVi && wii_gx_vi_scaler) {
         // VI+GX
+        WII_SetFilter(FALSE);
         WII_SetStandardVideoMode(x, y, TMS9918_WIDTH);
     } else {
         // Scale the screen (GX)
