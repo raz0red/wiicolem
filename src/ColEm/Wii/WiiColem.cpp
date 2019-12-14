@@ -491,9 +491,14 @@ static void wii_render_callback() {
         int padding = 2;
 
         if (dbg_count % 60 == 0) {
+#ifdef ENABLE_VSYNC            
             sprintf(text, "FPS: %0.2f, VSync: %s, CycleAdj: %d %s", FpsCounter,
                     (wii_vsync == VSYNC_ENABLED ? "On" : "Off"),
                     wii_coleco_db_entry.cycleAdjust, debug_str);
+#else
+            sprintf(text, "FPS: %0.2f, CycleAdj: %d %s", FpsCounter,                    
+                    wii_coleco_db_entry.cycleAdjust, debug_str);
+#endif                    
         }
 
         GXColor color = (GXColor){0x0, 0x0, 0x0, 0x80};
@@ -533,9 +538,11 @@ static void render_screen() {
     // Send to display
     wii_sdl_flip();
 
+#ifdef ENABLE_VSYNC
     // Wait for VSync signal
     if (wii_vsync == VSYNC_ENABLED)
         VIDEO_WaitVSync();
+#endif        
 }
 
 /**

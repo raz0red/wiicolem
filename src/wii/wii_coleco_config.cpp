@@ -45,8 +45,10 @@ void wii_config_handle_read_value(char* name, char* value) {
         wii_debug = Util_sscandec(value);
     } else if (strcmp(name, "top_menu_exit") == 0) {
         wii_top_menu_exit = Util_sscandec(value);
+#ifdef ENABLE_VSYNC        
     } else if (strcmp(name, "vsync") == 0) {
         wii_vsync = Util_sscandec(value);
+#endif        
     } else if (strcmp(name, "col_mode") == 0) {
         wii_coleco_mode = Util_sscandec(value);
     } else if (strcmp(name, "controller_view_mode") == 0) {
@@ -106,7 +108,9 @@ void wii_config_handle_read_value(char* name, char* value) {
 void wii_config_handle_write_config(FILE* fp) {
     fprintf(fp, "debug=%d\n", wii_debug);
     fprintf(fp, "top_menu_exit=%d\n", wii_top_menu_exit);
+#ifdef ENABLE_VSYNC    
     fprintf(fp, "vsync=%d\n", wii_vsync);
+#endif    
     fprintf(fp, "col_mode=%d\n", wii_coleco_mode);
     fprintf(fp, "controller_view_mode=%d\n", wii_coleco_controller_view_mode);
     fprintf(fp, "keypad_pause=%d\n", wii_keypad_pause);

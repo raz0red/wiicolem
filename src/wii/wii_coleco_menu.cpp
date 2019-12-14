@@ -258,8 +258,10 @@ void wii_coleco_menu_init() {
     child = wii_create_tree_node(NODETYPE_RESIZE_SCREEN, "Screen size ");
     wii_add_child(display, child);
 
+#ifdef ENABLE_VSYNC
     child = wii_create_tree_node(NODETYPE_VSYNC, "Vertical sync ");
     wii_add_child(display, child);
+#endif    
 
     child = wii_create_tree_node(NODETYPE_MAX_FRAMES, "Maximum frame rate ");
     wii_add_child(display, child);
