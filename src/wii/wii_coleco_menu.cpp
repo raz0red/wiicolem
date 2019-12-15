@@ -272,6 +272,9 @@ void wii_coleco_menu_init() {
     child = wii_create_tree_node(NODETYPE_16_9_CORRECTION, "16:9 correction ");
     wii_add_child(display, child);
 
+    child = wii_create_tree_node(NODETYPE_TRAP_FILTER, "Color trap filter");
+    wii_add_child(display, child);
+
     child =
         wii_create_tree_node(NODETYPE_DOUBLE_STRIKE, "Double strike (240p)");
     wii_add_child(display, child);
@@ -466,12 +469,16 @@ void wii_menu_handle_get_node_name(TREENODE* node, char* buffer, char* value) {
         case NODETYPE_USE_OVERLAY:
         case NODETYPE_SUPER_GAME_MODULE:
         case NODETYPE_DOUBLE_STRIKE:
+        case NODETYPE_TRAP_FILTER:        
         case NODETYPE_FILTER: {
             BOOL enabled = FALSE;
             switch (node->node_type) {
                 case NODETYPE_FILTER:
                     enabled = wii_filter;
                     break;
+                case NODETYPE_TRAP_FILTER:                    
+                    enabled = wii_trap_filter;
+                    break;                
                 case NODETYPE_DOUBLE_STRIKE:
                     enabled = wii_double_strike_mode;
                     break;
@@ -824,6 +831,9 @@ void wii_menu_handle_select_node(TREENODE* node) {
                 break;
             case NODETYPE_GX_VI_SCALER:
                 wii_gx_vi_scaler ^= 1;
+                break;
+            case NODETYPE_TRAP_FILTER:
+                wii_trap_filter ^= 1;
                 break;
             case NODETYPE_KEYPAD_PAUSE:
                 wii_keypad_pause ^= 1;

@@ -49,6 +49,7 @@
 #include "Sound.h"
 
 #include "fileop.h"
+#include "vi_encoder.h"
 #include "wii_sdl.h"
 #include "wii_app.h"
 #include "wii_hw_buttons.h"
@@ -254,6 +255,7 @@ static void AddRenderCallbackPostMenu() {
         wii_gx_pop_callback(); // Added by menu to blank screen                                                   
         wii_set_video_mode(TRUE);              
         wii_gx_push_callback(&wii_render_callback, TRUE, &wii_prerender_callback);                        
+        VIDEO_SetTrapFilter(wii_trap_filter);
         VIDEO_WaitVSync();
         WII_VideoStart();                                                        
     }

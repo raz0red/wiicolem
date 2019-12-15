@@ -97,6 +97,8 @@ void wii_config_handle_read_value(char* name, char* value) {
         setSmbPassword(value);
     } else if (strcmp(name, "usb_keepalive") == 0) {
         wii_usb_keepalive = Util_sscandec(value);
+    } else if (strcmp(name, "trap_filter") == 0) {
+        wii_trap_filter = Util_sscandec(value);
     }
 }
 
@@ -134,6 +136,7 @@ void wii_config_handle_write_config(FILE* fp) {
     fprintf(fp, "share_user=%s\n", getSmbUser());
     fprintf(fp, "share_pass=%s\n", getSmbPassword());
     fprintf(fp, "usb_keepalive=%d\n", wii_usb_keepalive);
+    fprintf(fp, "trap_filter=%d\n", wii_trap_filter);
 
     char hex[64] = "";
     Util_rgbatohex(&wii_menu_sel_color, hex);
