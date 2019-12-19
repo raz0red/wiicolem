@@ -287,7 +287,8 @@ static void RemoveRenderCallbackPreMenu() {
 
 // The last keypad button pressed when we were in the "pause emulation
 // when keypad is displayed mode".
-u32 lastkeypad = 0;
+static u32 lastkeypad = 0;
+static BOOL keypad_changed = FALSE;
 
 unsigned int Joystick(void) {
     /* Render audio here */
@@ -323,10 +324,12 @@ unsigned int Joystick(void) {
         // until the button is no longer held.
         //
         if (lastkeypad) {
-            if (wii_is_any_button_held(2)) {
+            if (keypad_changed || wii_is_any_button_held(2)) {
+                keypad_changed = FALSE;
                 return lastkeypad;
             } else {
                 lastkeypad = 0;
+                keypad_changed = FALSE;
             }
         }
 
@@ -363,6 +366,7 @@ unsigned int Joystick(void) {
 
                     // Repeat the last keypad press until the button is released
                     lastkeypad = keypad;
+                    keypad_changed = TRUE;
                 } else {
                     // A keypad is displayed, render the screen and pads
                     // and loop again, waiting for the keypads to close
