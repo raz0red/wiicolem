@@ -175,29 +175,29 @@ void wii_coleco_db_get_defaults(ColecoDBEntry* entry, BOOL fullClear) {
 
     switch (entry->controlsMode) {
         case CONTROLS_MODE_STANDARD:
-            entry->button[0] = JST_FIRER;
-            entry->button[1] = JST_FIREL;
+            entry->button[0] = JST_FIREL;
+            entry->button[1] = JST_FIRER;
             entry->wiiMoteHorizontal = 1;
             break;
         case CONTROLS_MODE_SUPERACTION:
-            entry->button[0] = entry->button[4] = JST_FIRER;  // Yellow
-            entry->button[1] = entry->button[5] = JST_FIREL;  // Orange
+            entry->button[0] = entry->button[4] = JST_FIREL;  // Yellow
+            entry->button[1] = entry->button[5] = JST_FIRER;  // Orange
             entry->button[2] = entry->button[6] = JST_BLUE;
             entry->button[3] = entry->button[7] = JST_PURPLE;
             break;
         case CONTROLS_MODE_ROLLER:
-            entry->button[0] = JST_2P_FIRER;
-            entry->button[1] = JST_2P_FIREL;
-            entry->button[2] = JST_FIRER;
-            entry->button[3] = JST_FIREL;
+            entry->button[0] = JST_2P_FIREL;
+            entry->button[1] = JST_2P_FIRER;
+            entry->button[2] = JST_FIREL;
+            entry->button[3] = JST_FIRER;
             break;
         case CONTROLS_MODE_DRIVING:
-            entry->button[0] = JST_FIRER;
-            entry->button[1] = JST_FIREL;
+            entry->button[0] = JST_FIREL;
+            entry->button[1] = JST_FIRER;
             break;
         case CONTROLS_MODE_DRIVING_TILT:
-            entry->button[0] = JST_FIRER;
-            entry->button[1] = JST_FIREL;
+            entry->button[0] = JST_FIREL;
+            entry->button[1] = JST_FIRER;
             entry->wiiMoteHorizontal = 1;
             break;
     }
