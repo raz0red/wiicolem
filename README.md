@@ -98,9 +98,9 @@ the Cartridge Database it may contain non-default mappings.
   cartridge basis via Cartridge Settings (see "Cartridge Settings" section,
   below).
 
-  NOTE: The "Keypad pause" option is not available when the GX+VI or 
+  **NOTE: The "Keypad pause" option is not available when the GX+VI or 
         Double strike (240p) video modes are enabled.
-        (Keypad pause is enabled and cannot be disabled).  
+        (Keypad pause is enabled and cannot be disabled).**
 
   * When keypad pause is enabled, the keypad will be closed when a keypad
       button is pressed (or the keypad is explicitly closed). It is important
