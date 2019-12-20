@@ -16,69 +16,33 @@ Marat Fayzullin.
 
 Features:
 
+  * Super Game Module (SGM) compatibility
+  * Multiple video modes (240p, GX+VI, GX) 
   * Support for driving, roller, and super action controllers
   * Tilt-based (Wiimote) driving support
   * Cartridge database w/ recommended controller settings and keypad 
     descriptions for most commercial cartridges
   * Cartridge keypad overlays
   * Per-cartridge button mappings  
-  * High cartridge compatibility (see below) 
-
-The following additions/modifications were made to the core emulation code:
-
-  * Support for ColecoVision MegaCart(R)
-  * "The Heist" now works correctly (memory initialization bug).
-  * Added support for Opcode memory expansion.
-  * Added support for "Lord of the Dungeon" (original 32k or trimmed 24k).
-  * Mode 2 masking now works correctly (supports Daniel Bienvenu games).
-  * Mode 0 and Mode 3 now work correctly ("Cabbage Patch Kids Picture
-    Show" and "Smurf: Paint 'n Play Workshop" now work correctly).
-  * Fixed graphic corruption that would occur when switching between games
-    (VRAM and related state were not being reset correctly).
-  * Fixed save/load state bug where the emulator would incorrectly report
-    that the save was invalid (memory was not being cleared correctly).
-  * Fixed save/load state bug causing the palette to not be restored 
-    correctly (Aquattack, War Room)
-  * Fixed issue where noise channel wasn't starting when it should (Matt
-    Patrol). 
-    
-## What about BlueMSX-wii? 
-
-So, a common question might be why release WiiColEm when the excellent
-BlueMSX-wii emulator exists? The truth is that I started this project some
-time ago prior to the release of BlueMSX-wii. After finally getting some free
-time again I decided to go ahead and complete the port. The reason I decided
-to release it is that it is an entirely different code base. As such, it may
-play some things that BlueMSX-wii does not. WiiColEm also supports all of the
-controllers (Driving, Roller, and Spinner). Finally, it has an on-screen 
-keypad display with key descriptions and overlay support so all Coleco games
-should be playable. 
-
-## Known issues
-
-  * Zip files are not currently supported 
-  * The noise channel isn't accurate (core bug) 
 
 ## Installation
 
 To install WiiColEm, simply extract the zip file directly to your SD card
 or USB device (retain the hierarchical structure exactly).
 
-Cartridge images must be placed in the roms directory (/wiicolem/roms).
-
 ## Cartridge Database 
 
 WiiColem ships with a database that contains recommended settings for most
 commercial cartridges. These settings cover controls mappings, keypad
 overlays, keypad button descriptions, and advanced settings (whether
-the cartridge requires the Opcode memory expansion, etc.).
+the cartridge requires an EEPROM, SRAM, etc.).
 
 To view/edit the settings applied for a particular cartridge perform the
 following steps:
 
   * Load the cartridge (via the "Load cartridge" menu item)
-  * Return to the WiiColem menu
-  * Select "Cartridge settings (current cartridge)" menu item
+  * Return to the WiiColEm menu
+  * Select "Cartridge-specific settings" menu item
   * Examine the "Control settings" and "Advanced" settings for the cartridge 
 
 For more information on mapping controls and creating and/or customizing
@@ -134,12 +98,17 @@ the Cartridge Database it may contain non-default mappings.
   cartridge basis via Cartridge Settings (see "Cartridge Settings" section,
   below).
 
+  NOTE: The "Keypad pause" option is not available when the GX+VI or 
+        Double strike (240p) video modes are enabled.
+        (Keypad pause is enabled and cannot be disabled).  
+
   * When keypad pause is enabled, the keypad will be closed when a keypad
       button is pressed (or the keypad is explicitly closed). It is important
       to note that the keypad button will continue to be pressed as long as
       the controller button is held. This is necessary for games like War 
       Room where you need to hold the keypad buttons down to see the 
-      different factories, etc.
+      different factories, etc. It is also necessary for games that require
+      a longer button press for the selection to register (Star Trek, etc.).
       
   * When keypad pause is disabled, emulation will continue while the keypad
       is displayed. The keypad will continue to be displayed until it is
@@ -353,8 +322,7 @@ WiiColEm contains the ability to manage per-cartridge settings. The settings
 that can be edited include:
 
   * Control settings
-  * Advanced settings (Whether it requires Opcode memory expansion,
-    keypad pause, etc.) 
+  * Advanced settings (Whether it requires an EEPROM, SRAM, etc.)
     
 ### Control Settings
 
@@ -394,32 +362,62 @@ The following control options are available:
       Classic   : ZR           Classic   : ZL
       GameCube  : (n/a)        GameCube  : (n/a)
            
+## SMB (Network support)
+
+WiiColEm allows for loading ROMs over the network via SMB. To enable SMB
+support, you must edit the "wiicolem.conf" file located in the "/wiicolem"
+directory and provide values for the following:
+
+  * share_ip    : IP address of the computer to connect to.
+  * share_name  : Name of the share on the computer.
+  * share_user  : Name of the user to connect as
+  * share_pass  : Password for the user           
+
 ## WiiColEm crashes, code dumps, etc.
 
 If you are having issues with WiiColEm, please let me know about it via one
 of the following locations:
 
 * http://www.wiibrew.org/wiki/Talk:WiiColEm
-* http://www.twitchasylum.com/forum/viewtopic.php?t=1245
+* https://github.com/raz0red/wiicolem/issues
 
 ## Credits
 
 * NeoRame          : Icon
 * Pixelboy         : Source overlays
 * James Carter     : Source overlays
+* Mastershoes      : Testing (0.3)
 * Murph74          : Testing (0.2) 
 * Astroman         : Testing (0.2)
 * Yurkie           : Testing (0.1)
 
 ## Special thanks
 
+* Marat Fayzullin  : Creating an awesome emulator and answering all of my 
+                     annoying questions
 * Tantric          : Menu example code and SDL enhancements
-* Marat Fayzullin  : Answering all of my questions
 * Daniel Bienvenu  : Help resolving the Mode 2 issues
 * Opcode           : Providing a ROM for testing the Opcode memory expansion
                      and MegaCart(R) support
 
 ## Change log
+
+### SNAPSHOT (0.3)
+  - Updated to latest version of ColEm (4.8)
+    - Super Game Module (SGM) emulation
+    - 24c08 and 24c256 EEPROM emulation
+  - Display enhancements
+    - Double strike (240p)
+    - GX+VI mode
+    - 16:9 correction
+    - Full widescreen support      
+    - Ability to enable/disable bilinear filter (GX mode)
+    - Color trap filter
+  - Hierarchical file navigation support
+  - SMB (Network support) for loading ROMs 
+  - Multi-save slot support
+  - Support for launching via WiiFlow (and returning)
+  - Updated to latest versions of devkitPPC (r35) and libogc (1.8.23)    
 
 ### 03/06/11 (0.2)
   - Cartridge-specific overlays
