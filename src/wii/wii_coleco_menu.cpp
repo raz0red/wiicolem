@@ -1196,7 +1196,9 @@ static void wii_read_game_list(TREENODE* menu) {
         wii_set_roms_dir("");
         wii_add_child(menu, wii_create_tree_node(NODETYPE_ROOT_DRIVE, "sd:"));
         wii_add_child(menu, wii_create_tree_node(NODETYPE_ROOT_DRIVE, "usb:"));
+#ifdef ENABLE_SMB        
         wii_add_child(menu, wii_create_tree_node(NODETYPE_ROOT_DRIVE, "smb:"));
+#endif        
     }
 
     games_read = TRUE;

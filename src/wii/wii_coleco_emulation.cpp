@@ -128,28 +128,28 @@ BOOL wii_start_emulation(char* romfile,
             // Reset coleco.
             // Allows for memory adjustments based on cartridge settings, etc.
             ResetColeco(get_coleco_mode());
+
+            // Attempt to load the save file if applicable
+            if (loadsave) {
+                // Ensure the save is valid
+                int sscheck = wii_check_snapshot(savefile);
+                if (sscheck < 0) {
+                    wii_set_status_message(
+                        "Unable to find the specified save state file.");
+                    succeeded = false;
+                } else {
+                    // Load the save file
+                    succeeded = LoadSTA(savefile);
+                    if (!succeeded) {
+                        wii_set_status_message(
+                            "An error occurred attempting to load the save state "
+                            "file.");
+                    }
+                }
+            }
         } else {
             wii_set_status_message(
                 "An error occurred loading the specified cartridge.");
-        }
-
-        // Attempt to load the save file if applicable
-        if (loadsave) {
-            // Ensure the save is valid
-            int sscheck = wii_check_snapshot(savefile);
-            if (sscheck < 0) {
-                wii_set_status_message(
-                    "Unable to find the specified save state file.");
-                succeeded = false;
-            } else {
-                // Load the save file
-                succeeded = LoadSTA(savefile);
-                if (!succeeded) {
-                    wii_set_status_message(
-                        "An error occurred attempting to load the save state "
-                        "file.");
-                }
-            }
         }
     } else if (reset) {
         // Reset the emulator
