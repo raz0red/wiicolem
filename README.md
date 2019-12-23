@@ -362,6 +362,17 @@ The following control options are available:
       Classic   : ZR           Classic   : ZL
       GameCube  : (n/a)        GameCube  : (n/a)
            
+## SMB (Network support)	
+
+WiiColEm allows for loading ROMs over the network via SMB. To enable SMB	
+support, you must edit the "wiicolem.conf" file located in the "/wiicolem"	
+directory and provide values for the following:	
+
+  * share_ip    : IP address of the computer to connect to.	
+  * share_name  : Name of the share on the computer.	
+  * share_user  : Name of the user to connect as	
+  * share_pass  : Password for the user         
+
 ## WiiColEm crashes, code dumps, etc.
 
 If you are having issues with WiiColEm, please let me know about it via one
@@ -403,6 +414,7 @@ of the following locations:
     - Ability to enable/disable bilinear filter (GX mode)
     - Color trap filter
   - Hierarchical file navigation support
+  - SMB (Network support) for loading ROMs  
   - Multi-save slot support
   - Support for launching via WiiFlow (and returning)
   - Updated to latest versions of devkitPPC (r35) and libogc (1.8.23)    

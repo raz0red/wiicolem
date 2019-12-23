@@ -78,7 +78,7 @@ INCLUDES	:= \
 CFLAGS	=   -g -O1 -Wall $(MACHDEP) $(INCLUDE) -DMSB_FIRST -DCOLEM -DWII -DBPP8 \
             -DBPS16 -DWII_BIN2O -DMEGACART -DZLIB \
             -Wno-format-truncation \
-            -Wno-format-overflow -DENABLE_VSYNC
+            -Wno-format-overflow -DENABLE_VSYNC -DENABLE_SMB
 # -DNO_AUDIO_PLAYBACK -DWII_NETTRACE
 CXXFLAGS	=	$(CFLAGS)
 

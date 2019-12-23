@@ -48,6 +48,10 @@ static int ss_index = 0;
 static int ss_exists = -1;
 /** The index of the latest snapshot */
 static int ss_latest = -1;
+/** The save name */
+static char savename[WII_MAX_PATH] = "";
+/** The file name */
+static char filename[WII_MAX_PATH] = "";
 
 /**
  * Returns the name of the snapshot associated with the specified romfile and
@@ -58,8 +62,8 @@ static int ss_latest = -1;
  * @param   buffer The output buffer to receive the name of the snapshot file
  *              (length must be WII_MAX_PATH)
  */
-static void get_snapshot_name(const char* romfile, int index, char* buffer) {
-    char filename[WII_MAX_PATH] = "";
+static void get_snapshot_name(const char* romfile, int index, char* buffer) {    
+    filename[0] = '\0';
     Util_splitpath(romfile, NULL, filename);
     snprintf(buffer, WII_MAX_PATH, "%s%s.%d.%s", wii_get_saves_dir(), filename,
              index, WII_SAVE_GAME_EXT);
@@ -83,7 +87,7 @@ BOOL wii_snapshot_current_exists() {
         if (!wii_last_rom) {
             ss_exists = FALSE;
         } else {
-            char savename[WII_MAX_PATH] = "";
+            savename[0] = '\0';
             wii_snapshot_handle_get_name(wii_last_rom, savename);
             ss_exists = Util_fileexists(savename);
         }
@@ -100,12 +104,10 @@ BOOL wii_snapshot_current_exists() {
 static int get_latest_snapshot() {
     if (ss_latest == -1 && wii_last_rom) {
         ss_latest = -2;  // The check has been performed
-        time_t max = 0;
-        char savename[WII_MAX_PATH] = "";
+        time_t max = 0;        
         for (int i = 0; i < MAX_SNAPSHOTS; i++) {
             savename[0] = '\0';
             get_snapshot_name(wii_last_rom, i, savename);
-
             struct stat st;
             if (stat(savename, &st) == 0) {
                 if (st.st_mtime > max) {
@@ -144,10 +146,19 @@ BOOL wii_snapshot_handle_save(char* filename) {
 /**
  * Resets snapshot related information. This method is typically invoked when
  * a new rom file is loaded.
+ *
+ * @param   setIndexToLatest Whether to set the snapshot index to the latest for
+ *          the current rom
  */
-void wii_snapshot_reset() {
+void wii_snapshot_reset(BOOL setIndexToLatest) {
     ss_index = 0;
     wii_snapshot_refresh();
+    if (setIndexToLatest) {
+        int latest = get_latest_snapshot();
+        if (latest > 0) {
+            ss_index = latest;
+        }
+    }
 }
 
 /**
@@ -187,7 +198,7 @@ BOOL wii_start_snapshot() {
     }
     wii_snapshot_refresh();  // force recheck
 
-    char savename[WII_MAX_PATH] = "";
+    savename[0] = '\0';
     wii_snapshot_handle_get_name(wii_last_rom, savename);
     return wii_start_emulation(wii_last_rom, savename, FALSE, FALSE);
 }
