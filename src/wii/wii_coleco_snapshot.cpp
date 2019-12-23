@@ -59,7 +59,7 @@ static int ss_latest = -1;
  *              (length must be WII_MAX_PATH)
  */
 static void get_snapshot_name(const char* romfile, int index, char* buffer) {
-    char filename[WII_MAX_PATH];
+    char filename[WII_MAX_PATH] = "";
     Util_splitpath(romfile, NULL, filename);
     snprintf(buffer, WII_MAX_PATH, "%s%s.%d.%s", wii_get_saves_dir(), filename,
              index, WII_SAVE_GAME_EXT);
@@ -83,11 +83,12 @@ BOOL wii_snapshot_current_exists() {
         if (!wii_last_rom) {
             ss_exists = FALSE;
         } else {
-            char savename[WII_MAX_PATH];
+            char savename[WII_MAX_PATH] = "";
             wii_snapshot_handle_get_name(wii_last_rom, savename);
             ss_exists = Util_fileexists(savename);
         }
     }
+
     return ss_exists;
 }
 
@@ -100,8 +101,9 @@ static int get_latest_snapshot() {
     if (ss_latest == -1 && wii_last_rom) {
         ss_latest = -2;  // The check has been performed
         time_t max = 0;
-        char savename[WII_MAX_PATH];
+        char savename[WII_MAX_PATH] = "";
         for (int i = 0; i < MAX_SNAPSHOTS; i++) {
+            savename[0] = '\0';
             get_snapshot_name(wii_last_rom, i, savename);
 
             struct stat st;
@@ -185,7 +187,7 @@ BOOL wii_start_snapshot() {
     }
     wii_snapshot_refresh();  // force recheck
 
-    char savename[WII_MAX_PATH];
+    char savename[WII_MAX_PATH] = "";
     wii_snapshot_handle_get_name(wii_last_rom, savename);
     return wii_start_emulation(wii_last_rom, savename, FALSE, FALSE);
 }
