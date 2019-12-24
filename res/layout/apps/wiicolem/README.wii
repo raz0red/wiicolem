@@ -1,5 +1,5 @@
 --------------------------------------------
-WiiColEm v0.3-SNAPSHOT release README
+WiiColEm v0.3 release README
 --------------------------------------------
 
 Ported by raz0red
@@ -428,7 +428,7 @@ Opcode           : Providing a ROM for testing the Opcode memory expansion
 Change log
 --------------------------------------------
 
-SNAPSHOT (0.3)
+12/25/19 (0.3)
 -------------------
   - Updated to latest version of ColEm (4.8)
     - Super Game Module (SGM) emulation

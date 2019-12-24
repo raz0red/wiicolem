@@ -402,7 +402,7 @@ of the following locations:
 
 ## Change log
 
-### SNAPSHOT (0.3)
+### 12/25/19 (0.3)
   - Updated to latest version of ColEm (4.8)
     - Super Game Module (SGM) emulation
     - 24c08 and 24c256 EEPROM emulation
