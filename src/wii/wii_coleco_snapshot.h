@@ -39,8 +39,11 @@ BOOL wii_start_snapshot();
 /**
  * Resets snapshot related information. This method is typically invoked when
  * a new rom file is loaded.
+ *
+ * @param   setIndexToLatest Whether to set the snapshot index to the latest for
+ *          the current rom
  */
-void wii_snapshot_reset();
+void wii_snapshot_reset(BOOL setIndexToLatest = FALSE);
 
 /**
  * Refreshes state of snapshot (does it exist, etc.)

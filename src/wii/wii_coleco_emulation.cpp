@@ -93,12 +93,13 @@ BOOL wii_start_emulation(char* romfile,
     wii_write_config();
 
     // Whether emulation successfully started
-    BOOL succeeded = true;
+    BOOL succeeded = TRUE;
+    BOOL loadsave = FALSE;
 
     // Start emulation
     if (!reset && !resume) {
         // Whether to load a save file
-        BOOL loadsave = (savefile != NULL && strlen(savefile) > 0);
+        loadsave = (savefile != NULL && strlen(savefile) > 0);
 
         // Determine the state file name (used for EEPROM carts)
         char state_file[WII_MAX_PATH];
@@ -128,28 +129,28 @@ BOOL wii_start_emulation(char* romfile,
             // Reset coleco.
             // Allows for memory adjustments based on cartridge settings, etc.
             ResetColeco(get_coleco_mode());
+
+            // Attempt to load the save file if applicable
+            if (loadsave) {
+                // Ensure the save is valid
+                int sscheck = wii_check_snapshot(savefile);
+                if (sscheck < 0) {
+                    wii_set_status_message(
+                        "Unable to find the specified save state file.");
+                    succeeded = false;
+                } else {
+                    // Load the save file
+                    succeeded = LoadSTA(savefile);
+                    if (!succeeded) {
+                        wii_set_status_message(
+                            "An error occurred attempting to load the save state "
+                            "file.");
+                    }
+                }
+            }
         } else {
             wii_set_status_message(
                 "An error occurred loading the specified cartridge.");
-        }
-
-        // Attempt to load the save file if applicable
-        if (loadsave) {
-            // Ensure the save is valid
-            int sscheck = wii_check_snapshot(savefile);
-            if (sscheck < 0) {
-                wii_set_status_message(
-                    "Unable to find the specified save state file.");
-                succeeded = false;
-            } else {
-                // Load the save file
-                succeeded = LoadSTA(savefile);
-                if (!succeeded) {
-                    wii_set_status_message(
-                        "An error occurred attempting to load the save state "
-                        "file.");
-                }
-            }
         }
     } else if (reset) {
         // Reset the emulator
@@ -164,10 +165,16 @@ BOOL wii_start_emulation(char* romfile,
         // Do it in this order in case they passed in the pointer
         // to the last rom variable
         char* last = strdup(romfile);
-        if (wii_last_rom != NULL) {
-            free(wii_last_rom);
-        }
+        char* old_last = wii_last_rom;
         wii_last_rom = last;
+        if (old_last != NULL) {
+            free(old_last);
+        }
+
+        // This was a newly loaded rom, set snapshot index to latest snapshot
+        if (!loadsave && !reset && !resume) {
+            wii_snapshot_reset(TRUE);
+        }
 
         // Clear the screen
         wii_sdl_black_screen();
@@ -207,9 +214,10 @@ BOOL wii_start_emulation(char* romfile,
         }
     } else {
         // Reset the last rom that was loaded
-        if (wii_last_rom != NULL) {
-            free(wii_last_rom);
-            wii_last_rom = NULL;
+        char *old_last = wii_last_rom;
+        wii_last_rom = NULL;
+        if (old_last != NULL) {
+            free(old_last);            
         }
     }
     return succeeded;

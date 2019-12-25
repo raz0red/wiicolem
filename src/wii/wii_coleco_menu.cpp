@@ -676,12 +676,16 @@ void wii_menu_handle_get_node_name(TREENODE* node, char* buffer, char* value) {
 void wii_menu_handle_select_node(TREENODE* node) {
     char buff[WII_MAX_PATH];
 
+    
     if (node->node_type == NODETYPE_ROM || 
         node->node_type == NODETYPE_RESUME ||
         node->node_type == NODETYPE_LOAD_STATE ||
         node->node_type == NODETYPE_RESET) {
         switch (node->node_type) {
             case NODETYPE_LOAD_STATE:
+                loading_game = TRUE;
+                VIDEO_WaitVSync();
+                LOCK_RENDER_MUTEX();                
                 if (wii_start_snapshot()) {
                     ResetAudio();
                     wii_menu_quit_loop = 1;
@@ -689,28 +693,37 @@ void wii_menu_handle_select_node(TREENODE* node) {
                     // Exit the save states (rom is no longer valid)
                     wii_menu_pop();
                 }
+                UNLOCK_RENDER_MUTEX();
+                loading_game = FALSE;
                 break;
             case NODETYPE_ROM:
                 snprintf(buff, sizeof(buff), "%s%s", wii_get_roms_dir(),
                          node->name);
                 loading_game = TRUE;
+                VIDEO_WaitVSync();
+                LOCK_RENDER_MUTEX();
                 if (wii_start_emulation(buff, NULL, FALSE, FALSE)) {
                     last_rom_index = wii_menu_get_current_index();
                     ResetAudio();
                     wii_menu_quit_loop = 1;
                 }
+                UNLOCK_RENDER_MUTEX();
                 loading_game = FALSE;
                 break;
             case NODETYPE_RESUME:
+                LOCK_RENDER_MUTEX();
                 if (wii_resume_emulation()) {
                     wii_menu_quit_loop = 1;
                 }
+                UNLOCK_RENDER_MUTEX();
                 break;
             case NODETYPE_RESET:
+                LOCK_RENDER_MUTEX();
                 if (wii_reset_emulation()) {
                     ResetAudio();
                     wii_menu_quit_loop = 1;
                 }
+                UNLOCK_RENDER_MUTEX();
                 break;
             default:
                 /* do nothing */
@@ -721,7 +734,8 @@ void wii_menu_handle_select_node(TREENODE* node) {
             wii_gx_push_callback(NULL, FALSE, NULL);    
             VIDEO_WaitVSync();
         }
-    } else {
+    } else {        
+
         LOCK_RENDER_MUTEX();
 
         switch (node->node_type) {            
@@ -1015,10 +1029,10 @@ void wii_menu_handle_select_node(TREENODE* node) {
             default:
                 /* do nothing */
                 break;
-        }
+        }        
 
         UNLOCK_RENDER_MUTEX();
-    }
+    }    
 }
 
 /**
@@ -1196,7 +1210,9 @@ static void wii_read_game_list(TREENODE* menu) {
         wii_set_roms_dir("");
         wii_add_child(menu, wii_create_tree_node(NODETYPE_ROOT_DRIVE, "sd:"));
         wii_add_child(menu, wii_create_tree_node(NODETYPE_ROOT_DRIVE, "usb:"));
+#ifdef ENABLE_SMB        
         wii_add_child(menu, wii_create_tree_node(NODETYPE_ROOT_DRIVE, "smb:"));
+#endif        
     }
 
     games_read = TRUE;

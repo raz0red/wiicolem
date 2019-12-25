@@ -1,5 +1,5 @@
 --------------------------------------------
-WiiColEm v0.3-SNAPSHOT release README
+WiiColEm v0.3 release README
 --------------------------------------------
 
 Ported by raz0red
@@ -14,6 +14,8 @@ Marat Fayzullin.
 
 Features:
 
+  * Super Game Module (SGM) compatibility
+  * Multiple video modes (240p, GX+VI, GX) 
   * Support for driving, roller, and super action controllers
   * Tilt-based (Wiimote) driving support
   * Cartridge database w/ recommended controller settings and keypad 
@@ -22,19 +24,11 @@ Features:
   * Per-cartridge button mappings  
 
 --------------------------------------------
-Known issues
---------------------------------------------
-
-  * Zip files are not currently supported 
-
---------------------------------------------
 Installation
 --------------------------------------------
 
 To install WiiColEm, simply extract the zip file directly to your SD card
 or USB device (retain the hierarchical structure exactly).
-
-Cartridge images must be placed in the roms directory (/wiicolem/roms).
 
 --------------------------------------------
 Cartridge Database 
@@ -43,14 +37,14 @@ Cartridge Database
 WiiColem ships with a database that contains recommended settings for most
 commercial cartridges. These settings cover controls mappings, keypad
 overlays, keypad button descriptions, and advanced settings (whether
-the cartridge requires the Opcode memory expansion, etc.).
+the cartridge requires an EEPROM, SRAM, etc.).
 
 To view/edit the settings applied for a particular cartridge perform the
 following steps:
 
   * Load the cartridge (via the "Load cartridge" menu item)
-  * Return to the WiiColem menu
-  * Select "Cartridge settings (current cartridge)" menu item
+  * Return to the WiiColEm menu
+  * Select "Cartridge-specific settings" menu item
   * Examine the "Control settings" and "Advanced" settings for the cartridge 
 
 For more information on mapping controls and creating and/or customizing
@@ -110,15 +104,17 @@ the Cartridge Database it may contain non-default mappings.
   cartridge basis via Cartridge Settings (see "Cartridge Settings" section,
   below). 
   
-  NOTE: The "Keypad pause" option is not available when the GX+VI scaler is 
-        enabled (Kaypad pause is enabled and cannot be disabled).
+  NOTE: The "Keypad pause" option is not available when the GX+VI or 
+        Double strike (240p) video modes are enabled.
+        (Keypad pause is enabled and cannot be disabled).
 
     * When keypad pause is enabled, the keypad will be closed when a keypad
       button is pressed (or the keypad is explicitly closed). It is important
       to note that the keypad button will continue to be pressed as long as
       the controller button is held. This is necessary for games like War 
       Room where you need to hold the keypad buttons down to see the 
-      different factories, etc.
+      different factories, etc. It is also necessary for games that require
+      a longer button press for the selection to register (Star Trek, etc.).
       
     * When keypad pause is disabled, emulation will continue while the keypad
       is displayed. The keypad will continue to be displayed until it is
@@ -340,8 +336,7 @@ WiiColEm contains the ability to manage per-cartridge settings. The settings
 that can be edited include:
 
   * Control settings
-  * Advanced settings (Whether it requires Opcode memory expansion,
-    keypad pause, etc.) 
+  * Advanced settings (Whether it requires an EEPROM, SRAM, etc.)
     
   Control Settings
   ----------------
@@ -382,7 +377,20 @@ that can be edited include:
       Nunchuk   : (n/a)        Nunchuk   : (n/a)
       Classic   : ZR           Classic   : ZL
       GameCube  : (n/a)        GameCube  : (n/a)
-           
+
+--------------------------------------------	
+SMB (Network support)	
+--------------------------------------------	
+
+WiiColEm allows for loading ROMs over the network via SMB. To enable SMB	
+support, you must edit the "wiicolem.conf" file located in the "/wiicolem"	
+directory and provide values for the following:	
+
+ * share_ip    : IP address of the computer to connect to.	
+ * share_name  : Name of the share on the computer.	
+ * share_user  : Name of the user to connect as	
+ * share_pass  : Password for the user
+
 --------------------------------------------
 WiiColEm crashes, code dumps, etc.
 --------------------------------------------
@@ -391,7 +399,7 @@ If you are having issues with WiiColEm, please let me know about it via one
 of the following locations:
 
 [http://www.wiibrew.org/wiki/Talk:WiiColEm]
-[http://www.twitchasylum.com/forum/viewtopic.php?t=1245]
+[https://github.com/raz0red/wiicolem/issues]
 
 --------------------------------------------
 Credits
@@ -400,6 +408,7 @@ Credits
 NeoRame          : Icon
 Pixelboy         : Source overlays
 James Carter     : Source overlays
+Mastershoes      : Testing (0.3)
 Murph74          : Testing (0.2) 
 Astroman         : Testing (0.2)
 Yurkie           : Testing (0.1)
@@ -408,8 +417,9 @@ Yurkie           : Testing (0.1)
 Special thanks
 --------------------------------------------
 
+Marat Fayzullin  : Creating an awesome emulator and answering all of my 
+                   annoying questions
 Tantric          : Menu example code and SDL enhancements
-Marat Fayzullin  : Answering all of my questions
 Daniel Bienvenu  : Help resolving the Mode 2 issues
 Opcode           : Providing a ROM for testing the Opcode memory expansion
                    and MegaCart(R) support
@@ -418,19 +428,23 @@ Opcode           : Providing a ROM for testing the Opcode memory expansion
 Change log
 --------------------------------------------
 
-SNAPSHOT (0.3)
+12/25/19 (0.3)
 -------------------
   - Updated to latest version of ColEm (4.8)
     - Super Game Module (SGM) emulation
     - 24c08 and 24c256 EEPROM emulation
   - Display enhancements
+    - Double strike (240p)
     - GX+VI mode
     - 16:9 correction
     - Full widescreen support      
-    - Ability to enable/disable bilinear filter
-  - Updated to latest versions of devkitPPC (r34) and libogc (1.8.23)    
-  - Refactored project layout. Now includes third party libraries, which
-    should reduce effort to build against latest devkitPro releases
+    - Ability to enable/disable bilinear filter (GX mode)
+    - Color trap filter
+  - Hierarchical file navigation support
+  - SMB (Network support) for loading ROMs  
+  - Multi-save slot support
+  - Support for launching via WiiFlow (and returning)
+  - Updated to latest versions of devkitPPC (r35) and libogc (1.8.23)    
 
 03/06/11 (0.2)
 -------------------

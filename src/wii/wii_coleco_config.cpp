@@ -87,6 +87,7 @@ void wii_config_handle_read_value(char* name, char* value) {
         wii_double_strike_mode = Util_sscandec(value);
     } else if (strcmp(name, "roms_dir") == 0) {
         wii_set_roms_dir(value);
+#ifdef ENABLE_SMB             
     } else if (strcmp(name, "share_ip") == 0) {
         setSmbAddress(value);
     } else if (strcmp(name, "share_name") == 0) {
@@ -95,6 +96,7 @@ void wii_config_handle_read_value(char* name, char* value) {
         setSmbUser(value);
     } else if (strcmp(name, "share_pass") == 0) {
         setSmbPassword(value);
+#endif        
     } else if (strcmp(name, "usb_keepalive") == 0) {
         wii_usb_keepalive = Util_sscandec(value);
     } else if (strcmp(name, "trap_filter") == 0) {
@@ -131,10 +133,12 @@ void wii_config_handle_write_config(FILE* fp) {
     fprintf(fp, "video_filter=%d\n", wii_filter);
     fprintf(fp, "vi_gx_scaler=%d\n", wii_gx_vi_scaler);
     fprintf(fp, "roms_dir=%s\n", wii_get_roms_dir());
+#ifdef ENABLE_SMB     
     fprintf(fp, "share_ip=%s\n", getSmbAddress());
     fprintf(fp, "share_name=%s\n", getSmbShare());
     fprintf(fp, "share_user=%s\n", getSmbUser());
     fprintf(fp, "share_pass=%s\n", getSmbPassword());
+#endif    
     fprintf(fp, "usb_keepalive=%d\n", wii_usb_keepalive);
     fprintf(fp, "trap_filter=%d\n", wii_trap_filter);
 
