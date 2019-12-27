@@ -2,7 +2,7 @@
  <app version="1">
    <name>WiiColEm</name>
    <coder>raz0red</coder>
-   <version>0.3</version>
+   <version>0.4-SNAPSHOT</version>
    <release_date>000000000000</release_date>
    <short_description>ColecoVision Emulator</short_description>
    <long_description>WiiColem is a port of the ColEm emulator developed by Marat Fayzullin.
