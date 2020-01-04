@@ -159,24 +159,24 @@ void wii_coleco_menu_init() {
     child = wii_create_tree_node(NODETYPE_SPACER, "");
     wii_add_child(cart_settings, child);
 
-    child = wii_create_tree_node(NODETYPE_CONTROLS_MODE, "Controller ");
+    child = wii_create_tree_node(NODETYPE_CONTROLS_MODE, "Controller");
     wii_add_child(controls, child);
 
-    child = wii_create_tree_node(NODETYPE_SENSITIVITY, "Sensitivity ");
+    child = wii_create_tree_node(NODETYPE_SENSITIVITY, "Sensitivity");
     wii_add_child(controls, child);
 
-    child = wii_create_tree_node(NODETYPE_SPINNER, "Spinner ");
+    child = wii_create_tree_node(NODETYPE_SPINNER, "Spinner");
     wii_add_child(controls, child);
 
-    child = wii_create_tree_node(NODETYPE_WIIMOTE_HORIZONTAL, "Wiimote ");
+    child = wii_create_tree_node(NODETYPE_WIIMOTE_HORIZONTAL, "Wiimote");
     wii_add_child(controls, child);
 
-    child = wii_create_tree_node(NODETYPE_VIEW_AS_CONTROLLER, "(View as) ");
+    child = wii_create_tree_node(NODETYPE_VIEW_AS_CONTROLLER, "(View as)");
     wii_add_child(controls, child);
 
     int button;
     for (button = NODETYPE_BUTTON1; button <= NODETYPE_BUTTON8; button++) {
-        child = wii_create_tree_node((NODETYPE)button, "Button ");
+        child = wii_create_tree_node((NODETYPE)button, "Button");
         wii_add_child(controls, child);
     }
 
@@ -186,35 +186,35 @@ void wii_coleco_menu_init() {
         wii_create_tree_node(NODETYPE_CARTRIDGE_SETTINGS_ADVANCED, "Advanced");
     wii_add_child(cart_settings, cartadvanced);
 
-    child = wii_create_tree_node(NODETYPE_KEYPAD_PAUSE_CART, "Keypad pause ");
+    child = wii_create_tree_node(NODETYPE_KEYPAD_PAUSE_CART, "Keypad pause");
     wii_add_child(cartadvanced, child);
 
-    child = wii_create_tree_node(NODETYPE_KEYPAD_SIZE_CART, "Keypad size ");
+    child = wii_create_tree_node(NODETYPE_KEYPAD_SIZE_CART, "Keypad size");
     wii_add_child(cartadvanced, child);
 
-    child = wii_create_tree_node(NODETYPE_USE_OVERLAY_CART, "Keypad overlay ");
+    child = wii_create_tree_node(NODETYPE_USE_OVERLAY_CART, "Keypad overlay");
     wii_add_child(cartadvanced, child);
 
     child = wii_create_tree_node(NODETYPE_SPACER, "");
     wii_add_child(cartadvanced, child);
 
-    child = wii_create_tree_node(NODETYPE_CART_SRAM, "Battery-backed SRAM ");
+    child = wii_create_tree_node(NODETYPE_CART_SRAM, "Battery-backed SRAM");
     wii_add_child(cartadvanced, child);
 
-    child = wii_create_tree_node(NODETYPE_OPCODE_MEMORY, "Opcode memory ");
+    child = wii_create_tree_node(NODETYPE_OPCODE_MEMORY, "Opcode memory");
     wii_add_child(cartadvanced, child);
 
-    child = wii_create_tree_node(NODETYPE_EEPROM, "EEPROM ");
+    child = wii_create_tree_node(NODETYPE_EEPROM, "EEPROM");
     wii_add_child(cartadvanced, child);
 
     child = wii_create_tree_node(NODETYPE_SPACER, "");
     wii_add_child(cartadvanced, child);
 
     child =
-        wii_create_tree_node(NODETYPE_MAX_FRAMES_CART, "Maximum frame rate ");
+        wii_create_tree_node(NODETYPE_MAX_FRAMES_CART, "Maximum frame rate");
     wii_add_child(cartadvanced, child);
 
-    child = wii_create_tree_node(NODETYPE_CYCLE_ADJUST, "Cycle adjust ");
+    child = wii_create_tree_node(NODETYPE_CYCLE_ADJUST, "Cycle adjust");
     wii_add_child(cartadvanced, child);
 
     // Save/Revert/Delete
@@ -255,21 +255,21 @@ void wii_coleco_menu_init() {
     child = wii_create_tree_node(NODETYPE_SPACER, "");
     wii_add_child(advanced, child);
 
-    child = wii_create_tree_node(NODETYPE_RESIZE_SCREEN, "Screen size ");
+    child = wii_create_tree_node(NODETYPE_RESIZE_SCREEN, "Screen size");
     wii_add_child(display, child);
 
 #ifdef ENABLE_VSYNC
-    child = wii_create_tree_node(NODETYPE_VSYNC, "Vertical sync ");
+    child = wii_create_tree_node(NODETYPE_VSYNC, "Vertical sync");
     wii_add_child(display, child);
 #endif    
 
-    child = wii_create_tree_node(NODETYPE_MAX_FRAMES, "Maximum frame rate ");
+    child = wii_create_tree_node(NODETYPE_MAX_FRAMES, "Maximum frame rate");
     wii_add_child(display, child);
 
-    child = wii_create_tree_node(NODETYPE_FULL_WIDESCREEN, "Full widescreen ");
+    child = wii_create_tree_node(NODETYPE_FULL_WIDESCREEN, "Full widescreen");
     wii_add_child(display, child);
 
-    child = wii_create_tree_node(NODETYPE_16_9_CORRECTION, "16:9 correction ");
+    child = wii_create_tree_node(NODETYPE_16_9_CORRECTION, "16:9 correction");
     wii_add_child(display, child);
 
     child = wii_create_tree_node(NODETYPE_TRAP_FILTER, "Color trap filter");
@@ -279,52 +279,52 @@ void wii_coleco_menu_init() {
         wii_create_tree_node(NODETYPE_DOUBLE_STRIKE, "Double strike (240p)");
     wii_add_child(display, child);
 
-    child = wii_create_tree_node(NODETYPE_GX_VI_SCALER, "Scaler ");
+    child = wii_create_tree_node(NODETYPE_GX_VI_SCALER, "Scaler");
     wii_add_child(display, child);
 
-    child = wii_create_tree_node(NODETYPE_FILTER, "Bilinear filter ");
+    child = wii_create_tree_node(NODETYPE_FILTER, "Bilinear filter");
     wii_add_child(display, child);
 
     child = wii_create_tree_node(NODETYPE_SPACER, "");
     wii_add_child(display, child);
 
-    child = wii_create_tree_node(NODETYPE_PALETTE, "Palette ");
+    child = wii_create_tree_node(NODETYPE_PALETTE, "Palette");
     wii_add_child(display, child);
 
     child =
-        wii_create_tree_node(NODETYPE_SHOW_ALL_SPRITES, "Show all sprites ");
+        wii_create_tree_node(NODETYPE_SHOW_ALL_SPRITES, "Show all sprites");
     wii_add_child(display, child);
 
-    child = wii_create_tree_node(NODETYPE_KEYPAD_PAUSE, "Keypad pause ");
+    child = wii_create_tree_node(NODETYPE_KEYPAD_PAUSE, "Keypad pause");
     wii_add_child(advanced, child);
 
-    child = wii_create_tree_node(NODETYPE_KEYPAD_SIZE, "Keypad size ");
+    child = wii_create_tree_node(NODETYPE_KEYPAD_SIZE, "Keypad size");
     wii_add_child(advanced, child);
 
-    child = wii_create_tree_node(NODETYPE_USE_OVERLAY, "Keypad overlays ");
+    child = wii_create_tree_node(NODETYPE_USE_OVERLAY, "Keypad overlays");
     wii_add_child(advanced, child);
 
     child =
-        wii_create_tree_node(NODETYPE_SUPER_GAME_MODULE, "Super Game Module ");
+        wii_create_tree_node(NODETYPE_SUPER_GAME_MODULE, "Super Game Module");
     wii_add_child(advanced, child);
 
     child = wii_create_tree_node(NODETYPE_SPACER, "");
     wii_add_child(advanced, child);
 
-    child = wii_create_tree_node(NODETYPE_VOLUME, "Volume ");
+    child = wii_create_tree_node(NODETYPE_VOLUME, "Volume");
     wii_add_child(advanced, child);
 
-    child = wii_create_tree_node(NODETYPE_TOP_MENU_EXIT, "Top menu exit ");
+    child = wii_create_tree_node(NODETYPE_TOP_MENU_EXIT, "Top menu exit");
     wii_add_child(advanced, child);
 
     child =
-        wii_create_tree_node(NODETYPE_WIIMOTE_MENU_ORIENT, "Wiimote (menu) ");
+        wii_create_tree_node(NODETYPE_WIIMOTE_MENU_ORIENT, "Wiimote (menu)");
     wii_add_child(advanced, child);
 
     child = wii_create_tree_node(NODETYPE_SPACER, "");
     wii_add_child(advanced, child);
 
-    child = wii_create_tree_node(NODETYPE_DEBUG_MODE, "Debug mode ");
+    child = wii_create_tree_node(NODETYPE_DEBUG_MODE, "Debug mode");
     wii_add_child(advanced, child);
 
     wii_menu_push(wii_menu_root);
@@ -574,7 +574,7 @@ void wii_menu_handle_get_node_name(TREENODE* node, char* buffer, char* value) {
                                           wii_coleco_db_entry.button[index],
                                           &wii_coleco_db_entry);
             snprintf(
-                buffer, WII_MENU_BUFF_SIZE, "%s ",
+                buffer, WII_MENU_BUFF_SIZE, "%s",
                 WiiButtonDescriptions[index][wii_coleco_controller_view_mode]);
             snprintf(value, WII_MENU_BUFF_SIZE, "%s", btnName);
         } break;
