@@ -99,6 +99,27 @@ static char saves_dir[WII_MAX_PATH] = "";
 /** The overlays directory */
 static char overlays_dir[WII_MAX_PATH] = "";
 
+/** The default screen sizes */
+static const screen_size default_screen_sizes[] = {
+    {DEFAULT_SCREEN_X, DEFAULT_SCREEN_Y, "ColecoVision PAR (8:7)"},
+    {640, DEFAULT_SCREEN_Y, "Square Pixels (1:1)"}
+};
+
+/** The default screen size count */
+static int default_screen_size_count =
+    sizeof(default_screen_sizes) / sizeof(screen_size);
+
+/**
+ * Returns the default screen sizes
+ * 
+ * @param   sizes (out) The array of screen sizes
+ * @param   size_count (out) The count of screen sizes
+ */
+void wii_get_default_screen_sizes(const screen_size** sizes, int* size_count) {
+    *sizes = default_screen_sizes;
+    *size_count = default_screen_size_count;
+}
+
 /**
  * Returns the base directory for the application
  * 

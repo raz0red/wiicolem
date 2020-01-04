@@ -31,6 +31,7 @@
 
 #include "wii_main.h"
 #include "wii_coleco_db.h"
+#include "wii_resize_screen.h"
 
 #define TMS9918_WIDTH 280
 #define COLECO_WIDTH 272
@@ -39,7 +40,7 @@
 // Default screen size
 // 256x192: Coleco
 // 272x200: Colem
-// 280x: TMS9981 (PAR 1.143)
+// 280x: TMS9981 (PAR 8:7)
 #define DEFAULT_SCREEN_X 732
 #define DEFAULT_SCREEN_Y 480
 
@@ -179,5 +180,13 @@ void wii_set_video_mode(BOOL allowVi);
  * @param   y (out) Output y value
  */
 void wii_get_screen_size(int inX, int inY, int* x, int* y);
+
+/**
+ * Returns the default screen sizes
+ * 
+ * @param   sizes (out) The array of screen sizes
+ * @param   size_count (out) The count of screen sizes
+ */
+void wii_get_default_screen_sizes(const screen_size** sizes, int* size_count);
 
 #endif

@@ -424,13 +424,17 @@ void wii_menu_handle_get_node_name(TREENODE* node, char* buffer, char* value) {
                          gettextmsg("Latest"));
             }
         } break;
-        case NODETYPE_RESIZE_SCREEN:
+        case NODETYPE_RESIZE_SCREEN: {
+            const screen_size* sizes = NULL;
+            int size_count = 0;
+            wii_get_default_screen_sizes(&sizes, &size_count);
+            resize_info rinfo = {sizes, size_count, (float)wii_screen_x,
+                                 (float)wii_screen_y};
+            int idx =
+                wii_resize_screen_find_size(&rinfo, wii_screen_x, wii_screen_y);
             snprintf(value, WII_MENU_BUFF_SIZE, "%s",
-                     ((wii_screen_x == DEFAULT_SCREEN_X &&
-                       wii_screen_y == DEFAULT_SCREEN_Y)
-                          ? "(default)"
-                          : "Custom"));
-            break;
+                     (idx == -1 ? "Custom" : sizes[idx].name));
+        }    break;
         case NODETYPE_GX_VI_SCALER:
             snprintf(value, WII_MENU_BUFF_SIZE, "%s",
                      (wii_gx_vi_scaler ? "GX + VI" : "GX"));
@@ -743,9 +747,12 @@ void wii_menu_handle_select_node(TREENODE* node) {
                 wii_resize_screen_draw_border(blit_surface, 0, COLECO_HEIGHT);
                 wii_sdl_put_image_normal(1);
                 wii_sdl_flip();
-                resize_info rinfo = {(float)DEFAULT_SCREEN_X,
-                                     (float)DEFAULT_SCREEN_Y,
-                                     (float)wii_screen_x, (float)wii_screen_y};
+
+                const screen_size* sizes = NULL;
+                int size_count = 0;
+                wii_get_default_screen_sizes(&sizes, &size_count);
+                resize_info rinfo = {sizes, size_count, (float)wii_screen_x,
+                                     (float)wii_screen_y};
                 wii_resize_screen_gui(&rinfo);
                 wii_screen_x = rinfo.currentX;
                 wii_screen_y = rinfo.currentY;
