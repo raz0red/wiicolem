@@ -7,7 +7,7 @@ Ported by raz0red
 
 _WiiColEm 0.3 + ColecoVision Homebrew Video_
 
-<a href='http://www.youtube.com/watch?feature=player_embedded&v=Ca3yebVwWxg' target='_blank'><img src='http://img.youtube.com/vi/Ca3yebVwWxg/0.jpg' width='425' height=344 /></a>
+<a href='http://www.youtube.com/watch?feature=player_embedded&v=9p8fNNkYF6M' target='_blank'><img src='http://img.youtube.com/vi/9p8fNNkYF6M/0.jpg' width='425' height=344 /></a>
 
 _WiiColEm Video_
 
