@@ -5,7 +5,7 @@
 /** This file contains platform-independent definitions and **/
 /** declarations for the EMULib-based console.              **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 2005-2019                 **/
+/** Copyright (C) Marat Fayzullin 2005-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/

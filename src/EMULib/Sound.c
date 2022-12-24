@@ -6,13 +6,14 @@
 /** and functions needed to log soundtrack into a MIDI      **/
 /** file. See Sound.h for declarations.                     **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1996-2019                 **/
+/** Copyright (C) Marat Fayzullin 1996-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
 /*************************************************************/
 #include "Sound.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -25,6 +26,10 @@
 /* alternative location, if the requested location is   */
 /* not available. OpenRealFile() WILL NOT USE ZLIB.     */
 #define fopen OpenRealFile
+#endif
+
+#ifdef WRC
+#include "LibWii.h"
 #endif
 
 typedef unsigned char byte;
@@ -90,7 +95,7 @@ static struct
   const signed char *Data;        /* Wave data (-128..127 each)       */
   int Length;                     /* Wave length in Data              */
   int Rate;                       /* Wave playback rate (or 0Hz)      */
-  int Pos;                        /* Wave current position in Data    */  
+  int Pos;                        /* Wave current position in Data    */
 
   int Count;                      /* Phase counter                    */
 } WaveCH[SND_CHANNELS] =
@@ -161,7 +166,7 @@ void Sound(int Channel,int Freq,int Volume)
   Freq   = Freq<0? 0:Freq;
   Volume = Volume<0? 0:Volume>255? 255:Volume;
 
-  /* Modify channel parameters */ 
+  /* Modify channel parameters */
   WaveCH[Channel].Volume = Volume;
   WaveCH[Channel].Freq   = Freq;
 
@@ -218,7 +223,7 @@ void SetSound(int Channel,int Type)
 /** SetChannels() ********************************************/
 /** Set master volume (0..255) and switch channels on/off.  **/
 /** Each channel N has corresponding bit 2^N in Switch. Set **/
-/** or reset this bit to turn the channel on or off.        **/ 
+/** or reset this bit to turn the channel on or off.        **/
 /*************************************************************/
 void SetChannels(int Volume,int Switch)
 {
@@ -228,7 +233,7 @@ void SetChannels(int Volume,int Switch)
   /* Call sound driver if present */
   if(SndDriver.SetChannels) (*SndDriver.SetChannels)(Volume,Switch);
 
-  /* Modify wave master settings */ 
+  /* Modify wave master settings */
   MasterVolume = Volume;
   MasterSwitch = Switch&((1<<SND_CHANNELS)-1);
 }
@@ -308,7 +313,7 @@ const signed char *GetWave(int Channel)
 /** InitMIDI() ***********************************************/
 /** Initialize soundtrack logging into MIDI file FileName.  **/
 /** Repeated calls to InitMIDI() will close current MIDI    **/
-/** file and continue logging into a new one.               **/ 
+/** file and continue logging into a new one.               **/
 /*************************************************************/
 void InitMIDI(const char *FileName)
 {
@@ -826,13 +831,24 @@ void RenderAudio(int *Wave,unsigned int Samples)
       }
 }
 
+#define BUF_LENGTH 256
+#ifdef WRC
+static sample* Buf = NULL;
+#endif
+
 /** PlayAudio() **********************************************/
 /** Normalize and play given number of samples from the mix **/
 /** buffer. Returns the number of samples actually played.  **/
 /*************************************************************/
 unsigned int PlayAudio(int *Wave,unsigned int Samples)
 {
-  sample Buf[256];
+#ifndef WRC
+  sample Buf[BUF_LENGTH];
+#else
+  if (!Buf) {
+    Buf = (sample*)malloc(BUF_LENGTH * sizeof(sample));
+  }
+#endif
   unsigned int I,J,K;
   int D;
 
@@ -840,14 +856,16 @@ unsigned int PlayAudio(int *Wave,unsigned int Samples)
   if(SndRate<8192) return(0);
 
   /* Check if the buffer contains enough free space */
+#ifndef WRC
   J = GetFreeAudio();
   if(J<Samples) Samples=J;
+#endif
 
   /* Spin until all samples played or WriteAudio() fails */
   for(K=I=J=0;(K<Samples)&&(I==J);K+=I)
   {
     /* Compute number of samples to convert */
-    J = sizeof(Buf)/sizeof(sample);
+    J = BUF_LENGTH /*sizeof(Buf)/sizeof(sample)*/;
     J = Samples-K>J? J:Samples-K;
 
     /* Convert samples */
@@ -886,9 +904,11 @@ unsigned int RenderAndPlayAudio(unsigned int Samples)
   /* Exit if wave sound not initialized */
   if(SndRate<8192) return(0);
 
+#ifndef WRC
   J       = GetFreeAudio();
   Samples = Samples<J? Samples:J;
- 
+#endif
+
   /* Render and play sound */
   for(I=0;I<Samples;I+=J)
   {

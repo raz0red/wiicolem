@@ -6,9 +6,9 @@
 <BODY BGCOLOR=#FFFFFF LINK=#006000 VLINK=#006000>
 
 <CENTER>
-<H1><FONT COLOR=#FF0000>ColEm<BR>version 4.8</FONT></H1>
+<H1><FONT COLOR=#FF0000>ColEm<BR>version 5.6</FONT></H1>
 <H3>by <A HREF="http://fms.komkon.org/">Marat Fayzullin</A></H3>
-</CENTER>>
+</CENTER>
 
 <H1>Contents</H1>
 <UL>
@@ -25,22 +25,21 @@
 <H1>New in This Version</H1>
 </A>
 <UL>
-<LI>Fixed state saves for games using SRAM.
-<LI>Fixed wrong SRAM contents being saved.
-<LI>Fixed SGM AY8910 wave effects.
-<LI>Now updating sound every 8 scanlines.
-<LI>Now muting AY8910 channels when Fnum is set to 0.
-<LI>Enabled AY8910 sound channels in ColEm-Unix.
+<LI>Now switching between ColecoVision and Adam modes when loading ROMs.
+<LI>Most command line options should now work in Windows version.
+<LI>Added <I>"Video | Show Framerate"</I> menu option to ColEm-Windows.
+<LI>Increased synchronization timer precision in Windows version.
+<LI>Added <CODE>-fps</CODE> command line option to ColEm-Linux.
 </UL>
 
 <A NAME="LABC">
 <H1>Introduction</H1>
 </A>
 <P>
-  ColEm is a portable emulator of the old ColecoVision videogame console.
-It should run most ColecoVision games and supports Coleco's SuperAction
-controllers with spin wheels. You can always get the latest ColEm binaries,
-source code, and support files from
+  ColEm is a portable emulator of the old ColecoVision videogame console
+and Coleco Adam personal computer. It should run most ColecoVision games
+and supports Coleco's SuperAction controllers with spin wheels. You can
+always get the latest ColEm binaries, source code, and support files from
 </P>
 <P ALIGN=CENTER>
 <A HREF="http://fms.komkon.org/ColEm/">http://fms.komkon.org/ColEm/</A>
@@ -81,6 +80,11 @@ Feel free to look at it though.
 </A>
 <FONT COLOR="#000060">
 <PRE>
+<B>Coleco Adam:</B>
+  When using Coleco Adam keyboard, press [CONTROL]+[KEY] to
+  access the special function of a [KEY], if it also performs
+  a keyboard function.
+
 <B>All versions:</B>
   [ALT]          - Hold to switch to the second controller
   [SPACE]        - FIRE-R button (also: [SHIFT],A,S,D,F,G,H,J,K,L)
@@ -113,6 +117,17 @@ Feel free to look at it though.
 
 <B>With #define WINDOWS:</B>
   [ALT]+[ENTER]  - Switch between full screen and window modes
+
+<B>Coleco Adam keys:</B>
+  [F7]           - UNDO
+  [F8]           - WILDCARD
+  [PGUP]         - MOVE / COPY
+  [PGDOWN]       - STORE / FETCH
+  [HOME]         - HOME
+  [INSERT]       - INSERT
+  [DELETE]       - DELETE
+  [END]          - CLEAR
+  [PRTSCR]       - PRINT
 </PRE>
 </FONT>
 
@@ -131,7 +146,9 @@ Usage: colem [-option1 [-option2...]] [filename]
   -verbose &lt;level&gt;    - Select debugging messages [5]
                         0 - Silent       1 - Startup messages
                         2 - VDP          4 - Illegal Z80 ops
-                                        16 - Sound
+                          8 - EEPROM      16 - Sound
+                         32 - Disks       64 - Tapes
+                        128 - AdamNet
   -skip &lt;percent&gt;     - Percentage of frames to skip [25]
   -help               - Print this help page
   -home &lt;dirname&gt;     - Set directory with system ROM files [off]
@@ -147,20 +164,32 @@ Usage: colem [-option1 [-option2...]] [filename]
   -spin2x/-spin2y     - Mouse X/Y position as SuperAction spinner 2 [off]
   -drums/-nodrums     - Hit/Don't hit MIDI drums on noise [-nodrums]
   -logsnd &lt;filename&gt;  - Write soundtrack to a MIDI file [LOG.MID]
+  -palette &lt;filename&gt; - Load color palette from given file [ColEm.pal]
   -palette &lt;number&gt;   - Use given color palette [0]
                         0 - Scaled VDP colors   1 - Original VDP colors
                         2 - Faded NTSC colors
   -sync &lt;frequency&gt;   - Sync screen updates to &lt;frequency&gt; [-nosync]
   -nosync             - Do not sync screen updates [-nosync]
   -tv/-lcd/-raster    - Simulate TV scanlines or LCD raster [off]
+  -linear             - Scale display with linear interpolation [off]
   -soft/-eagle        - Scale display with 2xSaI or EAGLE [off]
   -epx/-scale2x       - Scale display with EPX or Scale2X [off]
   -cmy/-rgb           - Simulate CMY/RGB pixel raster [off]
   -mono/-sepia        - Simulate monochrome or sepia CRT [off]
   -green/-amber       - Simulate green or amber CRT [off]
   -4x3                - Force 4:3 television screen ratio [off]
+  -fps                - Show framerate counter [off]
   -sound [&lt;quality&gt;]  - Sound emulation quality [22050]
   -nosound            - Don't emulate sound [-nosound]
+  -printer &lt;filename&gt; - Redirect Adam printer output to file [stdout]
+  -diska &lt;filename&gt;   - Set disk image used for drive A: [none]
+  -diskb &lt;filename&gt;   - Set disk image used for drive B: [none]
+  -diskc &lt;filename&gt;   - Set disk image used for drive C: [none]
+  -diskd &lt;filename&gt;   - Set disk image used for drive D: [none]
+  -tapea &lt;filename&gt;   - Set tape image used for drive A: [none]
+  -tapeb &lt;filename&gt;   - Set tape image used for drive B: [none]
+  -tapec &lt;filename&gt;   - Set tape image used for drive C: [none]
+  -taped &lt;filename&gt;   - Set tape image used for drive D: [none]
 
 <B>With #define DEBUG:</B>
   -trap &lt;address&gt;     - Trap execution when PC reaches address [FFFFh]
@@ -236,6 +265,79 @@ drivers included into official ColEm distribution.
 <A NAME="LABK">
 <H1>History</H1>
 </A>
+<H2>New in ColEm 5.5</H2>
+<UL>
+<LI>Made VDP compute 5th sprite status even when not drawing screen.
+<LI>Recent <I>Uridium</I> and <I>Gauntlet</I> ports to ColecoVision work now.
+<LI>Added <I>"Paste Clipboard"</I> option to ColEm-Windows in Adam mode.
+</UL>
+<H2>New in ColEm 5.4</H2>
+<UL>
+<LI>Added simple CPU-based linear interpolation scaler.
+<LI>Added file drag'n'drop support to ColEm-Windows.
+<LI>Added <CODE>-linear</CODE> command line option to ColEm-Linux.
+</UL>
+<H2>New in ColEm 5.3</H2>
+<UL>
+<LI>System ROM files location now defaults to where executable is.
+<LI>Refactored scaling and special effects framework.
+<LI>Optimized scaling for large screens and windows.
+<LI>Fixed ColEm-Windows behavior with multiple displays.
+<LI>Added <I>"File | Load .PAL Palette"</I> option to ColEm-Windows.
+<LI>Added <I>"File | Load .CHT Cheats"</I> option to ColEm-Windows.
+<LI>Added <I>"Video | Interpolate Video | Linear Scaling"</I> option to ColEm-Windows.
+<LI>Enabled <I>"Video | Stretch Full Screen"</I> option with effects enabled.
+<LI>Enabled <I>"Video | Force 4:3 Screen"</I> option with effects enabled.
+<LI>Renamed snapshot saving options in ColEm-Windows.
+</UL>
+<H2>New in ColEm 5.2</H2>
+<UL>
+<LI>Reorganized built-in configuration menu.
+<LI>Added built-in menu options for saving printer and MIDI outputs. 
+<LI>Added built-in menu for hardware model and options.
+<LI>Added built-in menu for Adam disks and tapes.
+<LI>Fixed built-in menu palette selection.
+<LI>Added <I>"File | Clear Settings and Quit"</I> option to ColEm-Windows.
+<LI>Fixed small windows behavior in ColEm-Windows.
+<LI>Fixed window position behavior in ColEm-Windows.
+<LI>Saving physical joystick/gamepad selection in ColEm-Windows.
+<LI>The <CODE>LoadFile()</CODE> function will now try loading .STA files.
+</UL>
+<H2>New in ColEm 5.1</H2>
+<UL>
+<LI>Added Coleco Adam state saving, loading, and rewinding.
+<LI>Added support for more Coleco Adam keys (see documentation).
+<LI>Disabled loading disks or tapes with no Adam firmware ROMs.
+<LI>Added support for default palette file named <CODE>ColEm.pal</CODE>.
+<LI>Now able to supply .PAL filename to <CODE>-palette</CODE> parameter.
+<LI>Changing palette in Windows no longer resets emulation.
+</UL>
+<H2>New in ColEm 5.0</H2>
+<UL>
+<LI>Coleco Adam emulation is now operational, with keyboard, printer,
+    disk, and tape drives. Use <CODE>-adam</CODE> command line option
+    or <I>"Hardware | Adam"</I> menu to enable. Requires
+    <CODE>EOS.ROM</CODE> and <CODE>WRITER.ROM</CODE> files.
+<LI>Emulator will load .DSK files into disk drive A: and enable Adam mode.
+<LI>Emulator will load .DDP files into tape drive A: and enable Adam mode.
+<LI>Printer output can be sent to a file with <CODE>-printer</CODE> option.
+<LI>Adam disk drives can also be loaded with <CODE>-disk*</CODE> options.
+<LI>Adam tape drives can also be loaded with <CODE>-tape*</CODE> options.
+<LI>Windows version has got full support for Adam-specific media images
+    and hardware.
+<LI>Added <I>"File | Save Printer Output"</I> menu to ColEm-Windows.
+<LI>Added <I>"Hardware | Disk Drives"</I> menu to ColEm-Windows.
+<LI>Added <I>"Hardware | Tape Drives"</I> menu to ColEm-Windows.
+</UL>
+<H2>New in ColEm 4.8</H2>
+<UL>
+<LI>Fixed state saves for games using SRAM.
+<LI>Fixed wrong SRAM contents being saved.
+<LI>Fixed SGM AY8910 wave effects.
+<LI>Now updating sound every 8 scanlines.
+<LI>Now muting AY8910 channels when Fnum is set to 0.
+<LI>Enabled AY8910 sound channels in ColEm-Unix.
+</UL>
 <H2>New in ColEm 4.7</H2>
 <UL>
 <LI>Fixed sprite collision code to take into account early-sync flag.

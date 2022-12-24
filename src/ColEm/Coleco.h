@@ -6,7 +6,7 @@
 /** and Coleco emulation itself. See Z80.h for #defines     **/
 /** related to Z80 emulation.                               **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1994-2019                 **/
+/** Copyright (C) Marat Fayzullin 1994-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -20,6 +20,7 @@
 #include "AdamNet.h"          /* AdamNet I/O emulation       */
 #include "AY8910.h"           /* AY8910 PSG emulation        */
 #include "C24XX.h"            /* 24Cxx EEPROM emulation      */
+#include "FDIDisk.h"          /* Disk images                 */
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,7 +30,11 @@ extern "C" {
                               /* nonexisting pages and ports */
 
 #define MAXCHEATS     256     /* Maximal number of cheats    */
-#define MAX_STASIZE   0xF000  /* Maximal state data size     */
+#define MAX_STASIZE   0x2F000 /* Maximal state data size     */
+#define MAX_DISKS     4       /* Maximal number of disks     */
+#define MAX_TAPES     4       /* Maximal number of tapes     */
+
+#define TAPE_SIZE     0x40000 /* Adam tape cartridge size    */
 
 #define CPU_CLOCK     TMS9918_CLOCK        /* Z80 clock, Hz  */
 #define CPU_HPERIOD   TMS9918_LINE       /* Scanline, clocks */
@@ -65,10 +70,6 @@ extern "C" {
 #define CV_24C08      0x00002000  /*   256-byte EEPROM */
 #define CV_24C256     0x00004000  /*   32kB EEPROM     */
 #define CV_SRAM       0x00008000  /* 2kB battery-backed SRAM */
-
-#ifdef WII
-extern byte *RAM;
-#endif
 
 /** Memory Areas *********************************************/
 #define ROM_WRITER    (RAM)         /* 32kB SmartWriter ROM  */
@@ -115,7 +116,7 @@ extern byte *RAM;
 #define JST_2P_FIREL  0x40000000
 #endif
 
-/******** Variables used to control emulator behavior ********/
+/** Variables used to control emulator behavior **************/
 extern byte Verbose;        /* Debug msgs ON/OFF             */
 extern int  Mode;           /* Conjunction of CV_* mode bits */
 extern byte UPeriod;        /* Percentage of frames to draw  */
@@ -130,15 +131,19 @@ extern Z80 CPU;                       /* CPU registers+state */
 extern TMS9918 VDP;                   /* TMS9918 VDP state   */
 extern byte *VRAM;                    /* Video RAM           */
 
-extern char *HomeDir;                 /* Home directory      */
-extern char *SndName;                 /* Soundtrack log file */
-extern char *StaName;                 /* State save file     */
-extern char *SavName;                 /* EEPROM save file    */
-extern char *PrnName;                 /* Printer redir. file */
+extern const char *HomeDir;           /* Home directory      */
+extern const char *SndName;           /* Soundtrack log file */
+extern const char *StaName;           /* State save file     */
+extern const char *SavName;           /* EEPROM save file    */
+extern const char *PrnName;           /* Printer redir. file */
+extern const char *PalName;           /* Palette file        */
 
 extern byte ExitNow;                  /* 1: Exit emulator    */
 extern byte AdamROMs;                 /* 1: Adam ROMs loaded */
 extern byte PCBTable[];
+
+extern FDIDisk Disks[MAX_DISKS];      /* Adam disk drives    */
+extern FDIDisk Tapes[MAX_TAPES];      /* Adam tape drives    */
 
 /** StartColeco() ********************************************/
 /** Allocate memory, load ROM image, initialize hardware,   **/
@@ -164,15 +169,17 @@ int ResetColeco(int NewMode);
 /*************************************************************/
 void MenuColeco(void);
 
+/** LoadFile() ***********************************************/
+/** Simple utility function to load cartridge, tape, or a   **/
+/** disk image, based on the file extension, etc.           **/
+/*************************************************************/
+int LoadFile(const char *FileName);
+
 /** LoadROM() ************************************************/
 /** Load given cartridge ROM file. Returns number of bytes  **/
 /** on success, 0 on failure.                               **/
 /*************************************************************/
-#ifdef WII
-int LoadROM(const char *Cartridge, const char* WiiStateFile);
-#else
 int LoadROM(const char *Cartridge);
-#endif
 
 /** LoadCHT() ************************************************/
 /** Load cheats from .CHT file. Cheat format is either      **/
@@ -209,6 +216,38 @@ int SaveSTA(const char *StateFile);
 /** success, 0 on failure.                                  **/
 /*************************************************************/
 int LoadSTA(const char *StateFile);
+
+/** ChangePrinter() ******************************************/
+/** Change printer output to a given file. The previous     **/
+/** file is closed. ChangePrinter(0) redirects output to    **/
+/** stdout.                                                 **/
+/*************************************************************/
+void ChangePrinter(const char *FileName);
+
+/** Printer() ************************************************/
+/** Send a character to the printer.                        **/
+/*************************************************************/
+void Printer(byte V);
+
+/** ChangeDisk() *********************************************/
+/** Change disk image in a given drive. Closes current disk **/
+/** image if Name=0 was given. Creates a new disk image if  **/
+/** Name="" was given. Returns 1 on success or 0 on failure.**/
+/*************************************************************/
+byte ChangeDisk(byte N,const char *FileName);
+
+/** ChangeTape() *********************************************/
+/** Change tape image in a given drive. Closes current tape **/
+/** image if Name=0 was given. Creates a new tape image if  **/
+/** Name="" was given. Returns 1 on success or 0 on failure.**/
+/*************************************************************/
+byte ChangeTape(byte N,const char *FileName);
+
+/** SaveTape() ***********************************************/
+/** Save tape inserted into given tape drive. Returns the   **/
+/** number of saved bytes on success, 0 on failure.         **/
+/*************************************************************/
+int SaveTape(byte N,const char *TapeName);
 
 /** SetScreenDepth() *****************************************/
 /** Set screen depth for the display drivers. Returns 1 on  **/
@@ -249,6 +288,12 @@ void ResetCheats(void);
 /** query (3).                                              **/
 /*************************************************************/
 int Cheats(int Switch);
+
+/** ChangePalette() ******************************************/
+/** Change colors to one of CV_PALETTE* values, without     **/
+/** resetting emulation.                                    **/
+/*************************************************************/
+void ChangePalette(unsigned int N);
 
 /** InitMachine() ********************************************/
 /** Allocate resources needed by the machine-dependent code.**/

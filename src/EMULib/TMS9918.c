@@ -6,7 +6,7 @@
 /** produced by Texas Instruments. See TMS9918.h for        **/
 /** declarations.                                           **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1996-2019                 **/
+/** Copyright (C) Marat Fayzullin 1996-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -177,8 +177,8 @@ byte Write9918(TMS9918 *VDP,byte R,byte V)
   /* Store value into the register */
   VDP->R[R]=V;
 
-  /* Depending on the register, do... */  
-  switch(R)  
+  /* Depending on the register, do... */
+  switch(R)
   {
     case 0: /* Mode register 0 */
     case 1: /* Mode register 1 */
@@ -248,6 +248,8 @@ byte Write9918(TMS9918 *VDP,byte R,byte V)
   return(IRQ);
 }
 
+extern int refresh_screen;
+
 /** Loop9918() ***********************************************/
 /** Call this routine on every scanline to update the       **/
 /** screen buffer. Loop9918() returns 1 if an interrupt is  **/
@@ -265,8 +267,12 @@ byte Loop9918(TMS9918 *VDP)
 
   /* If refreshing display area, call scanline handler */
   if((VDP->Line>=TMS9918_START_LINE)&&(VDP->Line<TMS9918_END_LINE))
+  {
     if(VDP->UCount>=100)
       Screen9918[VDP->Mode].LineHandler(VDP,VDP->Line-TMS9918_START_LINE);
+    else
+      ScanSprites(VDP,VDP->Line-TMS9918_START_LINE,0);
+  }
 
   /* If time for VBlank... */
   if(VDP->Line==TMS9918_END_LINE)
@@ -294,6 +300,10 @@ byte Loop9918(TMS9918 *VDP)
       if(CheckSprites(VDP)) VDP->Status|=TMS9918_STAT_OVRLAP;
   }
 
+  if ((VDP->Line + 1) == VDP->Scanlines) {
+    refresh_screen = 1;
+  }
+
   /* Done */
   return(IRQ);
 }
@@ -319,7 +329,7 @@ byte WrCtrl9918(TMS9918 *VDP,byte V)
         VDP->VAddr  = (VDP->VAddr+1)&0x3FFF;
         break;
       case 0x80:
-        /* Enabling IRQs may cause an IRQ here */ 
+        /* Enabling IRQs may cause an IRQ here */
         return(Write9918(VDP,V&0x0F,VDP->VAddr&0x00FF));
     }
   }
@@ -432,6 +442,63 @@ unsigned int Load9918(TMS9918 *VDP,byte *Buf,unsigned int Size)
 
   /* Done */
   return(N);
+}
+
+/** ScanSprites() ********************************************/
+/** Compute bitmask of sprites shown in a given scanline.   **/
+/** Returns the first sprite to show or -1 if none shown.   **/
+/** Also updates 5th sprite fields in the status register.  **/
+/*************************************************************/
+int ScanSprites(register TMS9918 *VDP,register byte Y,unsigned int *Mask)
+{
+  static const byte SprHeights[4] = { 8,16,16,32 };
+  register byte OH,IH,*AT;
+  register int L,K,C1,C2;
+  register unsigned int M;
+
+  /* No 5th sprite yet */
+  VDP->Status &= ~(TMS9918_STAT_5THNUM|TMS9918_STAT_5THSPR);
+
+  /* Must have MODE1+ and screen enabled */
+  if(!VDP->Mode || !TMS9918_ScreenON(VDP))
+  {
+    if(Mask) *Mask=0;
+    return(-1);
+  }
+
+  OH = SprHeights[VDP->R[1]&0x03];
+  IH = SprHeights[VDP->R[1]&0x02];
+  AT = VDP->SprTab;
+  C1 = VDP->MaxSprites+1;
+  C2 = 5;
+  M  = 0;
+
+  for(L=0;L<32;++L,AT+=4)
+  {
+    K=AT[0];             /* K = sprite Y coordinate */
+    if(K==208) break;    /* Iteration terminates if Y=208 */
+    if(K>256-IH) K-=256; /* Y coordinate may be negative */
+
+    /* Mark all valid sprites with 1s, break at MaxSprites */
+    if((Y>K)&&(Y<=K+OH))
+    {
+      /* If we exceed four sprites per line, set 5th sprite flag */
+      if(!--C2) VDP->Status|=TMS9918_STAT_5THSPR|L;
+
+      /* If we exceed maximum number of sprites per line, stop here */
+      if(!--C1) break;
+
+      /* Mark sprite as ready to draw */
+      M|=(1<<L);
+    }
+  }
+
+  /* Set last checked sprite number (5th sprite, or Y=208, or sprite #31) */
+  if(C2>0) VDP->Status |= L<32? L:31;
+
+  /* Return first shown sprite and bit mask of shown sprites */
+  if(Mask) *Mask=M;
+  return(L-1);
 }
 
 /** CheckSprites() *******************************************/

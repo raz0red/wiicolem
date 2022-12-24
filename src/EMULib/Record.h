@@ -5,7 +5,7 @@
 /** This file contains routines for gameplay recording and  **/
 /** replay.                                                 **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 2013-2019                 **/
+/** Copyright (C) Marat Fayzullin 2013-2021                 **/
 /**     The contents of this file are property of Marat     **/
 /**     Fayzullin and should only be used as agreed with    **/
 /**     him. The file is confidential. Absolutely no        **/

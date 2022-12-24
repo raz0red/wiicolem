@@ -6,7 +6,7 @@
 /** produced by Texas Instruments. See files TMS9918.c and  **/
 /** DRV9918.c for implementation.                           **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1996-2019                 **/
+/** Copyright (C) Marat Fayzullin 1996-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -234,6 +234,13 @@ void RefreshLine0(TMS9918 *VDP,byte Y);
 void RefreshLine1(TMS9918 *VDP,byte Y);
 void RefreshLine2(TMS9918 *VDP,byte Y);
 void RefreshLine3(TMS9918 *VDP,byte Y);
+
+/** ScanSprites() ********************************************/
+/** Compute bitmask of sprites shown in a given scanline.   **/
+/** Returns the first sprite to show or -1 if none shown.   **/
+/** Also updates 5th sprite fields in the status register.  **/
+/*************************************************************/
+int ScanSprites(TMS9918 *VDP,byte Y,unsigned int *Mask);
 
 /** RefreshScreen() ******************************************/
 /** Refresh screen. This function is called in the end of   **/

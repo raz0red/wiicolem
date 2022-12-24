@@ -5,7 +5,7 @@
 /** This file contains runtime menu code for configuring    **/
 /** the emulator. It uses console functions from Console.h. **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 2005-2019                 **/
+/** Copyright (C) Marat Fayzullin 2005-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -23,6 +23,7 @@
 #define CLR_BACK3  PIXEL(150,255,255)
 #define CLR_BACK4  PIXEL(255,255,150)
 #define CLR_BACK5  PIXEL(255,150,255)
+#define CLR_BACK6  PIXEL(150,255,150)
 #define CLR_TEXT   PIXEL(0,0,0)
 #define CLR_WHITE  PIXEL(255,255,255)
 #define CLR_ERROR  PIXEL(200,0,0)
@@ -31,6 +32,8 @@
 /** Cheat Structures *****************************************/
 extern int CheatCount;      /* # of cheats in the Cheats[]   */
 extern struct { word Addr,Data,Orig;byte Size,Text[10]; } CheatCodes[MAXCHEATS];
+
+static char SndNameBuf[256];
 
 /** MenuColeco() *********************************************/
 /** Invoke a menu system allowing to configure the emulator **/
@@ -48,22 +51,17 @@ void MenuColeco(void)
     /* Compose menu */
     sprintf(S,
       "ColEm\n"
-      "Load cartridge\n"
-      "Load state\n"
-      "Save state\n"
-      "Load cheats\n"
+      "Load file\n"
+      "Save file\n"
       "  \n"
-      "PAL (Europe)     %c\n"
-      "NTSC (US/Japan)  %c\n"
-      "Show all sprites %c\n"
-      "Select palette\n"
+      "Hardware model\n"
+      "Video options\n"
+      "Input options\n"
+      "Disks & tapes\n"
       "  \n"
       "Log soundtrack   %c\n"
       "Hit MIDI drums   %c\n"
       "  \n"
-      "Automatic FIRE-L %c\n"
-      "Automatic FIRE-R %c\n"
-      "Setup spinners\n"
       "Cheats\n"
       "Search cheats\n"
       "  \n"
@@ -71,13 +69,8 @@ void MenuColeco(void)
       "Quit emulator\n"
       "  \n"
       "Done\n",
-      Mode&CV_PAL?             CON_CHECK:' ',
-      !(Mode&CV_PAL)?          CON_CHECK:' ',
-      Mode&CV_ALLSPRITE?       CON_CHECK:' ',
       MIDILogging(MIDI_QUERY)? CON_CHECK:' ',
-      Mode&CV_DRUMS?           CON_CHECK:' ',
-      Mode&CV_AUTOFIREL?       CON_CHECK:' ',
-      Mode&CV_AUTOFIRER?       CON_CHECK:' '
+      Mode&CV_DRUMS?           CON_CHECK:' '
     );
 
     /* Replace all EOLNs with zeroes */
@@ -87,68 +80,121 @@ void MenuColeco(void)
     /* Handle menu selection */
     switch(J)
     {
-      case 1: /* Load game */
+      case 1: /* Load file */
         /* Request file name */
-        P=CONFile(CLR_TEXT,CLR_BACK3,".cv\0.cv.gz\0.rom\0.rom.gz\0");
+        P=CONFile(CLR_TEXT,CLR_BACK3,".rom\0.cv\0.col\0.bin\0.dsk\0.fdi\0.ddp\0.sta\0.rom.gz\0.cv.gz\0.col.gz\0.bin.gz\0.dsk.gz\0.fdi.gz\0.ddp.gz\0.sta.gz\0.pal\0.cht\0");
         /* Try loading file, show error on failure */
-        if(P&&!LoadROM(P))
+        if(P&&!LoadFile(P))
           CONMsg(-1,-1,-1,-1,CLR_BACK,CLR_ERROR,"Error","Cannot load file.\0\0");
         /* Exit top menu */
         J=0;
         break;
 
-      case 2: /* Load state */
-        /* Request file name */
-        P=CONFile(CLR_TEXT,CLR_BACK4,".sta\0");
-        /* Try loading state, show error on failure */
-        if(P&&!LoadSTA(P))
-          CONMsg(-1,-1,-1,-1,CLR_BACK,CLR_ERROR,"Error","Cannot load state.\0\0");
-        /* Exit top menu */
-        J=0;
-        break;
-
-      case 3: /* Save state */
+      case 2: /* Save file */
+        /* Run menu */
+        switch(CONMenu(-1,-1,-1,-1,CLR_TEXT,CLR_BACK4,
+          "Save File\0Emulation state\0Printer output\0MIDI soundtrack\0",1
+        ))
+        {
+          case 1: /* Save state */
         /* Request file name */
         P=CONFile(CLR_TEXT,CLR_BACK2,".sta\0");
         /* Try saving state, show error on failure */
         if(P&&!SaveSTA(P))
           CONMsg(-1,-1,-1,-1,CLR_BACK,CLR_ERROR,"Error","Cannot save state.\0\0");
+            break;
+          case 2: /* Printer output file */
+            /* Request file name */
+            P=CONFile(CLR_TEXT,CLR_BACK2,".prn\0.out\0.txt\0");
+            /* Try changing printer output */
+            if(P) ChangePrinter(P);
+            break;
+          case 3: /* Soundtrack output file */
+            /* Request file name */
+            P=CONFile(CLR_TEXT,CLR_BACK2,".mid\0.rmi\0");
+            if(P)
+            {
+              /* Try changing MIDI log output, show error on failure */
+              if(strlen(P)+1>sizeof(SndNameBuf))
+                CONMsg(-1,-1,-1,-1,CLR_BACK,CLR_ERROR,"Error","Name too long.\0\0");
+              else
+              {
+                strcpy(SndNameBuf,P);
+                SndName=SndNameBuf;
+                InitMIDI(SndName);
+                MIDILogging(MIDI_ON);
+              }
+            }
+            break;
+        }
         /* Exit top menu */
         J=0;
         break;
 
-      case 4: /* Load cheats */
-        /* Request file name */
-        P=CONFile(CLR_TEXT,CLR_BACK4,".cht\0");
-        /* Try loading file, show error on failure */
-        if(P&&!LoadCHT(P))
-          CONMsg(-1,-1,-1,-1,CLR_BACK,CLR_ERROR,"Error","Cannot load cheats.\0\0");
-        /* Exit top menu */
-        J=0;
-        break;
-
-      case 6: /* PAL VDP chip */
-        ResetColeco(Mode|CV_PAL);
-        break;
-      case 7: /* NTSC VDP chip */
-        ResetColeco(Mode&~CV_PAL);
-        break;
-      case 8: /* Show all sprites */
-        Mode^=CV_ALLSPRITE;
-        VDP.MaxSprites=Mode&CV_ALLSPRITE? 255:TMS9918_MAXSPRITES; 
-        break;
-
-      case 9: /* Select palette */
+      case 4: /* Hardware model */
         for(K=1;K;)
         {
           /* Compose menu */
           sprintf(S,
-            "Select Palette\n"
+            "Hardware Model\n"
+            "Coleco Adam       %c\n"
+            "ColecoVision      %c\n"
+            "Super Game Module %c\n"
+            "  \n"
+            "No EEPROM         %c\n"
+            "24c08 EEPROM      %c\n"
+            "24c256 EEPROM     %c\n"
+            "SRAM & battery    %c\n"
+            "  \n"
+            "Done\n",
+            Mode&CV_ADAM?                CON_CHECK:' ',
+            !(Mode&CV_ADAM)?             CON_CHECK:' ',
+            Mode&CV_SGM?                 CON_CHECK:' ',
+            (Mode&CV_EEPROM)==0?         CON_CHECK:' ',
+            (Mode&CV_EEPROM)==CV_24C08?  CON_CHECK:' ',
+            (Mode&CV_EEPROM)==CV_24C256? CON_CHECK:' ',
+            Mode&CV_SRAM?                CON_CHECK:' '
+          );
+          /* Replace all EOLNs with zeroes */
+          for(I=0;S[I];I++) if(S[I]=='\n') S[I]='\0';
+          /* Run menu */
+          K=CONMenu(-1,-1,-1,-1,CLR_TEXT,CLR_BACK6,S,K);
+          /* Handle menu selection */
+          switch(K)
+          {
+            case 1: ResetColeco(Mode|CV_ADAM);break;
+            case 2: ResetColeco(Mode&~CV_ADAM);break;
+            case 3: ResetColeco(Mode^CV_SGM);break;
+            case 5: ResetColeco(Mode&~CV_EEPROM);break;
+            case 6: ResetColeco((Mode&~CV_EEPROM)|CV_24C08);break;
+            case 7: ResetColeco((Mode&~CV_EEPROM)|CV_24C256);break;
+            case 8: ResetColeco(Mode^CV_SRAM);break;
+            case 10: K=0;break;
+          }
+        }
+        /* Exit top menu */
+        J=0;
+        break;
+
+      case 5: /* Video options */
+        for(K=1;K;)
+        {
+          /* Compose menu */
+          sprintf(S,
+            "Video Options\n"
+            "PAL (Europe)        %c\n"
+            "NTSC (US/Japan)     %c\n"
+            "  \n"
+            "Show all sprites    %c\n"
+            "  \n"
             "Scaled VDP colors   %c\n"
             "Original VDP colors %c\n"
             "Faded NTSC colors   %c\n"
             "  \n"
             "Done\n",
+            Mode&CV_PAL?                    CON_CHECK:' ',
+            !(Mode&CV_PAL)?                 CON_CHECK:' ',
+            Mode&CV_ALLSPRITE?              CON_CHECK:' ',
             (Mode&CV_PALETTE)==CV_PALETTE0? CON_CHECK:' ',
             (Mode&CV_PALETTE)==CV_PALETTE1? CON_CHECK:' ',
             (Mode&CV_PALETTE)==CV_PALETTE2? CON_CHECK:' '
@@ -160,41 +206,39 @@ void MenuColeco(void)
           /* Handle menu selection */
           switch(K)
           {
-            case 1: ResetColeco((Mode&~CV_PALETTE)|CV_PALETTE0);break;
-            case 2: ResetColeco((Mode&~CV_PALETTE)|CV_PALETTE1);break;
-            case 3: ResetColeco((Mode&~CV_PALETTE)|CV_PALETTE2);break;
-            case 5: K=0;break;
+            case 1: ResetColeco(Mode|CV_PAL);break;
+            case 2: ResetColeco(Mode&~CV_PAL);break;
+            case 4: /* Show all sprites */
+              Mode^=CV_ALLSPRITE;
+              VDP.MaxSprites=Mode&CV_ALLSPRITE? 255:TMS9918_MAXSPRITES; 
+              break;
+            case 6: ChangePalette(CV_PALETTE0);break;
+            case 7: ChangePalette(CV_PALETTE1);break;
+            case 8: ChangePalette(CV_PALETTE2);break;
+            case 10: K=0;break;
           }
         }
         /* Exit top menu */
         J=0;
         break;
 
-      case 11: /* Log MIDI soundtrack */
-        MIDILogging(MIDI_TOGGLE);
-        break;
-      case 12: /* Hit MIDI drums for noise */
-        Mode^=CV_DRUMS;
-        break;
-      case 14: /* Autofire LEFT */
-        Mode^=CV_AUTOFIREL;
-        break;
-      case 15: /* Autofire RIGHT */
-        Mode^=CV_AUTOFIRER;
-        break;
-
-      case 16: /* Setup spinners */
+      case 6: /* Input options */
         for(K=1;K;)
         {
           /* Compose menu */
           sprintf(S,
-            "Setup Spinners\n"
-            "X as spinner 1 %c\n"
-            "X as spinner 2 %c\n"
-            "Y as spinner 1 %c\n"
-            "Y as spinner 2 %c\n"
+            "Input Options\n"
+            "Automatic FIRE-L %c\n"
+            "Automatic FIRE-R %c\n"
+            "  \n"
+            "X as spinner #1  %c\n"
+            "X as spinner #2  %c\n"
+            "Y as spinner #1  %c\n"
+            "Y as spinner #2  %c\n"
             "  \n"
             "Done\n",
+            Mode&CV_AUTOFIREL?                CON_CHECK:' ',
+            Mode&CV_AUTOFIRER?                CON_CHECK:' ',
             (Mode&CV_SPINNER1)==CV_SPINNER1X? CON_CHECK:' ',
             (Mode&CV_SPINNER2)==CV_SPINNER2X? CON_CHECK:' ',
             (Mode&CV_SPINNER1)==CV_SPINNER1Y? CON_CHECK:' ',
@@ -203,22 +247,144 @@ void MenuColeco(void)
           /* Replace all EOLNs with zeroes */
           for(I=0;S[I];I++) if(S[I]=='\n') S[I]='\0';
           /* Run menu */
-          K=CONMenu(-1,-1,-1,-1,CLR_TEXT,CLR_BACK4,S,K);
+          K=CONMenu(-1,-1,-1,-1,CLR_TEXT,CLR_BACK3,S,K);
           /* Handle menu selection */
           switch(K)
           {
-            case 1: Mode=(Mode&~CV_SPINNER1Y)^CV_SPINNER1X;break;
-            case 2: Mode=(Mode&~CV_SPINNER2Y)^CV_SPINNER2X;break;
-            case 3: Mode=(Mode&~CV_SPINNER1X)^CV_SPINNER1Y;break;
-            case 4: Mode=(Mode&~CV_SPINNER2X)^CV_SPINNER2Y;break;
-            case 6: K=0;break;
+            case 1: Mode^=CV_AUTOFIREL;break;
+            case 2: Mode^=CV_AUTOFIRER;break;
+            case 4: Mode=(Mode&~CV_SPINNER1Y)^CV_SPINNER1X;break;
+            case 5: Mode=(Mode&~CV_SPINNER2Y)^CV_SPINNER2X;break;
+            case 6: Mode=(Mode&~CV_SPINNER1X)^CV_SPINNER1Y;break;
+            case 7: Mode=(Mode&~CV_SPINNER2X)^CV_SPINNER2Y;break;
+            case 9: K=0;break;
           }
         }
         /* Exit top menu */
         J=0;
         break;
 
-      case 17: /* Cheats */
+      case 7: /* Disks & tapes */
+        /* Compose menu */
+        sprintf(S,
+          "Disks & Tapes\n"
+          "Disk drive A:\n"
+          "Disk drive B:\n"
+          "Disk drive C:\n"
+          "Disk drive D:\n"
+          "  \n"
+          "Tape drive A:\n"
+          "Tape drive B:\n"
+          "Tape drive C:\n"
+          "Tape drive D:\n"
+          "  \n"
+          "Done\n"
+        );
+        /* Replace all EOLNs with zeroes */
+        for(I=0;S[I];I++) if(S[I]=='\n') S[I]='\0';
+        /* Run menu */
+        K=CONMenu(-1,-1,-1,-1,CLR_TEXT,CLR_BACK4,S,1);
+          /* Handle menu selection */
+          switch(K)
+          {
+          case 1: case 2: case 3: case 4:
+            /* Compute drive number */
+            K -= 1;
+            /* Create disk operations menu */
+            sprintf(S,
+              "Disk Drive %c:\n"
+              "Load disk\n"
+              "New disk\n"
+              "Eject disk\n"
+              " \n"
+              "Save DSK image\n"
+              "Save FDI image\n",
+              'A'+K
+            );
+            /* Replace all EOLNs with zeroes */
+            for(I=0;S[I];I++) if(S[I]=='\n') S[I]='\0';
+            /* Run menu and handle menu selection */
+            switch(CONMenu(-1,-1,-1,-1,CLR_TEXT,CLR_BACK2,S,1))
+            {
+              case 1: /* Load disk */
+                P=CONFile(CLR_TEXT,CLR_BACK3,".dsk\0.dsk.gz\0.fdi\0.fdi.gz\0");
+                if(P&&!ChangeDisk(K,P))
+                  CONMsg(-1,-1,-1,-1,CLR_BACK,CLR_ERROR,"Error","Cannot load disk image.\0\0");
+                break;
+              case 2: /* New disk */
+                ChangeDisk(K,"");
+                break;
+              case 3: /* Eject disk */
+                ChangeDisk(K,0);
+                break;
+              case 5: /* Save .DSK image */
+                P=CONFile(CLR_TEXT,CLR_BACK2,".dsk\0");
+                if(P&&!SaveFDI(&Disks[K],P,FMT_ADMDSK))
+                  CONMsg(-1,-1,-1,-1,CLR_BACK,CLR_ERROR,"Error","Cannot save disk image.\0\0");
+                break;
+              case 6: /* Save .FDI image */
+                P=CONFile(CLR_TEXT,CLR_BACK2,".fdi\0");
+                if(P&&!SaveFDI(&Disks[K],P,FMT_FDI))
+                  CONMsg(-1,-1,-1,-1,CLR_BACK,CLR_ERROR,"Error","Cannot save disk image.\0\0");
+                break;
+          }
+            break;
+
+          case 6: case 7: case 8: case 9:
+            /* Compute tape number */
+            K -= 6;
+            /* Create tape operations menu */
+            sprintf(S,
+              "Tape Drive %c:\n"
+              "Load tape\n"
+              "New tape\n"
+              "Eject tape\n"
+              " \n"
+              "Save DDP image\n"
+              "Save FDI image\n",
+              'A'+K
+            );
+            /* Replace all EOLNs with zeroes */
+            for(I=0;S[I];I++) if(S[I]=='\n') S[I]='\0';
+            /* Run menu and handle menu selection */
+            switch(CONMenu(-1,-1,-1,-1,CLR_TEXT,CLR_BACK2,S,1))
+            {
+              case 1: /* Load tape */
+                P=CONFile(CLR_TEXT,CLR_BACK3,".ddp\0.ddp.gz\0.fdi\0.fdi.gz\0");
+                if(P&&!ChangeTape(K,P))
+                  CONMsg(-1,-1,-1,-1,CLR_BACK,CLR_ERROR,"Error","Cannot load tape image.\0\0");
+                break;
+              case 2: /* New tape */
+                ChangeTape(K,"");
+                break;
+              case 3: /* Eject tape */
+                ChangeTape(K,0);
+                break;
+              case 5: /* Save .DDP image */
+                P=CONFile(CLR_TEXT,CLR_BACK2,".ddp\0");
+                if(P&&!SaveFDI(&Tapes[K],P,FMT_DDP))
+                  CONMsg(-1,-1,-1,-1,CLR_BACK,CLR_ERROR,"Error","Cannot save tape image.\0\0");
+                break;
+              case 6: /* Save .FDI image */
+                P=CONFile(CLR_TEXT,CLR_BACK2,".fdi\0");
+                if(P&&!SaveFDI(&Tapes[K],P,FMT_FDI))
+                  CONMsg(-1,-1,-1,-1,CLR_BACK,CLR_ERROR,"Error","Cannot save tape image.\0\0");
+                break;
+            }
+            break;
+        }
+        /* Exit top menu */
+        J=0;
+        break;
+
+      case 9: /* Log MIDI soundtrack */
+        MIDILogging(MIDI_TOGGLE);
+        break;
+      case 10: /* Hit MIDI drums for noise */
+        Mode^=CV_DRUMS;
+        break;
+
+      case 12: /* Cheats */
         /* Allocate buffer for cheats */
         PP=malloc(MAXCHEATS*2*16+64);
         if(!PP) break;
@@ -276,7 +442,7 @@ void MenuColeco(void)
         J=0;
         break;
 
-      case 18: /* Hunt for cheat codes */
+      case 13: /* Hunt for cheat codes */
         /* Until user quits the menu... */
         for(I=1;I;)
         {
@@ -457,15 +623,15 @@ void MenuColeco(void)
         J=0;
         break;
 
-      case 20: /* Reset */
+      case 15: /* Reset */
         ResetColeco(Mode);
         J=0;
         break;
-      case 21: /* Quit */
+      case 16: /* Quit */
         ExitNow=1;
         J=0;
         break;
-      case 23: /* Done */
+      case 18: /* Done */
         J=0;
         break;
     }

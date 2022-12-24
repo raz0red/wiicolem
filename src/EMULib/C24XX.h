@@ -5,7 +5,7 @@
 /** This file contains emulation for the 24cXX series of    **/
 /** serial EEPROMs. See C24XX.c for the actual code.        **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 2017-2019                 **/
+/** Copyright (C) Marat Fayzullin 2017-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/

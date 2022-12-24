@@ -6,7 +6,7 @@
 /** depths (BPP8,BPP16,BPP32). It is used automatically     **/
 /** when none of BPP* values are defined.                   **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 2008-2019                 **/
+/** Copyright (C) Marat Fayzullin 2008-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -35,6 +35,7 @@
 #define CropImage       CropImage_8
 #define ClearImage      ClearImage_8
 #define ScaleImage      ScaleImage_8
+#define InterpolateImage InterpolateImage_8
 #define RasterizeImage  RasterizeImage_8
 #define TelevizeImage   TelevizeImage_8
 #define LcdizeImage     LcdizeImage_8
@@ -59,6 +60,7 @@
 #undef CropImage
 #undef ClearImage
 #undef ScaleImage
+#undef InterpolateImage
 #undef RasterizeImage
 #undef TelevizeImage
 #undef LcdizeImage
@@ -97,6 +99,7 @@
 #define CropImage       CropImage_16
 #define ClearImage      ClearImage_16
 #define ScaleImage      ScaleImage_16
+#define InterpolateImage InterpolateImage_16
 #define RasterizeImage  RasterizeImage_16
 #define TelevizeImage   TelevizeImage_16
 #define LcdizeImage     LcdizeImage_16
@@ -128,6 +131,7 @@
 #undef CropImage
 #undef ClearImage
 #undef ScaleImage
+#undef InterpolateImage
 #undef RasterizeImage
 #undef TelevizeImage
 #undef LcdizeImage
@@ -164,6 +168,7 @@
 #define CropImage       CropImage_32
 #define ClearImage      ClearImage_32
 #define ScaleImage      ScaleImage_32
+#define InterpolateImage InterpolateImage_32
 #define RasterizeImage  RasterizeImage_32
 #define TelevizeImage   TelevizeImage_32
 #define LcdizeImage     LcdizeImage_32
@@ -195,6 +200,7 @@
 #undef CropImage
 #undef ClearImage
 #undef ScaleImage
+#undef InterpolateImage
 #undef RasterizeImage
 #undef TelevizeImage
 #undef LcdizeImage
@@ -368,6 +374,22 @@ void ScaleImage(Image *Dst,const Image *Src,int X,int Y,int W,int H)
     case 16: ScaleImage_16(Dst,Src,X,Y,W,H);break;
     case 24:
     case 32: ScaleImage_32(Dst,Src,X,Y,W,H);break;
+  }
+}
+
+/** InterpolateImage() ***************************************/
+/** Scale Src into Dst using simple interpolation.          **/
+/*************************************************************/
+void InterpolateImage(Image *Dst,const Image *Src,int X,int Y,int W,int H)
+{
+  if(Src->D!=Dst->D) return;
+
+  switch(Dst->D)
+  {
+    case 8:  InterpolateImage_8(Dst,Src,X,Y,W,H);break;
+    case 16: InterpolateImage_16(Dst,Src,X,Y,W,H);break;
+    case 24:
+    case 32: InterpolateImage_32(Dst,Src,X,Y,W,H);break;
   }
 }
 

@@ -5,7 +5,7 @@
 /** This file contains generic main() procedure statrting   **/
 /** the emulation.                                          **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1994-2019                 **/
+/** Copyright (C) Marat Fayzullin 1994-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <ctype.h>
 
 char *Options[]=
 { 
@@ -26,9 +27,11 @@ char *Options[]=
   "adam","cv","sgm","nosgm","24c08","24c256","sram",
   "allspr","autoa","noautoa","autob","noautob",
   "spin1x","spin1y","spin2x","spin2y",
-  "drums","nodrums","logsnd","palette",
-  "home","sound","nosound","trap",
-  "sync","nosync","scale","vsync",
+  "drums","nodrums","logsnd","palette","home","printer",
+  "diska","diskb","diskc","diskd",
+  "tapea","tapeb","tapec","taped",
+  "sound","nosound",
+  "trap","sync","nosync","scale","vsync",
   0
 };
 
@@ -102,7 +105,7 @@ int main(int argc,char *argv[])
                  }
                  break;
 	case 4:  printf
-                 ("%s by Marat Fayzullin    (C)FMS 1994-2019\n",Title);
+                 ("%s by Marat Fayzullin    (C)FMS 1994-2021\n",Title);
                  for(J=0;HelpText[J];J++) puts(HelpText[J]);
                  return(0);
         case 5:  Mode|=CV_ADAM;break;
@@ -130,6 +133,8 @@ int main(int argc,char *argv[])
         case 24: N++;
                  if(N>=argc)
                    printf("%s: No palette number supplied\n",argv[0]);
+                 else if((strlen(argv[N])!=1) || !isdigit(argv[N][0]))
+                   PalName=argv[N];
                  else
                  {
                    J    = atoi(argv[N]);
@@ -144,14 +149,31 @@ int main(int argc,char *argv[])
                  else printf("%s: No home directory supplied\n",argv[0]);
                  break;
         case 26: N++;
+                 if(N<argc) ChangePrinter(argv[N]);
+                 else printf("%s: No file for printer output\n",argv[0]);
+                 break;
+        case 27:
+        case 28:
+        case 29:
+        case 30: N++;
+                 if(N<argc) ChangeDisk(J-27,argv[N]);
+                 else printf("%s: No file for disk drive %c:\n",argv[0],J-27+'A');
+                 break;
+        case 31:
+        case 32:
+        case 33:
+        case 34: N++;
+                 if(N<argc) ChangeTape(J-31,argv[N]);
+                 else printf("%s: No file for tape drive %c:\n",argv[0],J-31+'A');
+                 break;
+        case 35: N++;
                  if(N>=argc) { UseSound=1;N--; }
                  else if(sscanf(argv[N],"%d",&UseSound)!=1)
                       { UseSound=1;N--; }
                  break;
-        case 27: UseSound=0;break;
-
+        case 36: UseSound=0;break;
 #if defined(DEBUG)
-        case 28: N++;
+        case 37: N++;
                  if(N>=argc)
                    printf("%s: No trap address supplied\n",argv[0]);
                  else
@@ -161,15 +183,15 @@ int main(int argc,char *argv[])
 #endif /* DEBUG */
 
 #if defined(UNIX) || defined(MSDOS) || defined(MAEMO)
-        case 29: N++;
+        case 38: N++;
                  if(N<argc) SyncFreq=atoi(argv[N]);
                  else printf("%s: No sync frequency supplied\n",argv[0]);
                  break;
-        case 30: SyncFreq=0;break;
+        case 39: SyncFreq=0;break;
 #endif /* UNIX || MSDOS || MAEMO */
 
 #if defined(UNIX)
-        case 31: N++;
+        case 40: N++;
                  if(N>=argc) { UseZoom=1;N--; }
                  else if(sscanf(argv[N],"%d",&UseZoom)!=1)
                       { UseZoom=1;N--; }
@@ -177,7 +199,7 @@ int main(int argc,char *argv[])
 #endif /* UNIX */
 
 #if defined(MSDOS)
-        case 32: SyncFreq=-1;break;
+        case 41: SyncFreq=-1;break;
 #endif /* MSDOS */
 
         default: printf("%s: Wrong option '%s'\n",argv[0],argv[N]);

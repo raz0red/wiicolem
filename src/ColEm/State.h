@@ -5,7 +5,7 @@
 /** This file contains routines to save and load emulation  **/
 /** state.                                                  **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1994-2019                 **/
+/** Copyright (C) Marat Fayzullin 1994-2021                 **/
 /**     The contents of this file are property of Marat     **/
 /**     Fayzullin and should only be used as agreed with    **/
 /**     him. The file is confidential. Absolutely no        **/
@@ -102,6 +102,15 @@ unsigned int SaveState(unsigned char *Buf,unsigned int MaxSize)
   SaveDATA(VDP.VRAM,0x4000);
   SaveSTRUCT(AYPSG);
 
+  /* If running Coleco Adam, save Adam RAM */
+  if(Mode&CV_ADAM)
+  {
+    SaveDATA(RAM_MAIN_LO,0x8000);
+    SaveDATA(RAM_EXP_LO,0x8000);
+    SaveDATA(RAM_MAIN_HI,0x8000);
+    SaveDATA(RAM_EXP_HI,0x8000);
+  }
+
   /* Return amount of data written */
   return(Size);
 }
@@ -161,6 +170,15 @@ unsigned int LoadState(unsigned char *Buf,unsigned int MaxSize)
   MegaPage   = State[J++]&(MegaSize-1);
   Port53     = State[J++];
 
+  /* If running Coleco Adam, load Adam RAM */
+  if(Mode&CV_ADAM)
+  {
+    LoadDATA(RAM_MAIN_LO,0x8000);
+    LoadDATA(RAM_EXP_LO,0x8000);
+    LoadDATA(RAM_MAIN_HI,0x8000);
+    LoadDATA(RAM_EXP_HI,0x8000);
+  }
+
   /* Normal cartridges have fixed ROM pages */
   if(MegaSize<=2) MegaPage=1;
 
@@ -170,6 +188,9 @@ unsigned int LoadState(unsigned char *Buf,unsigned int MaxSize)
 
   /* Set current update period */
   VDP.DrawFrames = UPeriod;
+
+  /* If no Adam ROMs, reset to ColecoVision mode */
+  if((Mode&CV_ADAM) && !AdamROMs) ResetColeco(Mode);
 
   /* Return amount of data read */
   return(Size);

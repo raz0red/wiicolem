@@ -5,7 +5,7 @@
 /** This file contains emulation for the SN76489 sound chip **/
 /** produced by Intel. See SN76489.h for declarations.      **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1996-2019                 **/
+/** Copyright (C) Marat Fayzullin 1996-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/

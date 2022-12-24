@@ -5,7 +5,7 @@
 /** This file contains platform-independent definitions and **/
 /** declarations for the emulation library.                 **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1996-2019                 **/
+/** Copyright (C) Marat Fayzullin 1996-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -74,6 +74,7 @@
 #define EFF_SCALE2X    (EFF_SOFTEN3)
 #define EFF_HQ4X       (EFF_SOFTEN|EFF_SOFTEN3)
 #define EFF_NEAREST    (EFF_SOFTEN2|EFF_SOFTEN3) /* Disable hw interpolation */
+#define EFF_LINEAR     (EFF_SOFTEN|EFF_SOFTEN2|EFF_SOFTEN3) /* Force hw interpolation */
 
 #define EFF_RASTER_ALL (EFF_TVLINES|EFF_LCDLINES)
 #define EFF_RASTER     (EFF_TVLINES|EFF_LCDLINES)
@@ -186,9 +187,6 @@
 #include "LibSym.h"
 #include "LibSym.rh"
 #endif
-#ifdef WII
-#include "LibWii.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -299,6 +297,11 @@ void ScaleImage(Image *Dst,const Image *Src,int X,int Y,int W,int H);
 /** width on success in <Height 31:16><Width 15:0> format.  **/
 /*************************************************************/
 unsigned int ARMScaleImage(Image *Dst,Image *Src,int X,int Y,int W,int H,int Attrs);
+
+/** InterpolateImage() ***************************************/
+/** Scale image Src into Dst using linear interpolation.    **/
+/*************************************************************/
+void InterpolateImage(Image *Dst,const Image *Src,int X,int Y,int W,int H);
 
 /** TelevizeImage() ******************************************/
 /** Create televizion effect on the image.                  **/

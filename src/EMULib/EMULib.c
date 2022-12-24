@@ -5,7 +5,7 @@
 /** This file contains platform-independent implementation  **/
 /** part of the emulation library.                          **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1996-2019                 **/
+/** Copyright (C) Marat Fayzullin 1996-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -229,13 +229,16 @@ unsigned int ParseEffects(char *Args[],unsigned int Effects)
     { "green",    EFF_GREEN,   EFF_MASK_ALL   },
     { "amber",    EFF_AMBER,   EFF_MASK_ALL   },
     { "soft",     EFF_2XSAI,   EFF_SOFTEN_ALL },
+    { "2xsai",    EFF_2XSAI,   EFF_SOFTEN_ALL },
     { "epx",      EFF_EPX,     EFF_SOFTEN_ALL },
     { "eagle",    EFF_EAGLE,   EFF_SOFTEN_ALL },
     { "scale2x",  EFF_SCALE2X, EFF_SOFTEN_ALL },
     { "hq4x",     EFF_HQ4X,    EFF_SOFTEN_ALL },
-    { "nearest",  EFF_NEAREST, EFF_SOFTEN_ALL },
+    { "nearest",  EFF_NEAREST, EFF_SOFTEN_ALL }, /* Disable hw softening */
+    { "linear",   EFF_LINEAR,  EFF_SOFTEN_ALL }, /* Force hw softening   */
     { "vignette", EFF_VIGNETTE,EFF_VIGNETTE   },
     { "4x3",      EFF_4X3,     EFF_4X3        },
+    { "fps",      EFF_SHOWFPS, EFF_SHOWFPS    },
 //    { "sync",     EFF_SYNC,    0 },
 //    { "nosync",  -EFF_SYNC,    0 },
     { "saver",    EFF_SAVECPU, 0 },

@@ -44,4 +44,12 @@ typedef unsigned int uint;
 typedef unsigned char uchar;
 typedef unsigned long long ullong;
 
+#ifdef WRC
+typedef unsigned long u32;
+typedef unsigned long long u64;
+typedef int BOOL;
+#define TRUE 1
+#define FALSE 0
+#endif
+
 #endif

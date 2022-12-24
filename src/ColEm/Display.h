@@ -5,7 +5,7 @@
 /** This file instantiates TMS9918 display drivers for all  **/
 /** supported screen depths.                                **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 2008-2019                 **/
+/** Copyright (C) Marat Fayzullin 2008-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/

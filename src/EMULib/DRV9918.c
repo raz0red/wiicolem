@@ -7,7 +7,7 @@
 /** TMS9918.h for declarations and TMS9918.c for the main   **/
 /** code.                                                   **/
 /**                                                         **/
-/** Copyright (C) Marat Fayzullin 1996-2019                 **/
+/** Copyright (C) Marat Fayzullin 1996-2021                 **/
 /**     You are not allowed to distribute this software     **/
 /**     commercially. Please, notify me, if you make any    **/
 /**     changes to this file.                               **/
@@ -64,49 +64,25 @@ void RefreshSprites(register TMS9918 *VDP,register byte Y)
   static const byte SprHeights[4] = { 8,16,16,32 };
   register byte OH,IH,*PT,*AT;
   register pixel *P,*T,C;
-  register int L,K;
-  register unsigned int M;
+  register int L,K,N;
+  unsigned int M;
 
-  /* No 5th sprite yet */
-  VDP->Status &= ~(TMS9918_STAT_5THNUM|TMS9918_STAT_5THSPR);
+  /* Find sprites to show, update 5th sprite status */
+  N = ScanSprites(VDP,Y,&M);
+  if((N<0) || !M) return;
 
   T  = (pixel *)(VDP->XBuf)
      + VDP->Width*(Y+(VDP->Height-192)/2)
      + VDP->Width/2-128;
   OH = SprHeights[VDP->R[1]&0x03];
   IH = SprHeights[VDP->R[1]&0x02];
-  AT = VDP->SprTab-4;
-  C  = VDP->MaxSprites+1;
-  M  = 0;
+  AT = VDP->SprTab+(N<<2);
 
-  for(L=0;L<32;++L)
+  /* For each possibly shown sprite... */
+  for( ; N>=0 ; --N, AT-=4)
   {
-    M<<=1;AT+=4;         /* Iterate through SprTab */
-    K=AT[0];             /* K = sprite Y coordinate */
-    if(K==208) break;    /* Iteration terminates if Y=208 */
-    if(K>256-IH) K-=256; /* Y coordinate may be negative */
-
-    /* Mark all valid sprites with 1s, break at MaxSprites */
-    if((Y>K)&&(Y<=K+OH))
-    {
-      /* If we exceed the maximum number of sprites per line... */
-      if(!--C)
-      {
-        /* Set extra sprite flag in the VDP status register */
-        VDP->Status|=TMS9918_STAT_5THSPR;
-        break;
-      }
-
-      /* Mark sprite as ready to draw */
-      M|=1;
-    }
-  }
-
-  /* Set last checked sprite number (5th sprite, or Y=208, or sprite #31) */
-  VDP->Status|=L<32? L:31;
-
-  for(;M;M>>=1,AT-=4)
-    if(M&1)
+    /* If showing this sprite... */
+    if(M&(1<<N))
     {
       C=AT[3];                  /* C = sprite attributes */
       L=C&0x80? AT[1]-32:AT[1]; /* Sprite may be shifted left by 32 */
@@ -200,6 +176,7 @@ void RefreshSprites(register TMS9918 *VDP,register byte Y)
         }
       }
     }
+  }
 }
 
 /** RefreshLine0() *******************************************/

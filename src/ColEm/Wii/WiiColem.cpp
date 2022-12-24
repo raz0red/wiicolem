@@ -250,14 +250,14 @@ unsigned int Mouse(void) {
  * been displayed.
  */
 static void AddRenderCallbackPostMenu() {
-    if (!ExitNow) { 
-        WII_VideoStop();     
-        wii_gx_pop_callback(); // Added by menu to blank screen                                                   
-        wii_set_video_mode(TRUE);              
-        wii_gx_push_callback(&wii_render_callback, TRUE, &wii_prerender_callback);                        
+    if (!ExitNow) {
+        WII_VideoStop();
+        wii_gx_pop_callback(); // Added by menu to blank screen
+        wii_set_video_mode(TRUE);
+        wii_gx_push_callback(&wii_render_callback, TRUE, &wii_prerender_callback);
         VIDEO_SetTrapFilter(wii_trap_filter);
         VIDEO_WaitVSync();
-        WII_VideoStart();                                                        
+        WII_VideoStart();
     }
 }
 
@@ -266,12 +266,12 @@ static void AddRenderCallbackPostMenu() {
  * being displayed.
  */
 static void RemoveRenderCallbackPreMenu() {
-    WII_VideoStop();                                                        
+    WII_VideoStop();
     wii_gx_pop_callback(); // Emulator render callback
-    wii_gx_push_callback( NULL, FALSE, NULL ); // Blank screen   
+    wii_gx_push_callback( NULL, FALSE, NULL ); // Blank screen
     WII_SetDefaultVideoMode();
     VIDEO_WaitVSync();
-    WII_VideoStart(); 
+    WII_VideoStart();
     VIDEO_WaitVSync();
     wii_gx_pop_callback(); // Blank screen callback
 }
@@ -378,11 +378,11 @@ unsigned int Joystick(void) {
                         wii_keypad_set_dim_screen(TRUE);
 
                         // Force GX without VI
-                        if (wii_gx_vi_scaler || wii_double_strike_mode) {                                                        
-                            WII_VideoStop();                            
+                        if (wii_gx_vi_scaler || wii_double_strike_mode) {
+                            WII_VideoStop();
                             wii_set_video_mode(FALSE);
                             VIDEO_WaitVSync();
-                            WII_VideoStart();                                                        
+                            WII_VideoStart();
                         }
                     }
 
@@ -400,10 +400,10 @@ unsigned int Joystick(void) {
             if (!loop && padvisible) {
                 // Restart selected video mode
                 if (wii_gx_vi_scaler || wii_double_strike_mode) {
-                    WII_VideoStop();                            
+                    WII_VideoStop();
                     wii_set_video_mode(TRUE);
                     VIDEO_WaitVSync();
-                    WII_VideoStart();                                                        
+                    WII_VideoStart();
                 }
 
                 // Un-dim the screen
@@ -497,14 +497,14 @@ static void wii_render_callback() {
         int padding = 2;
 
         if (dbg_count % 60 == 0) {
-#ifdef ENABLE_VSYNC            
+#ifdef ENABLE_VSYNC
             sprintf(text, "FPS: %0.2f, VSync: %s, CycleAdj: %d %s", FpsCounter,
                     (wii_vsync == VSYNC_ENABLED ? "On" : "Off"),
                     wii_coleco_db_entry.cycleAdjust, debug_str);
 #else
-            sprintf(text, "FPS: %0.2f, CycleAdj: %d %s", FpsCounter,                    
+            sprintf(text, "FPS: %0.2f, CycleAdj: %d %s", FpsCounter,
                     wii_coleco_db_entry.cycleAdjust, debug_str);
-#endif                    
+#endif
         }
 
         GXColor color = (GXColor){0x0, 0x0, 0x0, 0x80};
@@ -548,7 +548,7 @@ static void render_screen() {
     // Wait for VSync signal
     if (wii_vsync == VSYNC_ENABLED)
         VIDEO_WaitVSync();
-#endif        
+#endif
 }
 
 /**
