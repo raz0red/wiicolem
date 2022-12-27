@@ -19,6 +19,8 @@ static int SndVolume;        /* Master volume for audio        */
 extern int MasterSwitch;
 extern int *AudioBuf;
 
+static unsigned int Input = 0;
+
 extern "C" int EmStart() {
     /* Initialize video */
     ScrWidth = COLECO_WIDTH;
@@ -50,6 +52,18 @@ extern "C" int EmStart() {
 
 extern "C" void EmStep() {
     RunZ80(&CPU);
+}
+
+extern "C" void EmSetInput(unsigned int input) {
+    Input = input;
+}
+
+extern "C" int EmSaveState() {
+    return SaveSTA("/freeze.sta");
+}
+
+extern "C" int EmLoadState() {
+    return LoadSTA("/freeze.sta");
 }
 
 /** TrashMachine() *******************************************/
@@ -87,7 +101,7 @@ unsigned int Mouse(void) {
 
 unsigned int Joystick(void) {
     int samples = RenderAndPlayAudio((UseSound/((Mode & CV_PAL) ? 50 : 60)));
-    return 0x000200002;
+    return Input;
 }
 
 /** SetColor() ***********************************************/

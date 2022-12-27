@@ -56,7 +56,7 @@ LINK_FLAGS := \
 	-s ASSERTIONS=0 \
 	-s EXIT_RUNTIME=0 \
 	-s EXPORTED_RUNTIME_METHODS="['FS', 'cwrap']" \
-    -s EXPORTED_FUNCTIONS="['_EmStart', '_EmStep']" \
+    -s EXPORTED_FUNCTIONS="['_EmStart', '_EmStep', '_EmSaveState', '_EmLoadState', '_EmSetInput']" \
 	-s INVOKE_RUN=0 \
     -flto
 
