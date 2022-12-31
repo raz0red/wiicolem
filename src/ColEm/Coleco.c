@@ -236,8 +236,14 @@ int StartColeco(const char *Cartridge)
 
   /* Allocate memory for RAM and ROM */
   if(Verbose) printf("Allocating 256kB for CPU address space...");
+#ifndef WRC
   if(!(RAM=malloc(0x40000))) { if(Verbose) puts("FAILED");return(0); }
   memset(RAM,NORAM,0x40000);
+#else
+  // Avoid realloc based on MegaCert. No idea why this is necessary, realloc should work... :-/
+  if(!(RAM=malloc(0x40000 + 0x100000))) { if(Verbose) puts("FAILED");return(0); }
+  memset(RAM,NORAM,0x40000 + 0x100000);
+#endif
 
   /* Allocate EEPROM data buffer */
   if(Verbose) printf("Allocating 32kB for EEPROM data...");
@@ -269,7 +275,7 @@ int StartColeco(const char *Cartridge)
   if(!(F=fopen("/coleco.rom","rb"))) P="NOT FOUND";
 #else
   if(!(F=fopen("COLECO.ROM","rb"))) P="NOT FOUND";
-#endif  
+#endif
   else
   {
     if(fread(ROM_BIOS,1,0x2000,F)!=0x2000) P="SHORT FILE";
@@ -284,7 +290,7 @@ int StartColeco(const char *Cartridge)
     if((F=fopen("/writer.rom","rb")))
 #else
     if((F=fopen("WRITER.ROM","rb")))
-#endif          
+#endif
     {
       if(fread(ROM_WRITER,1,0x8000,F)==0x8000) ++AdamROMs;
       fclose(F);
@@ -300,7 +306,7 @@ int StartColeco(const char *Cartridge)
     if((F=fopen("/eos.rom","rb")))
 #else
     if((F=fopen("EOS.ROM","rb")))
-#endif              
+#endif
     {
       if(fread(ROM_EOS,1,0x2000,F)==0x2000) ++AdamROMs;
       fclose(F);
@@ -463,10 +469,14 @@ int LoadROM(const char *Cartridge)
     /* If not enough space, reallocate memory */
     if(J>MegaSize)
     {
+#ifdef WRC
+      printf("## MEGASIZE: %d\n", 0x38000 + (J << 14));
+#else
       P = realloc(RAM,0x38000+(J<<14));
       if(!P) { fclose(F);return(0); }
       RAM = P;
       P   = ROM_CARTRIDGE;
+#endif
     }
 
     /* Set new MegaROM size, cancel all cheats */
@@ -501,6 +511,8 @@ int LoadROM(const char *Cartridge)
 
   /* Load state, save file, palette, cheats, etc. */
   FindState(Cartridge);
+
+  printf("### done: %d\n", J);
 
   /* Done */
   return(J);
