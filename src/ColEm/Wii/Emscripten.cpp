@@ -20,12 +20,16 @@ extern int MasterSwitch;
 extern int *AudioBuf;
 
 static unsigned int Input = 0;
+static unsigned long EmOpts = 0;
 
 extern "C" int EmStart() {
     /* Initialize video */
     ScrWidth = COLECO_WIDTH;
     ScrHeight = COLECO_HEIGHT;
     ScrBuffer = NULL;
+
+    // 100% of frames
+    UPeriod = 100;
 
     // Initialize and run ColEm
     InitSound(UseSound, 150);
@@ -45,9 +49,13 @@ extern "C" int EmStart() {
     // Set the volume
     int Volume = 7;
     SetChannels((3 + (Volume * 4)), MasterSwitch);
-    ResetColeco(Mode);
+    ResetColeco(Mode | EmOpts);
 
     return 1;
+}
+
+extern "C" void EmSetOpts(unsigned long opts) {
+    EmOpts = opts;
 }
 
 extern "C" void EmStep() {

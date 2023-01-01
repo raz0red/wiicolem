@@ -1434,11 +1434,15 @@ unsigned int GuessROM(const byte *ROM,unsigned int Size)
   for(J=0;Games[J].Mode;++J)
     if(CRC==Games[J].CRC) { Guess=Games[J].Mode;break; }
 
+#ifndef WRC
   if(Verbose)
   {
+#endif
     if(Games[J].Mode) printf("identified as %s...",Games[J].Name);
     else printf("CRC=%08Xh...",CRC);
+#ifndef WRC
   }
+#endif
 
   /* Return whatever has been guessed */
   return(Guess);
