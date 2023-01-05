@@ -20,10 +20,8 @@ extern int MasterSwitch;
 extern int *AudioBuf;
 
 static unsigned int Input = 0;
-static int AxisX1 = 0;
-static int AxisY1 = 0;
-static int AxisX2 = 0;
-static int AxisY2 = 0;
+static int AxisX = 0;
+static int AxisY = 0;
 static unsigned long EmOpts = 0;
 
 extern "C" int EmStart() {
@@ -66,12 +64,10 @@ extern "C" void EmStep() {
     RunZ80(&CPU);
 }
 
-extern "C" void EmSetInput(unsigned int input, int axisX1, int axisY1, int axisX2, int axisY2) {
+extern "C" void EmSetInput(unsigned int input, int axisX, int axisY) {
     Input = input;
-    AxisX1 = axisX1;
-    AxisY1 = axisY1;
-    AxisX2 = axisX2;
-    AxisY2 = axisY2;
+    AxisX = axisX;
+    AxisY = axisY;
 }
 
 extern "C" int EmSaveState() {
@@ -107,13 +103,14 @@ unsigned int Mouse(void) {
     int x = 0;
     int y = 0;
 
-    x = AxisX1;
-    y = AxisY1;
+    x = AxisX;
+    y = AxisY;
 
-    //printf("%d, %d\n", AxisX1, AxisY1);
+    //printf("%d, %d\n", AxisX, AxisY);
 
     x &= 0xFFFF;
     y &= 0x3FFF;
+
 
     return ((y << 16) | x);
 }
