@@ -4,8 +4,8 @@
 MAKEFLAGS += --no-builtin-rules
 MAKE = /usr/bin/make
 CFILES := \
-    ./src/Colem/Coleco.c \
-    ./src/Colem/AdamNet.c \
+    ./src/ColEm/Coleco.c \
+    ./src/ColEm/AdamNet.c \
     ./src/EMULib/AY8910.c \
     ./src/EMULib/Hunt.c \
     ./src/EMULib/C24XX.c \
@@ -16,12 +16,33 @@ CFILES := \
     ./src/EMULib/DRV9918.c \
 	./src/EMULib/Sound.c \
 	./src/EMULib/Wii/SndEmscripten.c \
-    ./src/Z80/Z80.c
+    ./src/Z80/Z80.c \
+    ./rcheevos/src/rcheevos/alloc.c \
+    ./rcheevos/src/rcheevos/compat.c \
+    ./rcheevos/src/rcheevos/condition.c \
+    ./rcheevos/src/rcheevos/condset.c \
+    ./rcheevos/src/rcheevos/consoleinfo.c \
+    ./rcheevos/src/rcheevos/format.c \
+    ./rcheevos/src/rcheevos/lboard.c \
+    ./rcheevos/src/rcheevos/memref.c \
+    ./rcheevos/src/rcheevos/operand.c \
+    ./rcheevos/src/rcheevos/richpresence.c \
+    ./rcheevos/src/rcheevos/runtime.c \
+    ./rcheevos/src/rcheevos/runtime_progress.c \
+    ./rcheevos/src/rcheevos/trigger.c \
+    ./rcheevos/src/rcheevos/value.c \
+    ./rcheevos/src/rapi/rc_api_common.c \
+    ./rcheevos/src/rapi/rc_api_info.c \
+    ./rcheevos/src/rapi/rc_api_runtime.c \
+    ./rcheevos/src/rapi/rc_api_user.c \
+    ./rcheevos/src/rhash/hash.c \
+    ./rcheevos/src/rhash/md5.c \
+    ./rcheevos/src/rurl/url.c
 
 #WiiColem.cpp
 #SndSDL.c
 
-CPPFILES := ./src/Colem/Wii/Emscripten.cpp
+CPPFILES := ./src/ColEm/Wii/Emscripten.cpp ./src/ColEm/Wii/Cheevos.cpp
 
 FILES := $(patsubst %.c,%.o,$(CFILES)) $(patsubst %.cpp,%.o,$(CPPFILES))
 
@@ -33,7 +54,8 @@ FLAGS := \
     -I./src/Z80 \
     -I./src/EMULib \
 	-I./src/EMULib/Wii \
-    -DWRC -DWII -DCOLEM -DBPS16 -DBPP32 -DMEGACART -DLSB_FIRST -DSLOW_MELODIC_AUDIO -DWAVE_INTERPOLATION \
+    -I./rcheevos/include \
+    -DWRC -DWII -DCOLEM -DBPS16 -DBPP32 -DMEGACART -DLSB_FIRST -DSLOW_MELODIC_AUDIO -DWAVE_INTERPOLATION -DRC_DISABLE_LUA \
   	-Winline \
   	-fomit-frame-pointer \
 	-fno-strict-overflow \
@@ -53,10 +75,9 @@ LINK_FLAGS := \
     -s EXPORT_NAME="'colem'" \
     -s TOTAL_MEMORY=67108864 \
     -s ALLOW_MEMORY_GROWTH=1 \
-	-s ASSERTIONS=0 \
 	-s EXIT_RUNTIME=0 \
-	-s EXPORTED_RUNTIME_METHODS="['FS', 'cwrap']" \
-    -s EXPORTED_FUNCTIONS="['_EmStart', '_EmStep', '_EmSaveState', '_EmLoadState', '_EmSetInput', '_EmSetOpts']" \
+	-s EXPORTED_RUNTIME_METHODS="['FS', 'cwrap', 'ccall']" \
+    -s EXPORTED_FUNCTIONS="['_EmStart', '_EmStep', '_EmSaveState', '_EmLoadState', '_EmSetInput', '_EmSetOpts', '_EmCheevosInit', '_EmCheevosLogin', '_EmCheevosLoadGame', '_EmCheevosFrame', '_EmCheevosGetRPWrapper', '_rcheevos_wrc_response', '_malloc', '_free']" \
 	-s INVOKE_RUN=0 \
     -flto
 

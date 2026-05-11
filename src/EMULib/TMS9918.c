@@ -102,11 +102,14 @@ void Reset9918(TMS9918 *VDP,byte *Buffer,int Width,int Height)
   /* If new screen buffer is passed, set it */
   if(Buffer)
   {
-    if(VDP->OwnXBuf&&VDP->XBuf) free(VDP->XBuf);
-    VDP->XBuf    = Buffer;
+    if(Buffer!=VDP->XBuf)
+    {
+      if(VDP->OwnXBuf&&VDP->XBuf) free(VDP->XBuf);
+      VDP->XBuf    = Buffer;
+      VDP->OwnXBuf = 0;
+    }
     VDP->Width   = Width;
     VDP->Height  = Height;
-    VDP->OwnXBuf = 0;
   }
 
   memset(VDP->VRAM,0x00,0x4000);
